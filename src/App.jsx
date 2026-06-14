@@ -12,6 +12,27 @@ const SCENARIOS = {
 const JURISDICTIONS = ['Rural County','Mid-Size City','Large Urban Metro','Coastal Community','Tribal Nation','Interstate Corridor']
 const DIFFICULTIES  = ['Basic','Moderate','Advanced','Brutal','Adaptive']
 
+const LIFELINES = [
+  { key: 'safety',    label: 'Safety & Security',   icon: '🛡️' },
+  { key: 'food',      label: 'Food Water Shelter',   icon: '🍽️' },
+  { key: 'health',    label: 'Health & Medical',     icon: '🏥' },
+  { key: 'energy',    label: 'Energy',               icon: '⚡' },
+  { key: 'comms',     label: 'Communications',       icon: '📡' },
+  { key: 'transport', label: 'Transportation',       icon: '🚗' },
+  { key: 'hazmat',    label: 'Hazardous Material',   icon: '☣️' },
+]
+
+const DEFAULT_LIFELINES = {
+  safety: 'YELLOW', food: 'YELLOW', health: 'YELLOW',
+  energy: 'YELLOW', comms: 'YELLOW', transport: 'YELLOW', hazmat: 'YELLOW',
+}
+
+const LL_COLORS = {
+  GREEN:  { bg: '#0a2a1a', border: '#1D9E75', text: '#1D9E75' },
+  YELLOW: { bg: '#2a2000', border: '#EF9F27', text: '#EF9F27' },
+  RED:    { bg: '#2a0a0a', border: '#E24B4A', text: '#E24B4A' },
+}
+
 const DISPATCH_SEEDS = {
   hurricane:  ['NWS upgraded storm to Cat 5. Landfall window tightening to 14 hours.','Hospital requesting guidance on patient evacuation prioritization.','State EOC requesting resource status update within 30 minutes.','Fuel supplies at staging area running low. Vendors not answering.','Mayor\'s office asking for press conference guidance.'],
   mci:        ['Trauma Center 1 reports capacity reached. Diverting incoming.','Scene security not established. Second explosion reported — unconfirmed.','FBI on scene. Requesting coordination with your EOC.','Media satellite trucks arriving at perimeter. JIC not activated.','Mutual aid request from neighboring county.'],
@@ -44,48 +65,59 @@ RULES:
 - Advance incident clock realistically. State simulated time each turn.
 - Generate 1-2 new field dispatch items after each consequence.
 - Embed NIMS/ICS/ESF/FEMA doctrine in realism — don't lecture.
-- On ENDEX: deliver a thorough AAR. Explicitly evaluate: (1) COOP activation timing and trigger criteria, (2) command element continuity as a first-order decision, (3) alternate facility readiness assumptions, (4) IT and communications validation at alternate sites, (5) overall strengths, (6) critical gaps, (7) doctrine references, (8) specific recommendations for improvement.
+- On ENDEX: deliver a thorough AAR covering: (1) COOP activation timing and trigger criteria, (2) command element continuity as a first-order decision, (3) alternate facility readiness assumptions, (4) IT and communications validation at alternate sites, (5) overall strengths, (6) critical gaps, (7) doctrine references, (8) specific recommendations.
 - Never break character.
 
-RESPOND ONLY IN THIS JSON FORMAT:
+COMMUNITY LIFELINE STATUS: Each turn, evaluate and report the status of all 7 FEMA Community Lifelines based on current incident conditions. Use GREEN (functional), YELLOW (degraded), or RED (compromised/non-functional).
+
+RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
 {
   "time": "simulated time e.g. H+2:30 or Day 1, 1423L",
   "consequence": "3-5 sentence consequence narrative",
   "situation": "STABLE | DEVELOPING | CRITICAL | DETERIORATING",
   "dispatches": ["dispatch item 1", "dispatch item 2"],
-  "prompt": "one sentence prompt for next player action"
+  "prompt": "one sentence prompt for next player action",
+  "lifelines": {
+    "safety": "GREEN | YELLOW | RED",
+    "food": "GREEN | YELLOW | RED",
+    "health": "GREEN | YELLOW | RED",
+    "energy": "GREEN | YELLOW | RED",
+    "comms": "GREEN | YELLOW | RED",
+    "transport": "GREEN | YELLOW | RED",
+    "hazmat": "GREEN | YELLOW | RED"
+  }
 }
 
 On ENDEX:
 {
   "time": "ENDEX",
-  "consequence": "full AAR text covering all 8 points above",
+  "consequence": "full AAR text covering all 8 points",
   "situation": "ENDEX",
   "dispatches": [],
-  "prompt": "Scenario complete."
+  "prompt": "Scenario complete.",
+  "lifelines": { "safety": "RED", "food": "RED", "health": "RED", "energy": "RED", "comms": "RED", "transport": "RED", "hazmat": "RED" }
 }`
 }
 
-const SAVE_KEY = 'em_sim_v3'
+const SAVE_KEY = 'em_sim_v4'
 
 const defaultState = {
   screen: 'setup', scenario: null, jurisdiction: 'Mid-Size City', difficulty: 'Adaptive',
   history: [], dispatches: [], terminal: [], notepad: '', simTime: 'H+0:00',
-  situation: 'DEVELOPING', turn: 0,
+  situation: 'DEVELOPING', turn: 0, lifelines: DEFAULT_LIFELINES,
 }
 
 const sitColors = { STABLE:'#1D9E75', DEVELOPING:'#EF9F27', CRITICAL:'#D85A30', DETERIORATING:'#E24B4A', ENDEX:'#888' }
 
 export default function App() {
-  const [state, setState]       = useState(null)
-  const [loading, setLoading]   = useState(false)
-  const [input, setInput]       = useState('')
-  // Column widths as percentages: [dispatch, terminal, notepad]
-  const [cols, setCols]         = useState([18, 62, 20])
-  const dragging                = useRef(null)
-  const containerRef            = useRef(null)
-  const termRef                 = useRef(null)
-  const inputRef                = useRef(null)
+  const [state, setState]     = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [input, setInput]     = useState('')
+  const [cols, setCols]       = useState([18, 62, 20])
+  const dragging              = useRef(null)
+  const containerRef          = useRef(null)
+  const termRef               = useRef(null)
+  const inputRef              = useRef(null)
 
   const save = useCallback((next) => {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)) } catch {}
@@ -114,7 +146,6 @@ export default function App() {
     if (state?.screen === 'game') setTimeout(() => inputRef.current?.focus(), 100)
   }, [state?.screen])
 
-  // Draggable divider logic
   function onDividerMouseDown(dividerIndex, e) {
     e.preventDefault()
     dragging.current = { dividerIndex, startX: e.clientX, startCols: [...cols] }
@@ -130,11 +161,9 @@ export default function App() {
     const newCols    = [...startCols]
     const minPct     = 10
     if (dividerIndex === 0) {
-      // Between dispatch and terminal
       newCols[0] = Math.max(minPct, Math.min(startCols[0] + deltaPct, 100 - startCols[2] - minPct * 2))
       newCols[1] = 100 - newCols[0] - newCols[2]
     } else {
-      // Between terminal and notepad
       newCols[2] = Math.max(minPct, Math.min(startCols[2] - deltaPct, 100 - startCols[0] - minPct * 2))
       newCols[1] = 100 - newCols[0] - newCols[2]
     }
@@ -159,7 +188,8 @@ export default function App() {
         { type: 'divider' },
         { type: 'narrator', text: sc.desc + ' Your EOC is activating. What is your first action?' },
       ],
-      history: [], turn: 0, simTime: 'H+0:00', situation: 'DEVELOPING', notepad: '',
+      history: [], turn: 0, simTime: 'H+0:00', situation: 'DEVELOPING',
+      notepad: '', lifelines: DEFAULT_LIFELINES,
     })
   }
 
@@ -185,7 +215,7 @@ export default function App() {
 
       let parsed
       try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()) }
-      catch { parsed = { time: state.simTime, consequence: raw, situation: 'DEVELOPING', dispatches: [], prompt: 'What is your next action?' } }
+      catch { parsed = { time: state.simTime, consequence: raw, situation: 'DEVELOPING', dispatches: [], prompt: 'What is your next action?', lifelines: state.lifelines } }
 
       const newHistory    = [...msgs, { role: 'assistant', content: JSON.stringify(parsed) }]
       const nextTurn      = state.turn + 1
@@ -201,9 +231,11 @@ export default function App() {
         ? [...parsed.dispatches.map((text, i) => ({ id: Date.now() + i, text, turn: nextTurn })), ...state.dispatches.slice(0, 6)]
         : state.dispatches
 
-      update({ terminal: addedTerm, history: newHistory, dispatches: newDispatches,
-               simTime: parsed.time || state.simTime, situation: parsed.situation || 'DEVELOPING',
-               turn: nextTurn })
+      update({
+        terminal: addedTerm, history: newHistory, dispatches: newDispatches,
+        simTime: parsed.time || state.simTime, situation: parsed.situation || 'DEVELOPING',
+        turn: nextTurn, lifelines: parsed.lifelines || state.lifelines,
+      })
     } catch (e) {
       update({ terminal: [...newTerm, { type: 'system', text: `[ERROR: ${e.message}]` }] })
     }
@@ -270,93 +302,110 @@ export default function App() {
   const dividerInner = {
     width: 4, height: 32, background: '#444', borderRadius: 2, pointerEvents: 'none',
   }
-  
-  
 
   return (
-    <div ref={containerRef}
-      style={{ display: 'flex', flexDirection: 'row', gap: 0, padding: '0.75rem', height: '97vh', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, userSelect: dragging.current ? 'none' : 'auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '97vh', padding: '0.75rem', gap: 8, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
 
-      {/* DISPATCH */}
-      <div style={{ width: `${cols[0]}%`, display: 'flex', flexDirection: 'column', border: '0.5px solid #222', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
-        <div style={{ padding: '6px 10px', borderBottom: '0.5px solid #222', background: '#111', fontSize: 10, fontWeight: 500, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', justifyContent: 'space-between' }}>
-          <span>Field Dispatch</span>
-          <span style={{ background: '#E24B4A', color: '#fff', borderRadius: 3, padding: '1px 5px', fontSize: 9 }}>{state.dispatches.length}</span>
-        </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {state.dispatches.map((d) => {
-            const isNew = d.turn === state.turn
-            return (
-              <div key={d.id} style={{ padding: '6px 8px', borderRadius: 6, border: `0.5px solid ${isNew ? '#2a3a2a' : '#222'}`, background: isNew ? '#1a2a1a' : 'transparent', fontSize: 11, color: isNew ? '#ddd' : '#555', lineHeight: 1.5 }}>
-                {isNew && <div style={{ fontSize: 9, color: '#1D9E75', fontWeight: 500, marginBottom: 2 }}>NEW — {d.turn === 0 ? 'H+0:00' : state.simTime}</div>}
-                {d.text}
-              </div>
-            )
-          })}
-        </div>
+      {/* LIFELINE STATUS BAR */}
+      <div style={{ display: 'flex', gap: 6, padding: '6px 10px', border: '0.5px solid #222', borderRadius: 8, background: '#0d0d0d', alignItems: 'center', flexShrink: 0 }}>
+        <span style={{ fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginRight: 4, whiteSpace: 'nowrap' }}>Community Lifelines</span>
+        {LIFELINES.map(ll => {
+          const status = state.lifelines?.[ll.key] || 'YELLOW'
+          const c      = LL_COLORS[status]
+          return (
+            <div key={ll.key} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 4, border: `0.5px solid ${c.border}`, background: c.bg, flex: 1, minWidth: 0 }}>
+              <span style={{ fontSize: 13 }}>{ll.icon}</span>
+              <span style={{ fontSize: 9, color: c.text, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ll.label}</span>
+            </div>
+          )
+        })}
       </div>
 
-      {/* DIVIDER 1 */}
-      <div style={dividerStyle} onMouseDown={e => onDividerMouseDown(0, e)}>
-        <div style={dividerInner} />
-      </div>
+      {/* THREE PANEL ROW */}
+      <div ref={containerRef} style={{ display: 'flex', flex: 1, gap: 0, minHeight: 0, userSelect: dragging.current ? 'none' : 'auto' }}>
 
-      {/* TERMINAL */}
-      <div style={{ width: `${cols[1]}%`, display: 'flex', flexDirection: 'column', border: '0.5px solid #222', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
-        <div style={{ padding: '6px 10px', borderBottom: '0.5px solid #222', background: '#111', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 10, fontWeight: 500, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{SCENARIOS[state.scenario]?.name} — {state.jurisdiction}</span>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ fontSize: 10, color: '#444' }}>{state.simTime}</span>
-            <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 3, fontWeight: 500, background: (sitColors[state.situation]||'#888')+'22', color: sitColors[state.situation]||'#888' }}>{state.situation}</span>
-            <button onClick={reset} style={{ fontSize: 10, padding: '2px 8px', color: '#555' }}>New</button>
+        {/* DISPATCH */}
+        <div style={{ width: `${cols[0]}%`, display: 'flex', flexDirection: 'column', border: '0.5px solid #222', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+          <div style={{ padding: '6px 10px', borderBottom: '0.5px solid #222', background: '#111', fontSize: 10, fontWeight: 500, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', justifyContent: 'space-between' }}>
+            <span>Field Dispatch</span>
+            <span style={{ background: '#E24B4A', color: '#fff', borderRadius: 3, padding: '1px 5px', fontSize: 9 }}>{state.dispatches.length}</span>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {state.dispatches.map((d) => {
+              const isNew = d.turn === state.turn
+              return (
+                <div key={d.id} style={{ padding: '6px 8px', borderRadius: 6, border: `0.5px solid ${isNew ? '#2a3a2a' : '#222'}`, background: isNew ? '#1a2a1a' : 'transparent', fontSize: 11, color: isNew ? '#ddd' : '#555', lineHeight: 1.5 }}>
+                  {isNew && <div style={{ fontSize: 9, color: '#1D9E75', fontWeight: 500, marginBottom: 2 }}>NEW — {state.simTime}</div>}
+                  {d.text}
+                </div>
+              )
+            })}
           </div>
         </div>
 
-        <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', lineHeight: 1.8 }}>
-          {state.terminal.map((line, i) => {
-            if (!line) return null
-            if (line.type === 'divider') return <hr key={i} style={{ border: 'none', borderTop: '0.5px solid #1a1a1a', margin: '8px 0' }} />
-            const s = {
-              header:      { color: '#aaa', fontWeight: 500, marginBottom: 4 },
-              system:      { color: '#333', fontSize: 10, marginBottom: 6 },
-              narrator:    { color: '#ccc', marginBottom: 6 },
-              player:      { color: '#1D9E75', marginBottom: 4, fontWeight: 500 },
-              consequence: { color: '#777', marginBottom: 6, borderLeft: '2px solid #2a2a2a', paddingLeft: 10 },
-              time:        { color: '#EF9F27', fontSize: 10, marginBottom: 2, fontWeight: 500 },
-              prompt:      { color: '#EF9F27', fontStyle: 'italic', marginBottom: 4 },
-            }
-            return <div key={i} style={s[line.type]||{}}>{line.text}</div>
-          })}
-          {loading && <div style={{ color: '#333', fontStyle: 'italic' }}>Evaluating action...</div>}
+        {/* DIVIDER 1 */}
+        <div style={dividerStyle} onMouseDown={e => onDividerMouseDown(0, e)}>
+          <div style={dividerInner} />
         </div>
 
-        <div style={{ borderTop: '0.5px solid #222', padding: '8px 10px', display: 'flex', gap: 6 }}>
-          <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
-            placeholder="Your action..." rows={2}
-            style={{ flex: 1, resize: 'none', lineHeight: 1.6 }} />
-          <button onClick={sendAction} disabled={loading || !input.trim()}
-            style={{ padding: '6px 14px', fontWeight: 500, alignSelf: 'stretch', color: '#1D9E75', borderColor: '#1D9E75' }}>
-            Execute
-          </button>
-        </div>
-      </div>
+        {/* TERMINAL */}
+        <div style={{ width: `${cols[1]}%`, display: 'flex', flexDirection: 'column', border: '0.5px solid #222', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+          <div style={{ padding: '6px 10px', borderBottom: '0.5px solid #222', background: '#111', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 10, fontWeight: 500, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{SCENARIOS[state.scenario]?.name} — {state.jurisdiction}</span>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ fontSize: 10, color: '#444' }}>{state.simTime}</span>
+              <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 3, fontWeight: 500, background: (sitColors[state.situation]||'#888')+'22', color: sitColors[state.situation]||'#888' }}>{state.situation}</span>
+              <button onClick={reset} style={{ fontSize: 10, padding: '2px 8px', color: '#555' }}>New</button>
+            </div>
+          </div>
 
-      {/* DIVIDER 2 */}
-      <div style={dividerStyle} onMouseDown={e => onDividerMouseDown(1, e)}>
-        <div style={dividerInner} />
-      </div>
+          <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', lineHeight: 1.8 }}>
+            {state.terminal.map((line, i) => {
+              if (!line) return null
+              if (line.type === 'divider') return <hr key={i} style={{ border: 'none', borderTop: '0.5px solid #1a1a1a', margin: '8px 0' }} />
+              const s = {
+                header:      { color: '#aaa', fontWeight: 500, marginBottom: 4 },
+                system:      { color: '#333', fontSize: 10, marginBottom: 6 },
+                narrator:    { color: '#ccc', marginBottom: 6 },
+                player:      { color: '#1D9E75', marginBottom: 4, fontWeight: 500 },
+                consequence: { color: '#777', marginBottom: 6, borderLeft: '2px solid #2a2a2a', paddingLeft: 10 },
+                time:        { color: '#EF9F27', fontSize: 10, marginBottom: 2, fontWeight: 500 },
+                prompt:      { color: '#EF9F27', fontStyle: 'italic', marginBottom: 4 },
+              }
+              return <div key={i} style={s[line.type]||{}}>{line.text}</div>
+            })}
+            {loading && <div style={{ color: '#333', fontStyle: 'italic' }}>Evaluating action...</div>}
+          </div>
 
-      {/* NOTEPAD */}
-      <div style={{ width: `${cols[2]}%`, display: 'flex', flexDirection: 'column', border: '0.5px solid #222', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
-        <div style={{ padding: '6px 10px', borderBottom: '0.5px solid #222', background: '#111', fontSize: 10, fontWeight: 500, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Commander's Notepad
+          <div style={{ borderTop: '0.5px solid #222', padding: '8px 10px', display: 'flex', gap: 6 }}>
+            <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
+              placeholder="Your action..." rows={2}
+              style={{ flex: 1, resize: 'none', lineHeight: 1.6 }} />
+            <button onClick={sendAction} disabled={loading || !input.trim()}
+              style={{ padding: '6px 14px', fontWeight: 500, alignSelf: 'stretch', color: '#1D9E75', borderColor: '#1D9E75' }}>
+              Execute
+            </button>
+          </div>
         </div>
-        <textarea value={state.notepad} onChange={e => update({ notepad: e.target.value })}
-          placeholder={'Priorities, resource gaps, decisions pending...\n\nPersists across turns and sessions.'}
-          style={{ flex: 1, resize: 'none', border: 'none', padding: '8px 10px', background: 'transparent', color: '#888', lineHeight: 1.7, outline: 'none' }} />
-        <div style={{ padding: '4px 10px', borderTop: '0.5px solid #1a1a1a', fontSize: 10, color: '#333' }}>
-          Turn {state.turn} — {state.difficulty}
+
+        {/* DIVIDER 2 */}
+        <div style={dividerStyle} onMouseDown={e => onDividerMouseDown(1, e)}>
+          <div style={dividerInner} />
         </div>
+
+        {/* NOTEPAD */}
+        <div style={{ width: `${cols[2]}%`, display: 'flex', flexDirection: 'column', border: '0.5px solid #222', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+          <div style={{ padding: '6px 10px', borderBottom: '0.5px solid #222', background: '#111', fontSize: 10, fontWeight: 500, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            Commander's Notepad
+          </div>
+          <textarea value={state.notepad} onChange={e => update({ notepad: e.target.value })}
+            placeholder={'Priorities, resource gaps, decisions pending...\n\nPersists across turns and sessions.'}
+            style={{ flex: 1, resize: 'none', border: 'none', padding: '8px 10px', background: 'transparent', color: '#888', lineHeight: 1.7, outline: 'none' }} />
+          <div style={{ padding: '4px 10px', borderTop: '0.5px solid #1a1a1a', fontSize: 10, color: '#333' }}>
+            Turn {state.turn} — {state.difficulty}
+          </div>
+        </div>
+
       </div>
     </div>
   )
