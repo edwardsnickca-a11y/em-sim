@@ -124,12 +124,26 @@ const sitColors = { STABLE:'#1D9E75', DEVELOPING:'#EF9F27', CRITICAL:'#D85A30', 
 
 function LifelineTile({ ll, data }) {
   const [hovered, setHovered] = useState(false)
+  const [tipPos, setTipPos]   = useState({ left: 0, top: 0 })
+  const tileRef               = useRef(null)
   const status = data?.status || 'YELLOW'
   const reason = data?.reason || 'Assessment pending.'
   const c = LL_COLORS[status]
+
+  function handleMouseEnter() {
+    if (tileRef.current) {
+      const rect = tileRef.current.getBoundingClientRect()
+      let left = rect.left + rect.width / 2
+      left = Math.min(left, window.innerWidth - 170)
+      left = Math.max(left, 170)
+      setTipPos({ left, top: rect.bottom + 6 })
+    }
+    setHovered(true)
+  }
+
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
+    <div ref={tileRef}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setHovered(false)}
       style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 4, border: `0.5px solid ${c.border}`, background: c.bg, flex: 1, minWidth: 0, cursor: 'default' }}
     >
@@ -137,11 +151,11 @@ function LifelineTile({ ll, data }) {
       <span style={{ fontSize: 9, color: c.text, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ll.label}</span>
       {hovered && (
         <div style={{
-          position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
+          position: 'fixed', left: tipPos.left, top: tipPos.top,
+          transform: 'translateX(-50%)',
           background: '#1a1a1a', border: `0.5px solid ${c.border}`, borderRadius: 6,
-          padding: '6px 10px', fontSize: 10, color: '#ccc', lineHeight: 1.5,
-          whiteSpace: 'nowrap', maxWidth: 340,
-          zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+          padding: '8px 12px', fontSize: 10, color: '#ccc', lineHeight: 1.6,
+          width: 300, zIndex: 1000, boxShadow: '0 4px 16px rgba(0,0,0,0.8)',
           pointerEvents: 'none',
         }}>
           <span style={{ color: c.text, fontWeight: 500 }}>{status}</span> — {reason}
