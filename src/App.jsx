@@ -363,7 +363,7 @@ function SettingsPanel({ settings, onChange, onClose }) {
           <input type="color" value={settings.accentColor}
             onChange={e => onChange({ ...settings, accentColor: e.target.value })}
             style={{ width:36, height:28, border:'0.5px solid #333', borderRadius:4, background:'none', cursor:'pointer', padding:2 }} />
-          <div style={{ display:'flex', gap:6', flexWrap:'wrap', gap:6 }}>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
             {['#1D9E75','#4A90D9','#9B59B6','#E24B4A','#E8A838','#2ecc71'].map(c => (
               <div key={c} onClick={() => onChange({ ...settings, accentColor: c })}
                 style={{ width:18, height:18, borderRadius:3, background:c, cursor:'pointer', border:`2px solid ${settings.accentColor===c?'#fff':'transparent'}` }} />
