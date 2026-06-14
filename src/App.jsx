@@ -57,12 +57,12 @@ const SCENARIO_PINS = {
     { id:'staging',   label:'SAR Staging',              type:'STAGING',  lat:34.060, lng:-118.240, note:'Teams assembling' },
   ],
   flood: [
-    { id:'eoc',   label:'Primary EOC',               type:'EOC',      lat:38.580, lng:-121.494, note:'EOC activating' },
-    { id:'dam',   label:'Dam Site',                   type:'DAM',      lat:38.600, lng:-121.510, note:'Structural compromise confirmed' },
-    { id:'comm1', label:'Downstream Community A',     type:'AFFECTED', lat:38.565, lng:-121.480, note:'In inundation zone' },
-    { id:'comm2', label:'Downstream Community B',     type:'AFFECTED', lat:38.550, lng:-121.465, note:'Ignoring evac order' },
-    { id:'hosp1', label:'Regional Hospital',          type:'HOSPITAL', lat:38.575, lng:-121.500, note:'Preparing for casualties' },
-    { id:'staging',label:'Rescue Staging',            type:'STAGING',  lat:38.590, lng:-121.470, note:'Boat teams pre-positioned' },
+    { id:'eoc',    label:'Primary EOC',               type:'EOC',      lat:38.580, lng:-121.494, note:'EOC activating' },
+    { id:'dam',    label:'Dam Site',                   type:'DAM',      lat:38.600, lng:-121.510, note:'Structural compromise confirmed' },
+    { id:'comm1',  label:'Downstream Community A',     type:'AFFECTED', lat:38.565, lng:-121.480, note:'In inundation zone' },
+    { id:'comm2',  label:'Downstream Community B',     type:'AFFECTED', lat:38.550, lng:-121.465, note:'Ignoring evac order' },
+    { id:'hosp1',  label:'Regional Hospital',          type:'HOSPITAL', lat:38.575, lng:-121.500, note:'Preparing for casualties' },
+    { id:'staging',label:'Rescue Staging',             type:'STAGING',  lat:38.590, lng:-121.470, note:'Boat teams pre-positioned' },
   ],
 }
 
@@ -77,46 +77,46 @@ const SCENARIO_CENTERS = {
 
 const SCENARIO_REFS = {
   hurricane: [
-    { label: 'FEMA Hurricane Response Guidance',       url: 'https://www.fema.gov/emergency-managers/risk-management/hurricanes' },
-    { label: 'NHC Hurricane Preparedness',             url: 'https://www.nhc.noaa.gov/prepare/' },
-    { label: 'ESF-13 Public Safety & Security Annex',  url: 'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_13_Public-Safety-Security.pdf' },
-    { label: 'FEMA Mass Evacuation Incident Annex',    url: 'https://www.fema.gov/sites/default/files/2020-07/fema_Mass-Evacuation-Incident-Annex_0.pdf' },
-    { label: 'Hurricane Harvey After-Action Report',   url: 'https://www.fema.gov/sites/default/files/2020-08/fema_hurricane-harvey_after-action-report_2018.pdf' },
+    { label:'FEMA Hurricane Response Guidance',      url:'https://www.fema.gov/emergency-managers/risk-management/hurricanes' },
+    { label:'NHC Hurricane Preparedness',            url:'https://www.nhc.noaa.gov/prepare/' },
+    { label:'ESF-13 Public Safety Annex',            url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_13_Public-Safety-Security.pdf' },
+    { label:'FEMA Mass Evacuation Incident Annex',   url:'https://www.fema.gov/sites/default/files/2020-07/fema_Mass-Evacuation-Incident-Annex_0.pdf' },
+    { label:'Hurricane Harvey AAR 2018',             url:'https://www.fema.gov/sites/default/files/2020-08/fema_hurricane-harvey_after-action-report_2018.pdf' },
   ],
   mci: [
-    { label: 'FEMA MCI Management Guidelines',         url: 'https://www.fema.gov/emergency-managers/national-preparedness/frameworks/response' },
-    { label: 'START Triage Reference',                 url: 'https://chemm.hhs.gov/startadult.htm' },
-    { label: 'ESF-8 Public Health & Medical Annex',    url: 'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_8_Public-Health-Medical.pdf' },
-    { label: 'NIMS ICS Field Operations Guide',        url: 'https://www.fema.gov/sites/default/files/2020-07/fema_nims_ics-field-operations-guide.pdf' },
-    { label: 'Boston Marathon Bombing AAR',            url: 'https://www.mass.gov/doc/after-action-report-for-the-response-to-the-2013-boston-marathon-bombings/download' },
+    { label:'FEMA National Response Framework',      url:'https://www.fema.gov/emergency-managers/national-preparedness/frameworks/response' },
+    { label:'CHEMM START Triage Reference',          url:'https://chemm.hhs.gov/startadult.htm' },
+    { label:'ESF-8 Public Health & Medical Annex',   url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_8_Public-Health-Medical.pdf' },
+    { label:'NIMS ICS Field Operations Guide',       url:'https://www.fema.gov/sites/default/files/2020-07/fema_nims_ics-field-operations-guide.pdf' },
+    { label:'Boston Marathon Bombing AAR',           url:'https://www.mass.gov/doc/after-action-report-for-the-response-to-the-2013-boston-marathon-bombings/download' },
   ],
   hazmat: [
-    { label: 'EPA Emergency Response Guide',           url: 'https://www.epa.gov/emergency-response' },
-    { label: 'DOT Emergency Response Guidebook 2024',  url: 'https://www.phmsa.dot.gov/hazmat/erg/emergency-response-guidebook-erg' },
-    { label: 'LEPC Guidance Document',                 url: 'https://www.epa.gov/epcra/local-emergency-planning-committees' },
-    { label: 'ESF-10 Oil & Hazardous Materials Annex', url: 'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_10_Oil-Hazardous-Materials.pdf' },
-    { label: 'East Palestine Derailment AAR',          url: 'https://www.ntsb.gov/investigations/Pages/DCA23MR005.aspx' },
+    { label:'EPA Emergency Response',                url:'https://www.epa.gov/emergency-response' },
+    { label:'DOT Emergency Response Guidebook',      url:'https://www.phmsa.dot.gov/hazmat/erg/emergency-response-guidebook-erg' },
+    { label:'LEPC Guidance — EPA',                   url:'https://www.epa.gov/epcra/local-emergency-planning-committees' },
+    { label:'ESF-10 Oil & Hazardous Materials',      url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_10_Oil-Hazardous-Materials.pdf' },
+    { label:'NTSB East Palestine Investigation',     url:'https://www.ntsb.gov/investigations/Pages/DCA23MR005.aspx' },
   ],
   cyber: [
-    { label: 'CISA Critical Infrastructure Guidance',  url: 'https://www.cisa.gov/topics/critical-infrastructure-security-and-resilience' },
-    { label: 'FEMA Cyber Incident Annex',              url: 'https://www.fema.gov/sites/default/files/2020-07/fema_Cyber-Incident-Annex_0.pdf' },
-    { label: 'WaterISAC Cyber Resources',              url: 'https://www.waterisac.org/' },
-    { label: 'NERC CIP Standards Overview',            url: 'https://www.nerc.com/pa/Stand/Pages/CIPStandards.aspx' },
-    { label: 'Colonial Pipeline Incident Review',      url: 'https://www.cisa.gov/news-events/news/attack-colonial-pipeline-what-weve-learned-what-weve-done' },
+    { label:'CISA Critical Infrastructure',         url:'https://www.cisa.gov/topics/critical-infrastructure-security-and-resilience' },
+    { label:'FEMA Cyber Incident Annex',             url:'https://www.fema.gov/sites/default/files/2020-07/fema_Cyber-Incident-Annex_0.pdf' },
+    { label:'WaterISAC Resources',                   url:'https://www.waterisac.org/' },
+    { label:'NERC CIP Standards',                    url:'https://www.nerc.com/pa/Stand/Pages/CIPStandards.aspx' },
+    { label:'CISA Colonial Pipeline Review',         url:'https://www.cisa.gov/news-events/news/attack-colonial-pipeline-what-weve-learned-what-weve-done' },
   ],
   earthquake: [
-    { label: 'FEMA Earthquake Hazards Program',        url: 'https://www.fema.gov/emergency-managers/risk-management/earthquakes' },
-    { label: 'USGS Earthquake Response Resources',     url: 'https://www.usgs.gov/programs/earthquake-hazards' },
-    { label: 'FEMA Urban Search & Rescue',             url: 'https://www.fema.gov/emergency-managers/practitioners/urban-search-rescue' },
-    { label: 'ATC Rapid Evaluation Safety Assessment', url: 'https://www.atcouncil.org/resources/atc-20' },
-    { label: 'Northridge Earthquake AAR',              url: 'https://www.fema.gov/sites/default/files/2020-08/fema_northridge-earthquake_1994.pdf' },
+    { label:'FEMA Earthquake Hazards',               url:'https://www.fema.gov/emergency-managers/risk-management/earthquakes' },
+    { label:'USGS Earthquake Hazards Program',       url:'https://www.usgs.gov/programs/earthquake-hazards' },
+    { label:'FEMA Urban Search & Rescue',            url:'https://www.fema.gov/emergency-managers/practitioners/urban-search-rescue' },
+    { label:'ATC-20 Rapid Safety Assessment',        url:'https://www.atcouncil.org/resources/atc-20' },
+    { label:'FEMA Northridge Earthquake Report',     url:'https://www.fema.gov/sites/default/files/2020-08/fema_northridge-earthquake_1994.pdf' },
   ],
   flood: [
-    { label: 'FEMA Flood Response Guidance',           url: 'https://www.fema.gov/emergency-managers/risk-management/flood' },
-    { label: 'NWS Flood Safety Resources',             url: 'https://www.weather.gov/safety/flood' },
-    { label: 'USACE Dam Safety Program',               url: 'https://www.usace.army.mil/Missions/Civil-Works/Dam-Safety/' },
-    { label: 'Oroville Dam Spillway Incident Review',  url: 'https://www.water.ca.gov/LegacyFiles/pubs/flood/oroville_spillway_independent_forensic_team_report/oroville_spillway_incident_independent_forensic_team_final_report_jan_2018.pdf' },
-    { label: 'ESF-3 Public Works & Engineering Annex', url: 'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_3_Public-Works-Engineering.pdf' },
+    { label:'FEMA Flood Response Guidance',          url:'https://www.fema.gov/emergency-managers/risk-management/flood' },
+    { label:'NWS Flood Safety',                      url:'https://www.weather.gov/safety/flood' },
+    { label:'USACE Dam Safety Program',              url:'https://www.usace.army.mil/Missions/Civil-Works/Dam-Safety/' },
+    { label:'Oroville Dam Incident Review',          url:'https://www.water.ca.gov/LegacyFiles/pubs/flood/oroville_spillway_independent_forensic_team_report/oroville_spillway_incident_independent_forensic_team_final_report_jan_2018.pdf' },
+    { label:'ESF-3 Public Works & Engineering',      url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_3_Public-Works-Engineering.pdf' },
   ],
 }
 
@@ -190,8 +190,8 @@ RULES:
 - Advance incident clock realistically. State simulated time each turn.
 - Generate 1-2 new field dispatch items after each consequence.
 - Embed NIMS/ICS/ESF/FEMA doctrine in realism — don't lecture.
-- Generate 3-4 realistic fictional news headlines that reflect the current incident state. Headlines should feel like real local/national news coverage. Include the simulated time.
-- On ENDEX: deliver a thorough AAR covering: (1) COOP activation timing, (2) command element continuity, (3) alternate facility readiness, (4) IT/comms validation at alternate sites, (5) strengths, (6) gaps, (7) doctrine references, (8) recommendations.
+- Generate 3-4 realistic fictional news headlines reflecting current incident state.
+- On ENDEX: thorough AAR covering: (1) COOP activation timing, (2) command element continuity, (3) alternate facility readiness, (4) IT/comms at alternate sites, (5) strengths, (6) gaps, (7) doctrine references, (8) recommendations.
 - Never break character.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
@@ -202,8 +202,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
   "dispatches": ["dispatch item 1", "dispatch item 2"],
   "prompt": "one sentence prompt for next player action",
   "headlines": [
-    { "source": "Local News Source", "text": "Headline text here", "time": "simulated time" },
-    { "source": "National outlet", "text": "Headline text here", "time": "simulated time" }
+    { "source": "News outlet name", "text": "Headline text", "time": "simulated time" }
   ],
   "lifelines": {
     "safety":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence" },
@@ -219,7 +218,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
 On ENDEX use same format with full AAR in consequence field and empty headlines array.`
 }
 
-const SAVE_KEY = 'em_sim_v7'
+const SAVE_KEY = 'em_sim_v8'
 
 const defaultState = {
   screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive',
@@ -228,6 +227,64 @@ const defaultState = {
 }
 
 const sitColors = { STABLE:'#1D9E75', DEVELOPING:'#EF9F27', CRITICAL:'#D85A30', DETERIORATING:'#E24B4A', ENDEX:'#888' }
+
+// ── Drag helpers ──────────────────────────────────────────────────────────────
+// Horizontal: track absolute mouse X vs container left edge, convert to %
+function useHorizDrag(containerRef, count, dividerW, minPct, onUpdate) {
+  const drag = useRef(null)
+
+  function onMouseDown(idx, e) {
+    e.preventDefault()
+    const rect = containerRef.current.getBoundingClientRect()
+    drag.current = { idx, containerLeft: rect.left, containerW: rect.width }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
+
+  function onMove(e) {
+    if (!drag.current) return
+    const { idx, containerLeft, containerW } = drag.current
+    const mousePct = ((e.clientX - containerLeft) / containerW) * 100
+    onUpdate(idx, mousePct)
+  }
+
+  function onUp() {
+    drag.current = null
+    window.removeEventListener('mousemove', onMove)
+    window.removeEventListener('mouseup', onUp)
+  }
+
+  return onMouseDown
+}
+
+// Vertical: track absolute mouse Y vs container top edge, convert to %
+function useVertDrag(containerRef, onUpdate) {
+  const drag = useRef(null)
+
+  function onMouseDown(e) {
+    e.preventDefault()
+    const rect = containerRef.current.getBoundingClientRect()
+    drag.current = { containerTop: rect.top, containerH: rect.height }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
+
+  function onMove(e) {
+    if (!drag.current) return
+    const { containerTop, containerH } = drag.current
+    const pct = ((e.clientY - containerTop) / containerH) * 100
+    onUpdate(Math.max(15, Math.min(85, pct)))
+  }
+
+  function onUp() {
+    drag.current = null
+    window.removeEventListener('mousemove', onMove)
+    window.removeEventListener('mouseup', onUp)
+  }
+
+  return onMouseDown
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function LifelineTile({ ll, data }) {
   const [hovered, setHovered] = useState(false)
@@ -269,20 +326,23 @@ function MapUpdater({ center }) {
 }
 
 export default function App() {
-  const [state, setState]           = useState(null)
-  const [loading, setLoading]       = useState(false)
-  const [input, setInput]           = useState('')
-  const [cols, setCols]             = useState([14, 18, 48, 20])
+  const [state, setState]         = useState(null)
+  const [loading, setLoading]     = useState(false)
+  const [input, setInput]         = useState('')
+
+  // Column boundary positions as % from left: [after col0, after col1, after col2]
+  // 4 cols: news | dispatch | terminal | right
+  const [boundaries, setBoundaries] = useState([14, 32, 80])
+
+  // Vertical splits as % from top within their container
   const [rightSplit, setRightSplit] = useState(45)
-  const [newsSplit, setNewsSplit]   = useState(60)
-  const dragging                    = useRef(null)
-  const rightDragging               = useRef(null)
-  const newsDragging                = useRef(null)
-  const containerRef                = useRef(null)
-  const rightColRef                 = useRef(null)
-  const newsColRef                  = useRef(null)
-  const termRef                     = useRef(null)
-  const inputRef                    = useRef(null)
+  const [newsSplit,  setNewsSplit]  = useState(60)
+
+  const containerRef  = useRef(null)
+  const rightColRef   = useRef(null)
+  const newsColRef    = useRef(null)
+  const termRef       = useRef(null)
+  const inputRef      = useRef(null)
 
   const save = useCallback((next) => {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)) } catch {}
@@ -311,87 +371,31 @@ export default function App() {
     if (state?.screen === 'game') setTimeout(() => inputRef.current?.focus(), 100)
   }, [state?.screen])
 
-  // Horizontal col dividers
-  function onDividerMouseDown(idx, e) {
-    e.preventDefault()
-    dragging.current = { idx, startX: e.clientX, startCols: [...cols] }
-    window.addEventListener('mousemove', onColMove)
-    window.addEventListener('mouseup', onColUp)
-  }
-  function onColMove(e) {
-  if (!dragging.current || !containerRef.current) return
-  const { idx, startX, startCols } = dragging.current
-  const W = containerRef.current.offsetWidth
-  const d = ((e.clientX - startX) / W) * 100
-  const min = 8
-  const total = startCols.reduce((a, b) => a + b, 0)
-  const n = [...startCols]
+  // Horizontal boundary drag — absolute mouse position approach
+  const onColDown = useHorizDrag(containerRef, 4, 12, 8, (idx, mousePct) => {
+    setBoundaries(prev => {
+      const n   = [...prev]
+      const min = 8
+      if (idx === 0) n[0] = Math.max(min, Math.min(mousePct, n[1] - min))
+      if (idx === 1) n[1] = Math.max(n[0] + min, Math.min(mousePct, n[2] - min))
+      if (idx === 2) n[2] = Math.max(n[1] + min, Math.min(mousePct, 100 - min))
+      return n
+    })
+  })
 
-  if (idx === 0) {
-    const maxGrow = total - startCols[1] - startCols[2] - startCols[3] - min * 3
-    n[0] = Math.max(min, Math.min(startCols[0] + d, maxGrow))
-    n[1] = startCols[1]
-    n[3] = startCols[3]
-    n[2] = total - n[0] - n[1] - n[3]
-  } else if (idx === 1) {
-    const maxGrow = total - startCols[0] - startCols[2] - startCols[3] - min * 3
-    n[1] = Math.max(min, Math.min(startCols[1] + d, maxGrow))
-    n[0] = startCols[0]
-    n[3] = startCols[3]
-    n[2] = total - n[0] - n[1] - n[3]
-  } else if (idx === 2) {
-    const maxGrow = total - startCols[0] - startCols[1] - startCols[2] - min * 3
-    n[3] = Math.max(min, Math.min(startCols[3] - d, maxGrow))
-    n[0] = startCols[0]
-    n[1] = startCols[1]
-    n[2] = total - n[0] - n[1] - n[3]
-  }
+  // Vertical drag for right col (notepad/map)
+  const onRightDown = useVertDrag(rightColRef, setRightSplit)
 
-  if (n[2] >= min) setCols(n)
-}
-  function onColUp() {
-    dragging.current = null
-    window.removeEventListener('mousemove', onColMove)
-    window.removeEventListener('mouseup', onColUp)
-  }
+  // Vertical drag for news col (headlines/refs)
+  const onNewsDown  = useVertDrag(newsColRef,  setNewsSplit)
 
-  // Right col vertical divider (notepad/map)
-  function onRightDividerMouseDown(e) {
-    e.preventDefault()
-    rightDragging.current = { startY: e.clientY, startSplit: rightSplit }
-    window.addEventListener('mousemove', onRightMove)
-    window.addEventListener('mouseup', onRightUp)
-  }
-  function onRightMove(e) {
-    if (!rightDragging.current || !rightColRef.current) return
-    const H = rightColRef.current.offsetHeight
-    const d = ((e.clientY - rightDragging.current.startY) / H) * 100
-    setRightSplit(Math.max(20, Math.min(80, rightDragging.current.startSplit + d)))
-  }
-  function onRightUp() {
-    rightDragging.current = null
-    window.removeEventListener('mousemove', onRightMove)
-    window.removeEventListener('mouseup', onRightUp)
-  }
-
-  // News col vertical divider (headlines/refs)
-  function onNewsDividerMouseDown(e) {
-    e.preventDefault()
-    newsDragging.current = { startY: e.clientY, startSplit: newsSplit }
-    window.addEventListener('mousemove', onNewsMove)
-    window.addEventListener('mouseup', onNewsUp)
-  }
-  function onNewsMove(e) {
-    if (!newsDragging.current || !newsColRef.current) return
-    const H = newsColRef.current.offsetHeight
-    const d = ((e.clientY - newsDragging.current.startY) / H) * 100
-    setNewsSplit(Math.max(20, Math.min(80, newsDragging.current.startSplit + d)))
-  }
-  function onNewsUp() {
-    newsDragging.current = null
-    window.removeEventListener('mousemove', onNewsMove)
-    window.removeEventListener('mouseup', onNewsUp)
-  }
+  // Column widths derived from boundaries
+  const colW = [
+    boundaries[0],
+    boundaries[1] - boundaries[0],
+    boundaries[2] - boundaries[1],
+    100 - boundaries[2],
+  ]
 
   function startScenario(key) {
     const sc    = SCENARIOS[key]
@@ -505,8 +509,11 @@ export default function App() {
     </div>
   )
 
-  const divSty = { width:12, cursor:'col-resize', background:'#1a1a1a', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', borderLeft:'0.5px solid #2a2a2a', borderRight:'0.5px solid #2a2a2a' }
-  const divInner = { width:3, height:28, background:'#444', borderRadius:2, pointerEvents:'none' }
+  const divSty   = { width:10, cursor:'col-resize', background:'#161616', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', borderLeft:'0.5px solid #2a2a2a', borderRight:'0.5px solid #2a2a2a' }
+  const divInner = { width:3, height:28, background:'#3a3a3a', borderRadius:2, pointerEvents:'none' }
+  const hDivSty  = { height:10, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', borderTop:'0.5px solid #2a2a2a', borderBottom:'0.5px solid #2a2a2a', flexShrink:0 }
+  const hDivInner= { width:28, height:3, background:'#3a3a3a', borderRadius:2 }
+
   const pins   = state.scenario ? SCENARIO_PINS[state.scenario]||[] : []
   const center = state.scenario ? SCENARIO_CENTERS[state.scenario] : [39.5,-98.35]
   const refs   = state.scenario ? SCENARIO_REFS[state.scenario]||[] : []
@@ -521,21 +528,16 @@ export default function App() {
       </div>
 
       {/* FOUR PANEL ROW */}
-      <div ref={containerRef} style={{ display:'flex', flex:1, gap:0, minHeight:0 }}>
+      <div ref={containerRef} style={{ display:'flex', flex:1, minHeight:0, position:'relative' }}>
 
         {/* NEWS COLUMN */}
-        <div ref={newsColRef} style={{ width:`${cols[0]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0, gap:0 }}>
-
+        <div ref={newsColRef} style={{ width:`${colW[0]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
           {/* HEADLINES */}
           <div style={{ height:`${newsSplit}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>
-              Media Feed
-            </div>
+            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>Media Feed</div>
             <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:6 }}>
-              {state.headlines.length === 0 && (
-                <div style={{ color:'#333', fontSize:10, padding:'8px', fontStyle:'italic' }}>Headlines will appear after your first action.</div>
-              )}
-              {state.headlines.map((h, i) => (
+              {state.headlines.length === 0 && <div style={{ color:'#333', fontSize:10, padding:'8px', fontStyle:'italic' }}>Headlines appear after your first action.</div>}
+              {state.headlines.map(h => (
                 <div key={h.id} style={{ padding:'6px 8px', borderRadius:6, border:`0.5px solid ${h.turn===state.turn?'#2a2a3a':'#1a1a1a'}`, background:h.turn===state.turn?'#16161f':'transparent', lineHeight:1.5 }}>
                   {h.turn===state.turn && <div style={{ fontSize:9, color:'#4A90D9', fontWeight:500, marginBottom:2 }}>LIVE</div>}
                   <div style={{ fontSize:10, color:h.turn===state.turn?'#ccc':'#444', marginBottom:2 }}>{h.text}</div>
@@ -544,37 +546,29 @@ export default function App() {
               ))}
             </div>
           </div>
-
-          {/* NEWS/REF DIVIDER */}
-          <div onMouseDown={onNewsDividerMouseDown}
-            style={{ height:12, cursor:'row-resize', background:'#1a1a1a', display:'flex', alignItems:'center', justifyContent:'center', borderTop:'0.5px solid #2a2a2a', borderBottom:'0.5px solid #2a2a2a', flexShrink:0 }}>
-            <div style={{ width:28, height:3, background:'#444', borderRadius:2 }} />
-          </div>
-
+          {/* VERT DIVIDER */}
+          <div onMouseDown={onNewsDown} style={hDivSty}><div style={hDivInner}/></div>
           {/* REFERENCES */}
           <div style={{ flex:1, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
-            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>
-              Reference Links
-            </div>
+            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>Reference Links</div>
             <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:4 }}>
+              {refs.length === 0 && <div style={{ color:'#333', fontSize:10, padding:'8px', fontStyle:'italic' }}>Launch a scenario to see references.</div>}
               {refs.map((r, i) => (
                 <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
-                  style={{ display:'block', padding:'6px 8px', borderRadius:6, border:'0.5px solid #1a1a1a', background:'transparent', fontSize:10, color:'#4A90D9', lineHeight:1.5, textDecoration:'none', wordBreak:'break-word' }}
+                  style={{ display:'block', padding:'6px 8px', borderRadius:6, border:'0.5px solid #1a1a1a', fontSize:10, color:'#4A90D9', lineHeight:1.5, textDecoration:'none', wordBreak:'break-word' }}
                   onMouseEnter={e => e.currentTarget.style.background='#0a0a1a'}
                   onMouseLeave={e => e.currentTarget.style.background='transparent'}>
                   {r.label} ↗
                 </a>
               ))}
-              {refs.length === 0 && <div style={{ color:'#333', fontSize:10, padding:'8px', fontStyle:'italic' }}>Launch a scenario to see references.</div>}
             </div>
           </div>
         </div>
 
-        {/* DIVIDER 0 */}
-        <div style={divSty} onMouseDown={e => onDividerMouseDown(0, e)}><div style={divInner}/></div>
+        <div style={divSty} onMouseDown={e => onColDown(0, e)}><div style={divInner}/></div>
 
         {/* DISPATCH */}
-        <div style={{ width:`${cols[1]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
+        <div style={{ width:`${colW[1]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
           <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', justifyContent:'space-between' }}>
             <span>Field Dispatch</span>
             <span style={{ background:'#E24B4A', color:'#fff', borderRadius:3, padding:'1px 5px', fontSize:9 }}>{state.dispatches.length}</span>
@@ -592,11 +586,10 @@ export default function App() {
           </div>
         </div>
 
-        {/* DIVIDER 1 */}
-        <div style={divSty} onMouseDown={e => onDividerMouseDown(1, e)}><div style={divInner}/></div>
+        <div style={divSty} onMouseDown={e => onColDown(1, e)}><div style={divInner}/></div>
 
         {/* TERMINAL */}
-        <div style={{ width:`${cols[2]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
+        <div style={{ width:`${colW[2]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
           <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
             <span style={{ fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>{SCENARIOS[state.scenario]?.name} — {state.jurisdiction}</span>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
@@ -624,8 +617,7 @@ export default function App() {
           </div>
           <div style={{ borderTop:'0.5px solid #222', padding:'8px 10px', display:'flex', gap:6 }}>
             <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
-              placeholder="Your action..." rows={2}
-              style={{ flex:1, resize:'none', lineHeight:1.6 }}/>
+              placeholder="Your action..." rows={2} style={{ flex:1, resize:'none', lineHeight:1.6 }}/>
             <button onClick={sendAction} disabled={loading||!input.trim()}
               style={{ padding:'6px 14px', fontWeight:500, alignSelf:'stretch', color:'#1D9E75', borderColor:'#1D9E75' }}>
               Execute
@@ -633,30 +625,20 @@ export default function App() {
           </div>
         </div>
 
-        {/* DIVIDER 2 */}
-        <div style={divSty} onMouseDown={e => onDividerMouseDown(2, e)}><div style={divInner}/></div>
+        <div style={divSty} onMouseDown={e => onColDown(2, e)}><div style={divInner}/></div>
 
-        {/* RIGHT COLUMN: NOTEPAD + MAP */}
-        <div ref={rightColRef} style={{ width:`${cols[3]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
+        {/* RIGHT COLUMN */}
+        <div ref={rightColRef} style={{ width:`${colW[3]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
           <div style={{ height:`${rightSplit}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>
-              Commander's Notepad
-            </div>
+            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>Commander's Notepad</div>
             <textarea value={state.notepad} onChange={e => update({ notepad:e.target.value })}
               placeholder={'Priorities, resource gaps...\n\nPersists across sessions.'}
               style={{ flex:1, resize:'none', border:'none', padding:'8px 10px', background:'transparent', color:'#888', lineHeight:1.7, outline:'none' }}/>
-            <div style={{ padding:'4px 10px', borderTop:'0.5px solid #1a1a1a', fontSize:10, color:'#333' }}>
-              Turn {state.turn} — {state.difficulty}
-            </div>
+            <div style={{ padding:'4px 10px', borderTop:'0.5px solid #1a1a1a', fontSize:10, color:'#333' }}>Turn {state.turn} — {state.difficulty}</div>
           </div>
-          <div onMouseDown={onRightDividerMouseDown}
-            style={{ height:12, cursor:'row-resize', background:'#1a1a1a', display:'flex', alignItems:'center', justifyContent:'center', borderTop:'0.5px solid #2a2a2a', borderBottom:'0.5px solid #2a2a2a', flexShrink:0 }}>
-            <div style={{ width:28, height:3, background:'#444', borderRadius:2 }}/>
-          </div>
+          <div onMouseDown={onRightDown} style={hDivSty}><div style={hDivInner}/></div>
           <div style={{ flex:1, border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
-            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>
-              Incident Map
-            </div>
+            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>Incident Map</div>
             <div style={{ height:'calc(100% - 28px)' }}>
               <MapContainer center={center} zoom={13} style={{ height:'100%', width:'100%' }}>
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
