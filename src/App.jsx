@@ -1,4 +1,88 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+
+// Fix leaflet default icon paths
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+})
+
+function makeIcon(color) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="36" viewBox="0 0 24 36">
+    <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="${color}" stroke="#111" stroke-width="1.5"/>
+    <circle cx="12" cy="12" r="5" fill="white" opacity="0.9"/>
+  </svg>`
+  return L.divIcon({
+    html: svg, className: '', iconSize: [24, 36], iconAnchor: [12, 36], popupAnchor: [0, -36]
+  })
+}
+
+const PIN_COLORS = { EOC: '#1D9E75', HOSPITAL: '#4A90D9', DAM: '#E24B4A', STAGING: '#EF9F27', SHELTER: '#9B59B6', AFFECTED: '#E24B4A', DEFAULT: '#888' }
+
+const SCENARIO_PINS = {
+  hurricane:  [
+    { id: 'eoc',      label: 'Primary EOC',         type: 'EOC',      lat: 30.32,  lng: -89.09, note: 'EOC at full activation' },
+    { id: 'hosp1',    label: 'Regional Medical Ctr', type: 'HOSPITAL', lat: 30.34,  lng: -89.12, note: 'Receiving casualties' },
+    { id: 'staging',  label: 'Staging Area Alpha',   type: 'STAGING',  lat: 30.28,  lng: -89.05, note: 'Pre-positioned resources' },
+    { id: 'shelter1', label: 'Shelter Site 1',        type: 'SHELTER',  lat: 30.36,  lng: -89.15, note: 'Capacity: 500' },
+    { id: 'shelter2', label: 'Shelter Site 2',        type: 'SHELTER',  lat: 30.30,  lng: -89.20, note: 'Capacity: 300' },
+  ],
+  mci: [
+    { id: 'eoc',      label: 'Primary EOC',          type: 'EOC',      lat: 33.749, lng: -84.388, note: 'EOC activating' },
+    { id: 'incident', label: 'Incident Site',         type: 'AFFECTED', lat: 33.753, lng: -84.392, note: 'Scene not yet secured' },
+    { id: 'hosp1',    label: 'Trauma Center 1',       type: 'HOSPITAL', lat: 33.745, lng: -84.380, note: 'At capacity' },
+    { id: 'hosp2',    label: 'Trauma Center 2',       type: 'HOSPITAL', lat: 33.760, lng: -84.395, note: 'Receiving overflow' },
+    { id: 'staging',  label: 'Staging Area',          type: 'STAGING',  lat: 33.742, lng: -84.400, note: 'Awaiting assignment' },
+  ],
+  hazmat: [
+    { id: 'eoc',      label: 'Primary EOC',           type: 'EOC',      lat: 39.952, lng: -75.165, note: 'EOC activating' },
+    { id: 'incident', label: 'Derailment Site',        type: 'AFFECTED', lat: 39.960, lng: -75.170, note: 'Active chlorine release' },
+    { id: 'hosp1',    label: 'Regional Hospital',      type: 'HOSPITAL', lat: 39.945, lng: -75.155, note: 'Decon setup underway' },
+    { id: 'staging',  label: 'HazMat Staging',         type: 'STAGING',  lat: 39.955, lng: -75.180, note: 'Upwind of release' },
+    { id: 'shelter1', label: 'Shelter-in-Place Zone',  type: 'SHELTER',  lat: 39.965, lng: -75.160, note: '3-mile radius' },
+  ],
+  cyber: [
+    { id: 'eoc',      label: 'Primary EOC',            type: 'EOC',      lat: 40.712, lng: -74.006, note: 'EOC activating' },
+    { id: 'water',    label: 'Water Treatment Plant',   type: 'AFFECTED', lat: 40.720, lng: -74.015, note: 'SCADA offline' },
+    { id: 'power',    label: 'Power Substation Alpha',  type: 'AFFECTED', lat: 40.705, lng: -74.000, note: 'Ransomware confirmed' },
+    { id: 'hosp1',    label: 'Regional Hospital',       type: 'HOSPITAL', lat: 40.716, lng: -73.995, note: 'On backup generator' },
+    { id: 'staging',  label: 'IT Response Staging',     type: 'STAGING',  lat: 40.708, lng: -74.010, note: 'Vendor teams assembling' },
+  ],
+  earthquake: [
+    { id: 'eoc',      label: 'Primary EOC',             type: 'EOC',      lat: 34.052, lng: -118.243, note: 'EOC activating' },
+    { id: 'collapse1',label: 'Collapse Site Alpha',      type: 'AFFECTED', lat: 34.058, lng: -118.250, note: 'SAR requested' },
+    { id: 'collapse2',label: 'Collapse Site Bravo',      type: 'AFFECTED', lat: 34.048, lng: -118.235, note: 'Unknown casualties' },
+    { id: 'hosp1',    label: 'Trauma Center',            type: 'HOSPITAL', lat: 34.045, lng: -118.255, note: 'Surge protocols active' },
+    { id: 'staging',  label: 'SAR Staging',              type: 'STAGING',  lat: 34.060, lng: -118.240, note: 'Teams assembling' },
+  ],
+  flood: [
+    { id: 'eoc',      label: 'Primary EOC',              type: 'EOC',      lat: 38.580, lng: -121.494, note: 'EOC activating' },
+    { id: 'dam',      label: 'Dam Site',                  type: 'DAM',      lat: 38.600, lng: -121.510, note: 'Structural compromise confirmed' },
+    { id: 'comm1',    label: 'Downstream Community A',    type: 'AFFECTED', lat: 38.565, lng: -121.480, note: 'In inundation zone' },
+    { id: 'comm2',    label: 'Downstream Community B',    type: 'AFFECTED', lat: 38.550, lng: -121.465, note: 'Ignoring evac order' },
+    { id: 'hosp1',    label: 'Regional Hospital',         type: 'HOSPITAL', lat: 38.575, lng: -121.500, note: 'Preparing for casualties' },
+    { id: 'staging',  label: 'Rescue Staging',            type: 'STAGING',  lat: 38.590, lng: -121.470, note: 'Boat teams pre-positioned' },
+  ],
+}
+
+const SCENARIO_CENTERS = {
+  hurricane:  [30.32,  -89.09],
+  mci:        [33.749, -84.388],
+  hazmat:     [39.952, -75.165],
+  cyber:      [40.712, -74.006],
+  earthquake: [34.052, -118.243],
+  flood:      [38.580, -121.494],
+}
+
+function MapUpdater({ center }) {
+  const map = useMap()
+  useEffect(() => { map.setView(center, 13) }, [center])
+  return null
+}
 
 const SCENARIOS = {
   hurricane:  { name: 'Hurricane Landfall',          icon: '🌀', desc: 'Cat 4/5 landfall on a coastal county. 72-hour warning window closing fast.' },
@@ -112,7 +196,7 @@ On ENDEX:
 }`
 }
 
-const SAVE_KEY = 'em_sim_v5'
+const SAVE_KEY = 'em_sim_v6'
 
 const defaultState = {
   screen: 'setup', scenario: null, jurisdiction: 'Mid-Size City', difficulty: 'Adaptive',
@@ -166,14 +250,17 @@ function LifelineTile({ ll, data }) {
 }
 
 export default function App() {
-  const [state, setState]     = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [input, setInput]     = useState('')
-  const [cols, setCols]       = useState([18, 62, 20])
-  const dragging              = useRef(null)
-  const containerRef          = useRef(null)
-  const termRef               = useRef(null)
-  const inputRef              = useRef(null)
+  const [state, setState]       = useState(null)
+  const [loading, setLoading]   = useState(false)
+  const [input, setInput]       = useState('')
+  const [cols, setCols]         = useState([18, 62, 20])
+  const [rightSplit, setRightSplit] = useState(45) // notepad % of right column
+  const dragging                = useRef(null)
+  const rightDragging           = useRef(false)
+  const containerRef            = useRef(null)
+  const rightColRef             = useRef(null)
+  const termRef                 = useRef(null)
+  const inputRef                = useRef(null)
 
   const save = useCallback((next) => {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)) } catch {}
@@ -202,6 +289,7 @@ export default function App() {
     if (state?.screen === 'game') setTimeout(() => inputRef.current?.focus(), 100)
   }, [state?.screen])
 
+  // Horizontal column dividers
   function onDividerMouseDown(dividerIndex, e) {
     e.preventDefault()
     dragging.current = { dividerIndex, startX: e.clientX, startCols: [...cols] }
@@ -230,6 +318,29 @@ export default function App() {
     dragging.current = null
     window.removeEventListener('mousemove', onMouseMove)
     window.removeEventListener('mouseup', onMouseUp)
+  }
+
+  // Vertical right-column divider
+  function onRightDividerMouseDown(e) {
+    e.preventDefault()
+    rightDragging.current = { startY: e.clientY, startSplit: rightSplit }
+    window.addEventListener('mousemove', onRightMouseMove)
+    window.addEventListener('mouseup', onRightMouseUp)
+  }
+
+  function onRightMouseMove(e) {
+    if (!rightDragging.current || !rightColRef.current) return
+    const colH     = rightColRef.current.offsetHeight
+    const deltaY   = e.clientY - rightDragging.current.startY
+    const deltaPct = (deltaY / colH) * 100
+    const newSplit = Math.max(20, Math.min(80, rightDragging.current.startSplit + deltaPct))
+    setRightSplit(newSplit)
+  }
+
+  function onRightMouseUp() {
+    rightDragging.current = null
+    window.removeEventListener('mousemove', onRightMouseMove)
+    window.removeEventListener('mouseup', onRightMouseUp)
   }
 
   function startScenario(key) {
@@ -355,9 +466,10 @@ export default function App() {
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     borderLeft: '0.5px solid #333', borderRight: '0.5px solid #333',
   }
-  const dividerInner = {
-    width: 4, height: 32, background: '#444', borderRadius: 2, pointerEvents: 'none',
-  }
+  const dividerInner = { width: 4, height: 32, background: '#444', borderRadius: 2, pointerEvents: 'none' }
+
+  const pins = state.scenario ? SCENARIO_PINS[state.scenario] || [] : []
+  const center = state.scenario ? SCENARIO_CENTERS[state.scenario] : [39.5, -98.35]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '97vh', padding: '0.75rem', gap: 8, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
@@ -365,13 +477,11 @@ export default function App() {
       {/* LIFELINE BAR */}
       <div style={{ display: 'flex', gap: 6, padding: '6px 10px', border: '0.5px solid #222', borderRadius: 8, background: '#0d0d0d', alignItems: 'center', flexShrink: 0 }}>
         <span style={{ fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginRight: 4, whiteSpace: 'nowrap' }}>Community Lifelines</span>
-        {LIFELINES.map(ll => (
-          <LifelineTile key={ll.key} ll={ll} data={state.lifelines?.[ll.key]} />
-        ))}
+        {LIFELINES.map(ll => <LifelineTile key={ll.key} ll={ll} data={state.lifelines?.[ll.key]} />)}
       </div>
 
       {/* THREE PANEL ROW */}
-      <div ref={containerRef} style={{ display: 'flex', flex: 1, gap: 0, minHeight: 0, userSelect: dragging.current ? 'none' : 'auto' }}>
+      <div ref={containerRef} style={{ display: 'flex', flex: 1, gap: 0, minHeight: 0 }}>
 
         {/* DISPATCH */}
         <div style={{ width: `${cols[0]}%`, display: 'flex', flexDirection: 'column', border: '0.5px solid #222', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
@@ -407,7 +517,6 @@ export default function App() {
               <button onClick={reset} style={{ fontSize: 10, padding: '2px 8px', color: '#555' }}>New</button>
             </div>
           </div>
-
           <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '10px 14px', lineHeight: 1.8 }}>
             {state.terminal.map((line, i) => {
               if (!line) return null
@@ -425,7 +534,6 @@ export default function App() {
             })}
             {loading && <div style={{ color: '#333', fontStyle: 'italic' }}>Evaluating action...</div>}
           </div>
-
           <div style={{ borderTop: '0.5px solid #222', padding: '8px 10px', display: 'flex', gap: 6 }}>
             <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
               placeholder="Your action..." rows={2}
@@ -442,19 +550,58 @@ export default function App() {
           <div style={dividerInner} />
         </div>
 
-        {/* NOTEPAD */}
-        <div style={{ width: `${cols[2]}%`, display: 'flex', flexDirection: 'column', border: '0.5px solid #222', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
-          <div style={{ padding: '6px 10px', borderBottom: '0.5px solid #222', background: '#111', fontSize: 10, fontWeight: 500, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Commander's Notepad
-          </div>
-          <textarea value={state.notepad} onChange={e => update({ notepad: e.target.value })}
-            placeholder={'Priorities, resource gaps, decisions pending...\n\nPersists across turns and sessions.'}
-            style={{ flex: 1, resize: 'none', border: 'none', padding: '8px 10px', background: 'transparent', color: '#888', lineHeight: 1.7, outline: 'none' }} />
-          <div style={{ padding: '4px 10px', borderTop: '0.5px solid #1a1a1a', fontSize: 10, color: '#333' }}>
-            Turn {state.turn} — {state.difficulty}
-          </div>
-        </div>
+        {/* RIGHT COLUMN: NOTEPAD + MAP */}
+        <div ref={rightColRef} style={{ width: `${cols[2]}%`, display: 'flex', flexDirection: 'column', gap: 0, flexShrink: 0, minHeight: 0 }}>
 
+          {/* NOTEPAD */}
+          <div style={{ height: `${rightSplit}%`, display: 'flex', flexDirection: 'column', border: '0.5px solid #222', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+            <div style={{ padding: '6px 10px', borderBottom: '0.5px solid #222', background: '#111', fontSize: 10, fontWeight: 500, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Commander's Notepad
+            </div>
+            <textarea value={state.notepad} onChange={e => update({ notepad: e.target.value })}
+              placeholder={'Priorities, resource gaps...\n\nPersists across sessions.'}
+              style={{ flex: 1, resize: 'none', border: 'none', padding: '8px 10px', background: 'transparent', color: '#888', lineHeight: 1.7, outline: 'none' }} />
+            <div style={{ padding: '4px 10px', borderTop: '0.5px solid #1a1a1a', fontSize: 10, color: '#333' }}>
+              Turn {state.turn} — {state.difficulty}
+            </div>
+          </div>
+
+          {/* VERTICAL DIVIDER */}
+          <div
+            onMouseDown={onRightDividerMouseDown}
+            style={{ height: 12, cursor: 'row-resize', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', borderTop: '0.5px solid #333', borderBottom: '0.5px solid #333', flexShrink: 0 }}
+          >
+            <div style={{ width: 32, height: 3, background: '#444', borderRadius: 2 }} />
+          </div>
+
+          {/* MAP */}
+          <div style={{ flex: 1, border: '0.5px solid #222', borderRadius: 8, overflow: 'hidden', minHeight: 0 }}>
+            <div style={{ padding: '6px 10px', borderBottom: '0.5px solid #222', background: '#111', fontSize: 10, fontWeight: 500, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Incident Map
+            </div>
+            <div style={{ height: 'calc(100% - 28px)' }}>
+              <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }} zoomControl={true}>
+                <TileLayer
+                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                />
+                <MapUpdater center={center} />
+                {pins.map(pin => (
+                  <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type] || PIN_COLORS.DEFAULT)}>
+                    <Popup>
+                      <div style={{ fontFamily: 'monospace', fontSize: 11 }}>
+                        <strong>{pin.label}</strong><br />
+                        <span style={{ color: '#666' }}>{pin.type}</span><br />
+                        {pin.note}
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   )
