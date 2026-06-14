@@ -140,7 +140,7 @@ function LifelineTile({ ll, data }) {
           position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
           background: '#1a1a1a', border: `0.5px solid ${c.border}`, borderRadius: 6,
           padding: '6px 10px', fontSize: 10, color: '#ccc', lineHeight: 1.5,
-          whiteSpace: 'nowrap', maxWidth: 240, whiteSpace: 'normal',
+          whiteSpace: 'nowrap', maxWidth: 340,
           zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
           pointerEvents: 'none',
         }}>
