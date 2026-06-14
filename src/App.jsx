@@ -137,7 +137,7 @@ function LifelineTile({ ll, data }) {
       <span style={{ fontSize: 9, color: c.text, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ll.label}</span>
       {hovered && (
         <div style={{
-          position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
+          position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
           background: '#1a1a1a', border: `0.5px solid ${c.border}`, borderRadius: 6,
           padding: '6px 10px', fontSize: 10, color: '#ccc', lineHeight: 1.5,
           whiteSpace: 'nowrap', maxWidth: 240, whiteSpace: 'normal',
