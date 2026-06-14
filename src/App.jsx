@@ -116,7 +116,7 @@ export default function App() {
     const seeds = DISPATCH_SEEDS[key]
     update({
       screen: 'game', scenario: key,
-      dispatches: seeds.map((text, i) => ({ id: i, text })),
+      dispatches: seeds.map((text, i) => ({ id: i, text, turn: 0 })),
       terminal: [
         { type: 'header',   text: `▶ ${sc.name.toUpperCase()} — ${state.jurisdiction} — ${state.difficulty}` },
         { type: 'system',   text: 'Type your decisions as the EM on scene. Be specific. Type ENDEX to close the scenario and receive an AAR.' },
@@ -161,7 +161,7 @@ export default function App() {
       ].filter(Boolean)
 
       const newDispatches = parsed.dispatches?.length
-        ? [...parsed.dispatches.map((text, i) => ({ id: Date.now() + i, text })), ...state.dispatches.slice(0, 6)]
+        ? [...parsed.dispatches.map((text, i) => ({ id: Date.now() + i, text, turn: state.turn + 1 })), ...state.dispatches.slice(0, 6)]
         : state.dispatches
 
       update({ terminal: addedTerm, history: newHistory, dispatches: newDispatches,
@@ -236,8 +236,8 @@ export default function App() {
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {state.dispatches.map((d, i) => (
-            <div key={d.id} style={{ padding: '6px 8px', borderRadius: 6, border: '0.5px solid #222', background: i === 0 ? '#1a1a1a' : 'transparent', fontSize: 11, color: i === 0 ? '#ddd' : '#555', lineHeight: 1.5 }}>
-              {i === 0 && <div style={{ fontSize: 9, color: '#EF9F27', fontWeight: 500, marginBottom: 2 }}>NEW</div>}
+            <div key={d.id} style={{ padding: '6px 8px', borderRadius: 6, border: '0.5px solid #222', background: d.turn === state.turn ? '#1a1a1a' : 'transparent', fontSize: 11, color: d.turn === state.turn ? '#ddd' : '#555', lineHeight: 1.5 }}>
+              {d.turn === state.turn && <div style={{ fontSize: 9, color: '#EF9F27', fontWeight: 500, marginBottom: 2 }}>NEW</div>}
               {d.text}
             </div>
           ))}
