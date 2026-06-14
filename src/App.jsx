@@ -185,6 +185,9 @@ const DISPATCH_SEEDS = {
   flood:      ['Dam engineer recommending immediate downstream notification.','Two downstream communities ignoring evacuation order.','Emergency spillway activation requested — awaiting your authorization.','FEMA Region pre-positioned team requesting coordination call.','Local news helicopter flying over dam. Public anxiety rising.'],
 }
 
+const DEFAULT_SETTINGS = { fontSize: 11, accentColor: '#1D9E75', alertColor: '#EF9F27' }
+const SETTINGS_KEY = 'em_sim_settings'
+
 function buildSystemPrompt(scenario, jurisdiction, difficulty) {
   const sc = SCENARIOS[scenario]
   const diffMap = {
@@ -292,7 +295,7 @@ function useVertDrag(containerRef, onUpdate) {
   return onMouseDown
 }
 
-function LifelineTile({ ll, data }) {
+function LifelineTile({ ll, data, accent }) {
   const [hovered, setHovered] = useState(false)
   const [tipPos, setTipPos]   = useState({ left:0, top:0 })
   const tileRef               = useRef(null)
@@ -329,20 +332,95 @@ function MapUpdater({ center }) {
   return null
 }
 
+function SettingsPanel({ settings, onChange, onClose }) {
+  return (
+    <div style={{ position:'fixed', top:60, right:16, width:260, background:'#141414', border:'0.5px solid #333', borderRadius:10, padding:'14px 16px', zIndex:2000, boxShadow:'0 8px 24px rgba(0,0,0,0.8)' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+        <span style={{ fontSize:11, fontWeight:500, color:'#aaa', textTransform:'uppercase', letterSpacing:'0.08em' }}>Display Settings</span>
+        <button onClick={onClose} style={{ fontSize:14, color:'#555', padding:'0 4px', border:'none', background:'none', cursor:'pointer' }}>✕</button>
+      </div>
+
+      <div style={{ marginBottom:14 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+          <span style={{ fontSize:10, color:'#666' }}>Font Size</span>
+          <span style={{ fontSize:10, color:'#aaa' }}>{settings.fontSize}px</span>
+        </div>
+        <input type="range" min={9} max={16} value={settings.fontSize}
+          onChange={e => onChange({ ...settings, fontSize: Number(e.target.value) })}
+          style={{ width:'100%', accentColor: settings.accentColor }} />
+        <div style={{ display:'flex', justifyContent:'space-between', marginTop:2 }}>
+          <span style={{ fontSize:9, color:'#444' }}>Small</span>
+          <span style={{ fontSize:9, color:'#444' }}>Large</span>
+        </div>
+      </div>
+
+      <div style={{ marginBottom:14 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+          <span style={{ fontSize:10, color:'#666' }}>Accent Color</span>
+          <span style={{ fontSize:9, color:'#444' }}>highlights, player text</span>
+        </div>
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <input type="color" value={settings.accentColor}
+            onChange={e => onChange({ ...settings, accentColor: e.target.value })}
+            style={{ width:36, height:28, border:'0.5px solid #333', borderRadius:4, background:'none', cursor:'pointer', padding:2 }} />
+          <div style={{ display:'flex', gap:6', flexWrap:'wrap', gap:6 }}>
+            {['#1D9E75','#4A90D9','#9B59B6','#E24B4A','#E8A838','#2ecc71'].map(c => (
+              <div key={c} onClick={() => onChange({ ...settings, accentColor: c })}
+                style={{ width:18, height:18, borderRadius:3, background:c, cursor:'pointer', border:`2px solid ${settings.accentColor===c?'#fff':'transparent'}` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginBottom:14 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+          <span style={{ fontSize:10, color:'#666' }}>Alert Color</span>
+          <span style={{ fontSize:9, color:'#444' }}>timestamps, prompts</span>
+        </div>
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <input type="color" value={settings.alertColor}
+            onChange={e => onChange({ ...settings, alertColor: e.target.value })}
+            style={{ width:36, height:28, border:'0.5px solid #333', borderRadius:4, background:'none', cursor:'pointer', padding:2 }} />
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+            {['#EF9F27','#E24B4A','#4A90D9','#ccc','#9B59B6','#F39C12'].map(c => (
+              <div key={c} onClick={() => onChange({ ...settings, alertColor: c })}
+                style={{ width:18, height:18, borderRadius:3, background:c, cursor:'pointer', border:`2px solid ${settings.alertColor===c?'#fff':'transparent'}` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <button onClick={() => onChange(DEFAULT_SETTINGS)}
+        style={{ width:'100%', padding:'6px', fontSize:10, color:'#555', border:'0.5px solid #333', borderRadius:6, cursor:'pointer', background:'transparent' }}>
+        Reset to Defaults
+      </button>
+    </div>
+  )
+}
+
 export default function App() {
-  const [state, setState]       = useState(null)
-  const [loading, setLoading]   = useState(false)
-  const [input, setInput]       = useState('')
+  const [state, setState]           = useState(null)
+  const [loading, setLoading]       = useState(false)
+  const [input, setInput]           = useState('')
   const [boundaries, setBoundaries] = useState([14, 32, 80])
-  // Left col: three sections — [headlines%, refs%], esf gets remainder
   const [leftBounds, setLeftBounds] = useState([40, 70])
   const [rightSplit, setRightSplit] = useState(45)
+  const [showSettings, setShowSettings] = useState(false)
+  const [settings, setSettings]     = useState(() => {
+    try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}') } }
+    catch { return DEFAULT_SETTINGS }
+  })
 
   const containerRef = useRef(null)
   const leftColRef   = useRef(null)
   const rightColRef  = useRef(null)
   const termRef      = useRef(null)
   const inputRef     = useRef(null)
+
+  function updateSettings(s) {
+    setSettings(s)
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)) } catch {}
+  }
 
   const save = useCallback((next) => {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)) } catch {}
@@ -373,8 +451,7 @@ export default function App() {
 
   const onColDown = useHorizDrag(containerRef, (idx, pct) => {
     setBoundaries(prev => {
-      const n = [...prev]
-      const min = 8
+      const n = [...prev], min = 8
       if (idx === 0) n[0] = Math.max(min, Math.min(pct, n[1] - min))
       if (idx === 1) n[1] = Math.max(n[0] + min, Math.min(pct, n[2] - min))
       if (idx === 2) n[2] = Math.max(n[1] + min, Math.min(pct, 100 - min))
@@ -382,80 +459,39 @@ export default function App() {
     })
   })
 
-  const onLeftVertDown = useVertDrag(leftColRef, (pct) => {
-    // pct is mouse position within left col
-    // we have two dividers at leftBounds[0] and leftBounds[1]
-    // figure out which one is closer
-    setLeftBounds(prev => {
-      const d0 = Math.abs(pct - prev[0])
-      const d1 = Math.abs(pct - prev[1])
-      const n = [...prev]
-      if (d0 < d1) {
-        n[0] = Math.max(10, Math.min(pct, prev[1] - 10))
-      } else {
-        n[1] = Math.max(prev[0] + 10, Math.min(pct, 90))
+  function makeLeftVertDrag(divIdx) {
+    return function(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      const rect = leftColRef.current.getBoundingClientRect()
+      const info = { top: rect.top, h: rect.height }
+      function onMove(ev) {
+        const pct = ((ev.clientY - info.top) / info.h) * 100
+        setLeftBounds(prev => {
+          const n = [...prev]
+          if (divIdx === 0) n[0] = Math.max(10, Math.min(pct, prev[1] - 10))
+          else              n[1] = Math.max(prev[0] + 10, Math.min(pct, 90))
+          return n
+        })
       }
-      return n
-    })
-  })
-
-  // Individual left vert drag handlers
-  const leftDrag0 = useRef(null)
-  const leftDrag1 = useRef(null)
-
-  function onLeftDiv0Down(e) {
-    e.preventDefault()
-    e.stopPropagation()
-    const rect = leftColRef.current.getBoundingClientRect()
-    leftDrag0.current = { top: rect.top, h: rect.height }
-    function onMove(ev) {
-      if (!leftDrag0.current) return
-      const pct = ((ev.clientY - leftDrag0.current.top) / leftDrag0.current.h) * 100
-      setLeftBounds(prev => {
-        const n = [...prev]
-        n[0] = Math.max(10, Math.min(pct, prev[1] - 10))
-        return n
-      })
+      function onUp() {
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
     }
-    function onUp() {
-      leftDrag0.current = null
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }
-
-  function onLeftDiv1Down(e) {
-    e.preventDefault()
-    e.stopPropagation()
-    const rect = leftColRef.current.getBoundingClientRect()
-    leftDrag1.current = { top: rect.top, h: rect.height }
-    function onMove(ev) {
-      if (!leftDrag1.current) return
-      const pct = ((ev.clientY - leftDrag1.current.top) / leftDrag1.current.h) * 100
-      setLeftBounds(prev => {
-        const n = [...prev]
-        n[1] = Math.max(prev[0] + 10, Math.min(pct, 90))
-        return n
-      })
-    }
-    function onUp() {
-      leftDrag1.current = null
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
   }
 
   const onRightDown = useVertDrag(rightColRef, setRightSplit)
-
   const colW = [boundaries[0], boundaries[1]-boundaries[0], boundaries[2]-boundaries[1], 100-boundaries[2]]
 
+  const fs = settings.fontSize
+  const ac = settings.accentColor
+  const al = settings.alertColor
+
   function startScenario(key) {
-    const sc    = SCENARIOS[key]
-    const seeds = DISPATCH_SEEDS[key]
+    const sc = SCENARIOS[key], seeds = DISPATCH_SEEDS[key]
     update({
       screen:'game', scenario:key,
       dispatches: seeds.map((text, i) => ({ id:i, text, turn:0 })),
@@ -473,8 +509,7 @@ export default function App() {
   async function sendAction() {
     if (!input.trim() || loading || !state) return
     const action = input.trim()
-    setInput('')
-    setLoading(true)
+    setInput(''); setLoading(true)
     const newTerm = [...state.terminal, { type:'player', text:`> ${action}` }]
     update({ terminal: newTerm })
     const msgs = [...state.history, { role:'user', content:action }]
@@ -486,7 +521,7 @@ export default function App() {
       const data = await res.json()
       const raw  = data.content?.[0]?.text || ''
       let parsed
-      try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()) }
+      try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
       catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'What is your next action?', lifelines:state.lifelines, headlines:[] } }
       const nextTurn   = state.turn + 1
       const newHistory = [...msgs, { role:'assistant', content:JSON.stringify(parsed) }]
@@ -498,16 +533,12 @@ export default function App() {
         { type:'divider' },
       ].filter(Boolean)
       const newDispatches = parsed.dispatches?.length
-        ? [...parsed.dispatches.map((text, i) => ({ id:Date.now()+i, text, turn:nextTurn })), ...state.dispatches.slice(0,6)]
+        ? [...parsed.dispatches.map((text,i) => ({ id:Date.now()+i, text, turn:nextTurn })), ...state.dispatches.slice(0,6)]
         : state.dispatches
       const newHeadlines = parsed.headlines?.length
-        ? [...parsed.headlines.map((h, i) => ({ ...h, id:Date.now()+i, turn:nextTurn })), ...state.headlines.slice(0,12)]
+        ? [...parsed.headlines.map((h,i) => ({ ...h, id:Date.now()+i, turn:nextTurn })), ...state.headlines.slice(0,12)]
         : state.headlines
-      update({
-        terminal:addedTerm, history:newHistory, dispatches:newDispatches,
-        simTime:parsed.time||state.simTime, situation:parsed.situation||'DEVELOPING',
-        turn:nextTurn, lifelines:parsed.lifelines||state.lifelines, headlines:newHeadlines,
-      })
+      update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches, simTime:parsed.time||state.simTime, situation:parsed.situation||'DEVELOPING', turn:nextTurn, lifelines:parsed.lifelines||state.lifelines, headlines:newHeadlines })
     } catch(e) {
       update({ terminal:[...newTerm, { type:'system', text:`[ERROR: ${e.message}]` }] })
     }
@@ -516,26 +547,25 @@ export default function App() {
   }
 
   function handleKey(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAction() }
+    if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendAction() }
   }
 
   function reset() {
     try { localStorage.removeItem(SAVE_KEY) } catch {}
-    setState(defaultState)
-    setInput('')
+    setState(defaultState); setInput('')
   }
 
   if (!state) return <div style={{ color:'#888', padding:'2rem', fontFamily:'monospace' }}>Loading...</div>
 
   if (state.screen === 'setup') return (
-    <div style={{ maxWidth:680, margin:'0 auto', padding:'2rem 1rem' }}>
-      <h1 style={{ fontFamily:'JetBrains Mono', fontSize:16, fontWeight:500, color:'#1D9E75', marginBottom:'0.5rem', letterSpacing:'0.08em' }}>EM CRISIS SIMULATOR</h1>
-      <p style={{ fontSize:12, color:'#555', marginBottom:'2rem', fontFamily:'monospace' }}>Emergency Management Training System — Select scenario to begin</p>
+    <div style={{ maxWidth:680, margin:'0 auto', padding:'2rem 1rem', fontFamily:'JetBrains Mono, monospace' }}>
+      <h1 style={{ fontSize:16, fontWeight:500, color:ac, marginBottom:'0.5rem', letterSpacing:'0.08em' }}>EM CRISIS SIMULATOR</h1>
+      <p style={{ fontSize:12, color:'#555', marginBottom:'2rem' }}>Emergency Management Training System — Select scenario to begin</p>
       <p style={{ fontSize:11, color:'#666', marginBottom:'0.5rem', textTransform:'uppercase', letterSpacing:'0.08em' }}>Scenario</p>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8, marginBottom:'1.5rem' }}>
         {Object.entries(SCENARIOS).map(([key, sc]) => (
           <button key={key} onClick={() => update({ scenario:key })}
-            style={{ textAlign:'left', padding:'10px 12px', border:`0.5px solid ${state.scenario===key?'#1D9E75':'#222'}`, background:state.scenario===key?'#0a1f18':'transparent' }}>
+            style={{ textAlign:'left', padding:'10px 12px', border:`0.5px solid ${state.scenario===key?ac:'#222'}`, background:state.scenario===key?'#0a1f18':'transparent' }}>
             <div style={{ fontSize:20, marginBottom:6 }}>{sc.icon}</div>
             <div style={{ fontSize:12, fontWeight:500, color:'#ddd', marginBottom:4 }}>{sc.name}</div>
             <div style={{ fontSize:10, color:'#555', lineHeight:1.5 }}>{sc.desc}</div>
@@ -557,7 +587,7 @@ export default function App() {
         </div>
       </div>
       <button onClick={() => state.scenario && startScenario(state.scenario)}
-        style={{ width:'100%', padding:'10px', fontSize:13, fontWeight:500, border:`0.5px solid ${state.scenario?'#1D9E75':'#333'}`, color:state.scenario?'#1D9E75':'#555', cursor:state.scenario?'pointer':'not-allowed' }}>
+        style={{ width:'100%', padding:'10px', fontSize:13, fontWeight:500, border:`0.5px solid ${state.scenario?ac:'#333'}`, color:state.scenario?ac:'#555', cursor:state.scenario?'pointer':'not-allowed' }}>
         {state.scenario ? `LAUNCH — ${SCENARIOS[state.scenario].name} ↗` : 'Select a scenario to begin'}
       </button>
     </div>
@@ -567,31 +597,45 @@ export default function App() {
   const divInner  = { width:3, height:28, background:'#3a3a3a', borderRadius:2, pointerEvents:'none' }
   const hDivSty   = { height:10, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', borderTop:'0.5px solid #2a2a2a', borderBottom:'0.5px solid #2a2a2a', flexShrink:0 }
   const hDivInner = { width:28, height:3, background:'#3a3a3a', borderRadius:2 }
+  const panelHdr  = (label) => (
+    <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0 }}>{label}</div>
+  )
 
   const pins   = state.scenario ? SCENARIO_PINS[state.scenario]||[] : []
   const center = state.scenario ? SCENARIO_CENTERS[state.scenario] : [39.5,-98.35]
   const refs   = state.scenario ? SCENARIO_REFS[state.scenario]||[] : []
 
-  const panelHdr = (label) => (
-    <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0 }}>{label}</div>
-  )
+  const termStyles = {
+    header:      { color:'#aaa', fontWeight:500, marginBottom:4, fontSize:fs },
+    system:      { color:'#333', fontSize:Math.max(9, fs-2), marginBottom:6 },
+    narrator:    { color:'#ccc', marginBottom:6, fontSize:fs },
+    player:      { color:ac, marginBottom:4, fontWeight:500, fontSize:fs },
+    consequence: { color:'#777', marginBottom:6, borderLeft:'2px solid #2a2a2a', paddingLeft:10, fontSize:fs },
+    time:        { color:al, fontSize:Math.max(9, fs-1), marginBottom:2, fontWeight:500 },
+    prompt:      { color:al, fontStyle:'italic', marginBottom:4, fontSize:fs },
+  }
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', height:'97vh', padding:'0.75rem', gap:8, fontFamily:'JetBrains Mono, monospace', fontSize:12 }}>
+    <div style={{ display:'flex', flexDirection:'column', height:'97vh', padding:'0.75rem', gap:8, fontFamily:'JetBrains Mono, monospace', fontSize:fs }}>
+
+      {showSettings && <SettingsPanel settings={settings} onChange={updateSettings} onClose={() => setShowSettings(false)} />}
 
       {/* LIFELINE BAR */}
       <div style={{ display:'flex', gap:6, padding:'6px 10px', border:'0.5px solid #222', borderRadius:8, background:'#0d0d0d', alignItems:'center', flexShrink:0 }}>
         <span style={{ fontSize:9, color:'#444', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:500, marginRight:4, whiteSpace:'nowrap' }}>Community Lifelines</span>
-        {LIFELINES.map(ll => <LifelineTile key={ll.key} ll={ll} data={state.lifelines?.[ll.key]} />)}
+        {LIFELINES.map(ll => <LifelineTile key={ll.key} ll={ll} data={state.lifelines?.[ll.key]} accent={ac} />)}
+        <button onClick={() => setShowSettings(s => !s)}
+          title="Display Settings"
+          style={{ marginLeft:8, flexShrink:0, width:26, height:26, borderRadius:5, border:'0.5px solid #333', background:showSettings?'#222':'transparent', color:'#666', cursor:'pointer', fontSize:14, display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
+          ⚙️
+        </button>
       </div>
 
       {/* FOUR PANEL ROW */}
       <div ref={containerRef} style={{ display:'flex', flex:1, minHeight:0 }}>
 
-        {/* LEFT COLUMN: HEADLINES + REFS + ESF */}
+        {/* LEFT COLUMN */}
         <div ref={leftColRef} style={{ width:`${colW[0]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
-
-          {/* HEADLINES */}
           <div style={{ height:`${leftBounds[0]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
             {panelHdr('Media Feed')}
             <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:6 }}>
@@ -599,23 +643,20 @@ export default function App() {
               {state.headlines.map(h => (
                 <div key={h.id} style={{ padding:'6px 8px', borderRadius:6, border:`0.5px solid ${h.turn===state.turn?'#2a2a3a':'#1a1a1a'}`, background:h.turn===state.turn?'#16161f':'transparent', lineHeight:1.5 }}>
                   {h.turn===state.turn && <div style={{ fontSize:9, color:'#4A90D9', fontWeight:500, marginBottom:2 }}>LIVE</div>}
-                  <div style={{ fontSize:10, color:h.turn===state.turn?'#ccc':'#444', marginBottom:2 }}>{h.text}</div>
+                  <div style={{ fontSize:fs-1, color:h.turn===state.turn?'#ccc':'#444', marginBottom:2 }}>{h.text}</div>
                   <div style={{ fontSize:9, color:'#333' }}>{h.source} — {h.time}</div>
                 </div>
               ))}
             </div>
           </div>
-
-          <div onMouseDown={onLeftDiv0Down} style={hDivSty}><div style={hDivInner}/></div>
-
-          {/* REFERENCES */}
+          <div onMouseDown={makeLeftVertDrag(0)} style={hDivSty}><div style={hDivInner}/></div>
           <div style={{ height:`${leftBounds[1]-leftBounds[0]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
             {panelHdr('Reference Links')}
             <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:4 }}>
               {refs.length === 0 && <div style={{ color:'#333', fontSize:10, padding:'8px', fontStyle:'italic' }}>Launch a scenario to see references.</div>}
-              {refs.map((r, i) => (
+              {refs.map((r,i) => (
                 <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
-                  style={{ display:'block', padding:'6px 8px', borderRadius:6, border:'0.5px solid #1a1a1a', fontSize:10, color:'#4A90D9', lineHeight:1.5, textDecoration:'none', wordBreak:'break-word' }}
+                  style={{ display:'block', padding:'6px 8px', borderRadius:6, border:'0.5px solid #1a1a1a', fontSize:fs-1, color:'#4A90D9', lineHeight:1.5, textDecoration:'none', wordBreak:'break-word' }}
                   onMouseEnter={e => e.currentTarget.style.background='#0a0a1a'}
                   onMouseLeave={e => e.currentTarget.style.background='transparent'}>
                   {r.label} ↗
@@ -623,18 +664,15 @@ export default function App() {
               ))}
             </div>
           </div>
-
-          <div onMouseDown={onLeftDiv1Down} style={hDivSty}><div style={hDivInner}/></div>
-
-          {/* ESF REFERENCE */}
+          <div onMouseDown={makeLeftVertDrag(1)} style={hDivSty}><div style={hDivInner}/></div>
           <div style={{ flex:1, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
             {panelHdr('ESF Reference')}
             <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:3 }}>
               {ESFS.map(esf => (
                 <div key={esf.num} style={{ padding:'5px 8px', borderRadius:5, border:'0.5px solid #1a1a1a', lineHeight:1.4 }}>
                   <div style={{ display:'flex', gap:6, alignItems:'baseline', marginBottom:2 }}>
-                    <span style={{ fontSize:9, color:'#EF9F27', fontWeight:500, whiteSpace:'nowrap' }}>ESF-{esf.num}</span>
-                    <span style={{ fontSize:10, color:'#aaa', fontWeight:500 }}>{esf.name}</span>
+                    <span style={{ fontSize:9, color:al, fontWeight:500, whiteSpace:'nowrap' }}>ESF-{esf.num}</span>
+                    <span style={{ fontSize:fs-1, color:'#aaa', fontWeight:500 }}>{esf.name}</span>
                   </div>
                   <div style={{ fontSize:9, color:'#444' }}>Lead: {esf.lead}</div>
                   <div style={{ fontSize:9, color:'#333', marginTop:1 }}>{esf.desc}</div>
@@ -642,10 +680,9 @@ export default function App() {
               ))}
             </div>
           </div>
-
         </div>
 
-        <div style={divSty} onMouseDown={e => onColDown(0, e)}><div style={divInner}/></div>
+        <div style={divSty} onMouseDown={e => onColDown(0,e)}><div style={divInner}/></div>
 
         {/* DISPATCH */}
         <div style={{ width:`${colW[1]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
@@ -657,8 +694,8 @@ export default function App() {
             {state.dispatches.map(d => {
               const isNew = d.turn === state.turn
               return (
-                <div key={d.id} style={{ padding:'6px 8px', borderRadius:6, border:`0.5px solid ${isNew?'#2a3a2a':'#222'}`, background:isNew?'#1a2a1a':'transparent', fontSize:11, color:isNew?'#ddd':'#555', lineHeight:1.5 }}>
-                  {isNew && <div style={{ fontSize:9, color:'#1D9E75', fontWeight:500, marginBottom:2 }}>NEW — {state.simTime}</div>}
+                <div key={d.id} style={{ padding:'6px 8px', borderRadius:6, border:`0.5px solid ${isNew?'#2a3a2a':'#222'}`, background:isNew?'#1a2a1a':'transparent', fontSize:fs-1, color:isNew?'#ddd':'#555', lineHeight:1.5 }}>
+                  {isNew && <div style={{ fontSize:9, color:ac, fontWeight:500, marginBottom:2 }}>NEW — {state.simTime}</div>}
                   {d.text}
                 </div>
               )
@@ -666,7 +703,7 @@ export default function App() {
           </div>
         </div>
 
-        <div style={divSty} onMouseDown={e => onColDown(1, e)}><div style={divInner}/></div>
+        <div style={divSty} onMouseDown={e => onColDown(1,e)}><div style={divInner}/></div>
 
         {/* TERMINAL */}
         <div style={{ width:`${colW[2]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
@@ -679,41 +716,32 @@ export default function App() {
             </div>
           </div>
           <div ref={termRef} style={{ flex:1, overflowY:'auto', padding:'10px 14px', lineHeight:1.8 }}>
-            {state.terminal.map((line, i) => {
+            {state.terminal.map((line,i) => {
               if (!line) return null
               if (line.type==='divider') return <hr key={i} style={{ border:'none', borderTop:'0.5px solid #1a1a1a', margin:'8px 0' }}/>
-              const s = {
-                header:      { color:'#aaa', fontWeight:500, marginBottom:4 },
-                system:      { color:'#333', fontSize:10, marginBottom:6 },
-                narrator:    { color:'#ccc', marginBottom:6 },
-                player:      { color:'#1D9E75', marginBottom:4, fontWeight:500 },
-                consequence: { color:'#777', marginBottom:6, borderLeft:'2px solid #2a2a2a', paddingLeft:10 },
-                time:        { color:'#EF9F27', fontSize:10, marginBottom:2, fontWeight:500 },
-                prompt:      { color:'#EF9F27', fontStyle:'italic', marginBottom:4 },
-              }
-              return <div key={i} style={s[line.type]||{}}>{line.text}</div>
+              return <div key={i} style={termStyles[line.type]||{ fontSize:fs }}>{line.text}</div>
             })}
-            {loading && <div style={{ color:'#333', fontStyle:'italic' }}>Evaluating action...</div>}
+            {loading && <div style={{ color:'#333', fontStyle:'italic', fontSize:fs }}>Evaluating action...</div>}
           </div>
           <div style={{ borderTop:'0.5px solid #222', padding:'8px 10px', display:'flex', gap:6 }}>
             <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
-              placeholder="Your action..." rows={2} style={{ flex:1, resize:'none', lineHeight:1.6 }}/>
+              placeholder="Your action..." rows={2} style={{ flex:1, resize:'none', lineHeight:1.6, fontSize:fs }}/>
             <button onClick={sendAction} disabled={loading||!input.trim()}
-              style={{ padding:'6px 14px', fontWeight:500, alignSelf:'stretch', color:'#1D9E75', borderColor:'#1D9E75' }}>
+              style={{ padding:'6px 14px', fontWeight:500, alignSelf:'stretch', color:ac, borderColor:ac }}>
               Execute
             </button>
           </div>
         </div>
 
-        <div style={divSty} onMouseDown={e => onColDown(2, e)}><div style={divInner}/></div>
+        <div style={divSty} onMouseDown={e => onColDown(2,e)}><div style={divInner}/></div>
 
-        {/* RIGHT COLUMN: NOTEPAD + MAP */}
+        {/* RIGHT COLUMN */}
         <div ref={rightColRef} style={{ width:`${colW[3]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
           <div style={{ height:`${rightSplit}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
             {panelHdr("Commander's Notepad")}
             <textarea value={state.notepad} onChange={e => update({ notepad:e.target.value })}
               placeholder={'Priorities, resource gaps...\n\nPersists across sessions.'}
-              style={{ flex:1, resize:'none', border:'none', padding:'8px 10px', background:'transparent', color:'#888', lineHeight:1.7, outline:'none' }}/>
+              style={{ flex:1, resize:'none', border:'none', padding:'8px 10px', background:'transparent', color:'#888', lineHeight:1.7, outline:'none', fontSize:fs }}/>
             <div style={{ padding:'4px 10px', borderTop:'0.5px solid #1a1a1a', fontSize:10, color:'#333' }}>Turn {state.turn} — {state.difficulty}</div>
           </div>
           <div onMouseDown={onRightDown} style={hDivSty}><div style={hDivInner}/></div>
