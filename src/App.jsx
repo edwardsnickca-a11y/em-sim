@@ -13,18 +13,23 @@ const JURISDICTIONS = ['Rural County','Mid-Size City','Large Urban Metro','Coast
 const DIFFICULTIES  = ['Basic','Moderate','Advanced','Brutal','Adaptive']
 
 const LIFELINES = [
-  { key: 'safety',    label: 'Safety & Security',   icon: '🛡️' },
-  { key: 'food',      label: 'Food Water Shelter',   icon: '🍽️' },
-  { key: 'health',    label: 'Health & Medical',     icon: '🏥' },
-  { key: 'energy',    label: 'Energy',               icon: '⚡' },
-  { key: 'comms',     label: 'Communications',       icon: '📡' },
-  { key: 'transport', label: 'Transportation',       icon: '🚗' },
-  { key: 'hazmat',    label: 'Hazardous Material',   icon: '☣️' },
+  { key: 'safety',    label: 'Safety & Security', icon: '🛡️' },
+  { key: 'food',      label: 'Food Water Shelter', icon: '🍽️' },
+  { key: 'health',    label: 'Health & Medical',   icon: '🏥' },
+  { key: 'energy',    label: 'Energy',             icon: '⚡' },
+  { key: 'comms',     label: 'Communications',     icon: '📡' },
+  { key: 'transport', label: 'Transportation',     icon: '🚗' },
+  { key: 'hazmat',    label: 'Hazardous Material', icon: '☣️' },
 ]
 
 const DEFAULT_LIFELINES = {
-  safety: 'YELLOW', food: 'YELLOW', health: 'YELLOW',
-  energy: 'YELLOW', comms: 'YELLOW', transport: 'YELLOW', hazmat: 'YELLOW',
+  safety:    { status: 'YELLOW', reason: 'Situation developing. Assessment pending.' },
+  food:      { status: 'YELLOW', reason: 'Situation developing. Assessment pending.' },
+  health:    { status: 'YELLOW', reason: 'Situation developing. Assessment pending.' },
+  energy:    { status: 'YELLOW', reason: 'Situation developing. Assessment pending.' },
+  comms:     { status: 'YELLOW', reason: 'Situation developing. Assessment pending.' },
+  transport: { status: 'YELLOW', reason: 'Situation developing. Assessment pending.' },
+  hazmat:    { status: 'YELLOW', reason: 'Situation developing. Assessment pending.' },
 }
 
 const LL_COLORS = {
@@ -68,7 +73,7 @@ RULES:
 - On ENDEX: deliver a thorough AAR covering: (1) COOP activation timing and trigger criteria, (2) command element continuity as a first-order decision, (3) alternate facility readiness assumptions, (4) IT and communications validation at alternate sites, (5) overall strengths, (6) critical gaps, (7) doctrine references, (8) specific recommendations.
 - Never break character.
 
-COMMUNITY LIFELINE STATUS: Each turn, evaluate and report the status of all 7 FEMA Community Lifelines based on current incident conditions. Use GREEN (functional), YELLOW (degraded), or RED (compromised/non-functional).
+COMMUNITY LIFELINE STATUS: Each turn evaluate all 7 FEMA Community Lifelines. For each provide a status (GREEN/YELLOW/RED) and a one-sentence reason explaining why.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
 {
@@ -78,13 +83,13 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
   "dispatches": ["dispatch item 1", "dispatch item 2"],
   "prompt": "one sentence prompt for next player action",
   "lifelines": {
-    "safety": "GREEN | YELLOW | RED",
-    "food": "GREEN | YELLOW | RED",
-    "health": "GREEN | YELLOW | RED",
-    "energy": "GREEN | YELLOW | RED",
-    "comms": "GREEN | YELLOW | RED",
-    "transport": "GREEN | YELLOW | RED",
-    "hazmat": "GREEN | YELLOW | RED"
+    "safety":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence explanation" },
+    "food":      { "status": "GREEN | YELLOW | RED", "reason": "one sentence explanation" },
+    "health":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence explanation" },
+    "energy":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence explanation" },
+    "comms":     { "status": "GREEN | YELLOW | RED", "reason": "one sentence explanation" },
+    "transport": { "status": "GREEN | YELLOW | RED", "reason": "one sentence explanation" },
+    "hazmat":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence explanation" }
   }
 }
 
@@ -95,11 +100,19 @@ On ENDEX:
   "situation": "ENDEX",
   "dispatches": [],
   "prompt": "Scenario complete.",
-  "lifelines": { "safety": "RED", "food": "RED", "health": "RED", "energy": "RED", "comms": "RED", "transport": "RED", "hazmat": "RED" }
+  "lifelines": {
+    "safety":    { "status": "RED", "reason": "Scenario concluded." },
+    "food":      { "status": "RED", "reason": "Scenario concluded." },
+    "health":    { "status": "RED", "reason": "Scenario concluded." },
+    "energy":    { "status": "RED", "reason": "Scenario concluded." },
+    "comms":     { "status": "RED", "reason": "Scenario concluded." },
+    "transport": { "status": "RED", "reason": "Scenario concluded." },
+    "hazmat":    { "status": "RED", "reason": "Scenario concluded." }
+  }
 }`
 }
 
-const SAVE_KEY = 'em_sim_v4'
+const SAVE_KEY = 'em_sim_v5'
 
 const defaultState = {
   screen: 'setup', scenario: null, jurisdiction: 'Mid-Size City', difficulty: 'Adaptive',
@@ -108,6 +121,35 @@ const defaultState = {
 }
 
 const sitColors = { STABLE:'#1D9E75', DEVELOPING:'#EF9F27', CRITICAL:'#D85A30', DETERIORATING:'#E24B4A', ENDEX:'#888' }
+
+function LifelineTile({ ll, data }) {
+  const [hovered, setHovered] = useState(false)
+  const status = data?.status || 'YELLOW'
+  const reason = data?.reason || 'Assessment pending.'
+  const c = LL_COLORS[status]
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 4, border: `0.5px solid ${c.border}`, background: c.bg, flex: 1, minWidth: 0, cursor: 'default' }}
+    >
+      <span style={{ fontSize: 13 }}>{ll.icon}</span>
+      <span style={{ fontSize: 9, color: c.text, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ll.label}</span>
+      {hovered && (
+        <div style={{
+          position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
+          background: '#1a1a1a', border: `0.5px solid ${c.border}`, borderRadius: 6,
+          padding: '6px 10px', fontSize: 10, color: '#ccc', lineHeight: 1.5,
+          whiteSpace: 'nowrap', maxWidth: 240, whiteSpace: 'normal',
+          zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+          pointerEvents: 'none',
+        }}>
+          <span style={{ color: c.text, fontWeight: 500 }}>{status}</span> — {reason}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function App() {
   const [state, setState]     = useState(null)
@@ -306,19 +348,12 @@ export default function App() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '97vh', padding: '0.75rem', gap: 8, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
 
-      {/* LIFELINE STATUS BAR */}
+      {/* LIFELINE BAR */}
       <div style={{ display: 'flex', gap: 6, padding: '6px 10px', border: '0.5px solid #222', borderRadius: 8, background: '#0d0d0d', alignItems: 'center', flexShrink: 0 }}>
         <span style={{ fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500, marginRight: 4, whiteSpace: 'nowrap' }}>Community Lifelines</span>
-        {LIFELINES.map(ll => {
-          const status = state.lifelines?.[ll.key] || 'YELLOW'
-          const c      = LL_COLORS[status]
-          return (
-            <div key={ll.key} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 4, border: `0.5px solid ${c.border}`, background: c.bg, flex: 1, minWidth: 0 }}>
-              <span style={{ fontSize: 13 }}>{ll.icon}</span>
-              <span style={{ fontSize: 9, color: c.text, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ll.label}</span>
-            </div>
-          )
-        })}
+        {LIFELINES.map(ll => (
+          <LifelineTile key={ll.key} ll={ll} data={state.lifelines?.[ll.key]} />
+        ))}
       </div>
 
       {/* THREE PANEL ROW */}
