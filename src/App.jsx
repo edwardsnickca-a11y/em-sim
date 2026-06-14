@@ -319,25 +319,36 @@ export default function App() {
     window.addEventListener('mouseup', onColUp)
   }
   function onColMove(e) {
-    if (!dragging.current || !containerRef.current) return
-    const { idx, startX, startCols } = dragging.current
-    const W = containerRef.current.offsetWidth
-    const d = ((e.clientX - startX) / W) * 100
-    const n = [...startCols]
-    const min = 8
-    if (idx === 0) {
-      n[0] = Math.max(min, Math.min(startCols[0] + d, 100 - startCols[1] - startCols[2] - startCols[3] - min * 3))
-      n[1] = startCols[1]
-      n[2] = 100 - n[0] - n[1] - n[3]
-    } else if (idx === 1) {
-      n[1] = Math.max(min, Math.min(startCols[1] + d, 100 - startCols[0] - startCols[2] - startCols[3] - min * 3))
-      n[2] = 100 - n[0] - n[1] - n[3]
-    } else if (idx === 2) {
-      n[3] = Math.max(min, Math.min(startCols[3] - d, 100 - startCols[0] - startCols[1] - min * 3))
-      n[2] = 100 - n[0] - n[1] - n[3]
-    }
-    setCols(n)
+  if (!dragging.current || !containerRef.current) return
+  const { idx, startX, startCols } = dragging.current
+  const W = containerRef.current.offsetWidth
+  const d = ((e.clientX - startX) / W) * 100
+  const min = 8
+  const total = startCols.reduce((a, b) => a + b, 0)
+  const n = [...startCols]
+
+  if (idx === 0) {
+    const maxGrow = total - startCols[1] - startCols[2] - startCols[3] - min * 3
+    n[0] = Math.max(min, Math.min(startCols[0] + d, maxGrow))
+    n[1] = startCols[1]
+    n[3] = startCols[3]
+    n[2] = total - n[0] - n[1] - n[3]
+  } else if (idx === 1) {
+    const maxGrow = total - startCols[0] - startCols[2] - startCols[3] - min * 3
+    n[1] = Math.max(min, Math.min(startCols[1] + d, maxGrow))
+    n[0] = startCols[0]
+    n[3] = startCols[3]
+    n[2] = total - n[0] - n[1] - n[3]
+  } else if (idx === 2) {
+    const maxGrow = total - startCols[0] - startCols[1] - startCols[2] - min * 3
+    n[3] = Math.max(min, Math.min(startCols[3] - d, maxGrow))
+    n[0] = startCols[0]
+    n[1] = startCols[1]
+    n[2] = total - n[0] - n[1] - n[3]
   }
+
+  if (n[2] >= min) setCols(n)
+}
   function onColUp() {
     dragging.current = null
     window.removeEventListener('mousemove', onColMove)
