@@ -77,10 +77,10 @@ const SCENARIO_CENTERS = {
 
 const SCENARIO_REFS = {
   hurricane: [
-    { label:'FEMA Hurricane Response Guidance',      url:'https://www.fema.gov/emergency-managers/risk-management/hurricanes' },
+    { label:'FEMA Hurricane Response',               url:'https://www.fema.gov/emergency-managers/risk-management/hurricanes' },
     { label:'NHC Hurricane Preparedness',            url:'https://www.nhc.noaa.gov/prepare/' },
     { label:'ESF-13 Public Safety Annex',            url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_13_Public-Safety-Security.pdf' },
-    { label:'FEMA Mass Evacuation Incident Annex',   url:'https://www.fema.gov/sites/default/files/2020-07/fema_Mass-Evacuation-Incident-Annex_0.pdf' },
+    { label:'FEMA Mass Evacuation Annex',            url:'https://www.fema.gov/sites/default/files/2020-07/fema_Mass-Evacuation-Incident-Annex_0.pdf' },
     { label:'Hurricane Harvey AAR 2018',             url:'https://www.fema.gov/sites/default/files/2020-08/fema_hurricane-harvey_after-action-report_2018.pdf' },
   ],
   mci: [
@@ -119,6 +119,24 @@ const SCENARIO_REFS = {
     { label:'ESF-3 Public Works & Engineering',      url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_3_Public-Works-Engineering.pdf' },
   ],
 }
+
+const ESFS = [
+  { num:1,  name:'Transportation',                   lead:'DOT',     desc:'Aviation, maritime, surface transport coordination.' },
+  { num:2,  name:'Communications',                   lead:'DHS/CISA',desc:'Restore and sustain communications infrastructure.' },
+  { num:3,  name:'Public Works & Engineering',       lead:'USACE',   desc:'Infrastructure protection, emergency repair, debris clearance.' },
+  { num:4,  name:'Firefighting',                     lead:'USDA/FS', desc:'Wildland and structural firefighting support.' },
+  { num:5,  name:'Information & Planning',           lead:'FEMA',    desc:'Collect, analyze, and disseminate incident information.' },
+  { num:6,  name:'Mass Care',                        lead:'FEMA',    desc:'Sheltering, feeding, emergency assistance, reunification.' },
+  { num:7,  name:'Logistics',                        lead:'FEMA/GSA',desc:'Resource and supply chain management.' },
+  { num:8,  name:'Public Health & Medical',          lead:'HHS',     desc:'Medical surge, public health, behavioral health.' },
+  { num:9,  name:'Search & Rescue',                  lead:'FEMA',    desc:'Life-saving assistance, urban and swift-water SAR.' },
+  { num:10, name:'Oil & Hazardous Materials',        lead:'EPA/USCG',desc:'Environmental response, hazmat containment and cleanup.' },
+  { num:11, name:'Agriculture & Natural Resources',  lead:'USDA',    desc:'Food safety, agriculture, natural and cultural resources.' },
+  { num:12, name:'Energy',                           lead:'DOE',     desc:'Restore energy systems: electric power, natural gas, petroleum.' },
+  { num:13, name:'Public Safety & Security',         lead:'DOJ',     desc:'Law enforcement, facility security, security planning.' },
+  { num:14, name:'Cross-Sector Business & Infrastructure', lead:'DHS',desc:'Private sector coordination and infrastructure restoration.' },
+  { num:15, name:'External Affairs',                 lead:'FEMA',    desc:'Public information, intergovernmental, community affairs.' },
+]
 
 const SCENARIOS = {
   hurricane:  { name:'Hurricane Landfall',          icon:'🌀', desc:'Cat 4/5 landfall on a coastal county. 72-hour warning window closing fast.' },
@@ -174,7 +192,7 @@ function buildSystemPrompt(scenario, jurisdiction, difficulty) {
     Moderate: 'Evaluate with moderate rigor. Surface two complications per turn.',
     Advanced: 'Evaluate with professional rigor. Surface 2-3 complications per turn. Resource constraints are real.',
     Brutal:   'Evaluate ruthlessly. Every delayed or vague decision has cascading consequences.',
-    Adaptive: 'Calibrate difficulty to the player\'s demonstrated competence. Never make it easy.',
+    Adaptive: 'Calibrate difficulty to demonstrated competence. Never make it easy.',
   }
   return `You are the AI engine for an emergency management training simulator. The player is a senior emergency manager.
 
@@ -218,7 +236,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
 On ENDEX use same format with full AAR in consequence field and empty headlines array.`
 }
 
-const SAVE_KEY = 'em_sim_v8'
+const SAVE_KEY = 'em_sim_v9'
 
 const defaultState = {
   screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive',
@@ -228,11 +246,8 @@ const defaultState = {
 
 const sitColors = { STABLE:'#1D9E75', DEVELOPING:'#EF9F27', CRITICAL:'#D85A30', DETERIORATING:'#E24B4A', ENDEX:'#888' }
 
-// ── Drag helpers ──────────────────────────────────────────────────────────────
-// Horizontal: track absolute mouse X vs container left edge, convert to %
-function useHorizDrag(containerRef, count, dividerW, minPct, onUpdate) {
+function useHorizDrag(containerRef, onUpdate) {
   const drag = useRef(null)
-
   function onMouseDown(idx, e) {
     e.preventDefault()
     const rect = containerRef.current.getBoundingClientRect()
@@ -240,27 +255,22 @@ function useHorizDrag(containerRef, count, dividerW, minPct, onUpdate) {
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }
-
   function onMove(e) {
     if (!drag.current) return
     const { idx, containerLeft, containerW } = drag.current
-    const mousePct = ((e.clientX - containerLeft) / containerW) * 100
-    onUpdate(idx, mousePct)
+    const pct = ((e.clientX - containerLeft) / containerW) * 100
+    onUpdate(idx, pct)
   }
-
   function onUp() {
     drag.current = null
     window.removeEventListener('mousemove', onMove)
     window.removeEventListener('mouseup', onUp)
   }
-
   return onMouseDown
 }
 
-// Vertical: track absolute mouse Y vs container top edge, convert to %
 function useVertDrag(containerRef, onUpdate) {
   const drag = useRef(null)
-
   function onMouseDown(e) {
     e.preventDefault()
     const rect = containerRef.current.getBoundingClientRect()
@@ -268,23 +278,19 @@ function useVertDrag(containerRef, onUpdate) {
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }
-
   function onMove(e) {
     if (!drag.current) return
     const { containerTop, containerH } = drag.current
     const pct = ((e.clientY - containerTop) / containerH) * 100
-    onUpdate(Math.max(15, Math.min(85, pct)))
+    onUpdate(Math.max(10, Math.min(90, pct)))
   }
-
   function onUp() {
     drag.current = null
     window.removeEventListener('mousemove', onMove)
     window.removeEventListener('mouseup', onUp)
   }
-
   return onMouseDown
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
 function LifelineTile({ ll, data }) {
   const [hovered, setHovered] = useState(false)
@@ -293,7 +299,6 @@ function LifelineTile({ ll, data }) {
   const status = data?.status || 'YELLOW'
   const reason = data?.reason || 'Assessment pending.'
   const c = LL_COLORS[status]
-
   function handleMouseEnter() {
     if (tileRef.current) {
       const rect = tileRef.current.getBoundingClientRect()
@@ -304,7 +309,6 @@ function LifelineTile({ ll, data }) {
     }
     setHovered(true)
   }
-
   return (
     <div ref={tileRef} onMouseEnter={handleMouseEnter} onMouseLeave={() => setHovered(false)}
       style={{ position:'relative', display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:4, border:`0.5px solid ${c.border}`, background:c.bg, flex:1, minWidth:0, cursor:'default' }}>
@@ -326,23 +330,19 @@ function MapUpdater({ center }) {
 }
 
 export default function App() {
-  const [state, setState]         = useState(null)
-  const [loading, setLoading]     = useState(false)
-  const [input, setInput]         = useState('')
-
-  // Column boundary positions as % from left: [after col0, after col1, after col2]
-  // 4 cols: news | dispatch | terminal | right
+  const [state, setState]       = useState(null)
+  const [loading, setLoading]   = useState(false)
+  const [input, setInput]       = useState('')
   const [boundaries, setBoundaries] = useState([14, 32, 80])
-
-  // Vertical splits as % from top within their container
+  // Left col: three sections — [headlines%, refs%], esf gets remainder
+  const [leftBounds, setLeftBounds] = useState([40, 70])
   const [rightSplit, setRightSplit] = useState(45)
-  const [newsSplit,  setNewsSplit]  = useState(60)
 
-  const containerRef  = useRef(null)
-  const rightColRef   = useRef(null)
-  const newsColRef    = useRef(null)
-  const termRef       = useRef(null)
-  const inputRef      = useRef(null)
+  const containerRef = useRef(null)
+  const leftColRef   = useRef(null)
+  const rightColRef  = useRef(null)
+  const termRef      = useRef(null)
+  const inputRef     = useRef(null)
 
   const save = useCallback((next) => {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)) } catch {}
@@ -371,31 +371,87 @@ export default function App() {
     if (state?.screen === 'game') setTimeout(() => inputRef.current?.focus(), 100)
   }, [state?.screen])
 
-  // Horizontal boundary drag — absolute mouse position approach
-  const onColDown = useHorizDrag(containerRef, 4, 12, 8, (idx, mousePct) => {
+  const onColDown = useHorizDrag(containerRef, (idx, pct) => {
     setBoundaries(prev => {
-      const n   = [...prev]
+      const n = [...prev]
       const min = 8
-      if (idx === 0) n[0] = Math.max(min, Math.min(mousePct, n[1] - min))
-      if (idx === 1) n[1] = Math.max(n[0] + min, Math.min(mousePct, n[2] - min))
-      if (idx === 2) n[2] = Math.max(n[1] + min, Math.min(mousePct, 100 - min))
+      if (idx === 0) n[0] = Math.max(min, Math.min(pct, n[1] - min))
+      if (idx === 1) n[1] = Math.max(n[0] + min, Math.min(pct, n[2] - min))
+      if (idx === 2) n[2] = Math.max(n[1] + min, Math.min(pct, 100 - min))
       return n
     })
   })
 
-  // Vertical drag for right col (notepad/map)
+  const onLeftVertDown = useVertDrag(leftColRef, (pct) => {
+    // pct is mouse position within left col
+    // we have two dividers at leftBounds[0] and leftBounds[1]
+    // figure out which one is closer
+    setLeftBounds(prev => {
+      const d0 = Math.abs(pct - prev[0])
+      const d1 = Math.abs(pct - prev[1])
+      const n = [...prev]
+      if (d0 < d1) {
+        n[0] = Math.max(10, Math.min(pct, prev[1] - 10))
+      } else {
+        n[1] = Math.max(prev[0] + 10, Math.min(pct, 90))
+      }
+      return n
+    })
+  })
+
+  // Individual left vert drag handlers
+  const leftDrag0 = useRef(null)
+  const leftDrag1 = useRef(null)
+
+  function onLeftDiv0Down(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    const rect = leftColRef.current.getBoundingClientRect()
+    leftDrag0.current = { top: rect.top, h: rect.height }
+    function onMove(ev) {
+      if (!leftDrag0.current) return
+      const pct = ((ev.clientY - leftDrag0.current.top) / leftDrag0.current.h) * 100
+      setLeftBounds(prev => {
+        const n = [...prev]
+        n[0] = Math.max(10, Math.min(pct, prev[1] - 10))
+        return n
+      })
+    }
+    function onUp() {
+      leftDrag0.current = null
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
+
+  function onLeftDiv1Down(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    const rect = leftColRef.current.getBoundingClientRect()
+    leftDrag1.current = { top: rect.top, h: rect.height }
+    function onMove(ev) {
+      if (!leftDrag1.current) return
+      const pct = ((ev.clientY - leftDrag1.current.top) / leftDrag1.current.h) * 100
+      setLeftBounds(prev => {
+        const n = [...prev]
+        n[1] = Math.max(prev[0] + 10, Math.min(pct, 90))
+        return n
+      })
+    }
+    function onUp() {
+      leftDrag1.current = null
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
+
   const onRightDown = useVertDrag(rightColRef, setRightSplit)
 
-  // Vertical drag for news col (headlines/refs)
-  const onNewsDown  = useVertDrag(newsColRef,  setNewsSplit)
-
-  // Column widths derived from boundaries
-  const colW = [
-    boundaries[0],
-    boundaries[1] - boundaries[0],
-    boundaries[2] - boundaries[1],
-    100 - boundaries[2],
-  ]
+  const colW = [boundaries[0], boundaries[1]-boundaries[0], boundaries[2]-boundaries[1], 100-boundaries[2]]
 
   function startScenario(key) {
     const sc    = SCENARIOS[key]
@@ -432,7 +488,6 @@ export default function App() {
       let parsed
       try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()) }
       catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'What is your next action?', lifelines:state.lifelines, headlines:[] } }
-
       const nextTurn   = state.turn + 1
       const newHistory = [...msgs, { role:'assistant', content:JSON.stringify(parsed) }]
       const addedTerm  = [
@@ -448,7 +503,6 @@ export default function App() {
       const newHeadlines = parsed.headlines?.length
         ? [...parsed.headlines.map((h, i) => ({ ...h, id:Date.now()+i, turn:nextTurn })), ...state.headlines.slice(0,12)]
         : state.headlines
-
       update({
         terminal:addedTerm, history:newHistory, dispatches:newDispatches,
         simTime:parsed.time||state.simTime, situation:parsed.situation||'DEVELOPING',
@@ -509,14 +563,18 @@ export default function App() {
     </div>
   )
 
-  const divSty   = { width:10, cursor:'col-resize', background:'#161616', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', borderLeft:'0.5px solid #2a2a2a', borderRight:'0.5px solid #2a2a2a' }
-  const divInner = { width:3, height:28, background:'#3a3a3a', borderRadius:2, pointerEvents:'none' }
-  const hDivSty  = { height:10, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', borderTop:'0.5px solid #2a2a2a', borderBottom:'0.5px solid #2a2a2a', flexShrink:0 }
-  const hDivInner= { width:28, height:3, background:'#3a3a3a', borderRadius:2 }
+  const divSty    = { width:10, cursor:'col-resize', background:'#161616', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', borderLeft:'0.5px solid #2a2a2a', borderRight:'0.5px solid #2a2a2a' }
+  const divInner  = { width:3, height:28, background:'#3a3a3a', borderRadius:2, pointerEvents:'none' }
+  const hDivSty   = { height:10, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', borderTop:'0.5px solid #2a2a2a', borderBottom:'0.5px solid #2a2a2a', flexShrink:0 }
+  const hDivInner = { width:28, height:3, background:'#3a3a3a', borderRadius:2 }
 
   const pins   = state.scenario ? SCENARIO_PINS[state.scenario]||[] : []
   const center = state.scenario ? SCENARIO_CENTERS[state.scenario] : [39.5,-98.35]
   const refs   = state.scenario ? SCENARIO_REFS[state.scenario]||[] : []
+
+  const panelHdr = (label) => (
+    <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0 }}>{label}</div>
+  )
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'97vh', padding:'0.75rem', gap:8, fontFamily:'JetBrains Mono, monospace', fontSize:12 }}>
@@ -528,13 +586,14 @@ export default function App() {
       </div>
 
       {/* FOUR PANEL ROW */}
-      <div ref={containerRef} style={{ display:'flex', flex:1, minHeight:0, position:'relative' }}>
+      <div ref={containerRef} style={{ display:'flex', flex:1, minHeight:0 }}>
 
-        {/* NEWS COLUMN */}
-        <div ref={newsColRef} style={{ width:`${colW[0]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
+        {/* LEFT COLUMN: HEADLINES + REFS + ESF */}
+        <div ref={leftColRef} style={{ width:`${colW[0]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
+
           {/* HEADLINES */}
-          <div style={{ height:`${newsSplit}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>Media Feed</div>
+          <div style={{ height:`${leftBounds[0]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
+            {panelHdr('Media Feed')}
             <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:6 }}>
               {state.headlines.length === 0 && <div style={{ color:'#333', fontSize:10, padding:'8px', fontStyle:'italic' }}>Headlines appear after your first action.</div>}
               {state.headlines.map(h => (
@@ -546,11 +605,12 @@ export default function App() {
               ))}
             </div>
           </div>
-          {/* VERT DIVIDER */}
-          <div onMouseDown={onNewsDown} style={hDivSty}><div style={hDivInner}/></div>
+
+          <div onMouseDown={onLeftDiv0Down} style={hDivSty}><div style={hDivInner}/></div>
+
           {/* REFERENCES */}
-          <div style={{ flex:1, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
-            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>Reference Links</div>
+          <div style={{ height:`${leftBounds[1]-leftBounds[0]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
+            {panelHdr('Reference Links')}
             <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:4 }}>
               {refs.length === 0 && <div style={{ color:'#333', fontSize:10, padding:'8px', fontStyle:'italic' }}>Launch a scenario to see references.</div>}
               {refs.map((r, i) => (
@@ -563,6 +623,26 @@ export default function App() {
               ))}
             </div>
           </div>
+
+          <div onMouseDown={onLeftDiv1Down} style={hDivSty}><div style={hDivInner}/></div>
+
+          {/* ESF REFERENCE */}
+          <div style={{ flex:1, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
+            {panelHdr('ESF Reference')}
+            <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:3 }}>
+              {ESFS.map(esf => (
+                <div key={esf.num} style={{ padding:'5px 8px', borderRadius:5, border:'0.5px solid #1a1a1a', lineHeight:1.4 }}>
+                  <div style={{ display:'flex', gap:6, alignItems:'baseline', marginBottom:2 }}>
+                    <span style={{ fontSize:9, color:'#EF9F27', fontWeight:500, whiteSpace:'nowrap' }}>ESF-{esf.num}</span>
+                    <span style={{ fontSize:10, color:'#aaa', fontWeight:500 }}>{esf.name}</span>
+                  </div>
+                  <div style={{ fontSize:9, color:'#444' }}>Lead: {esf.lead}</div>
+                  <div style={{ fontSize:9, color:'#333', marginTop:1 }}>{esf.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
 
         <div style={divSty} onMouseDown={e => onColDown(0, e)}><div style={divInner}/></div>
@@ -627,10 +707,10 @@ export default function App() {
 
         <div style={divSty} onMouseDown={e => onColDown(2, e)}><div style={divInner}/></div>
 
-        {/* RIGHT COLUMN */}
+        {/* RIGHT COLUMN: NOTEPAD + MAP */}
         <div ref={rightColRef} style={{ width:`${colW[3]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
           <div style={{ height:`${rightSplit}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>Commander's Notepad</div>
+            {panelHdr("Commander's Notepad")}
             <textarea value={state.notepad} onChange={e => update({ notepad:e.target.value })}
               placeholder={'Priorities, resource gaps...\n\nPersists across sessions.'}
               style={{ flex:1, resize:'none', border:'none', padding:'8px 10px', background:'transparent', color:'#888', lineHeight:1.7, outline:'none' }}/>
@@ -638,7 +718,7 @@ export default function App() {
           </div>
           <div onMouseDown={onRightDown} style={hDivSty}><div style={hDivInner}/></div>
           <div style={{ flex:1, border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
-            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>Incident Map</div>
+            {panelHdr('Incident Map')}
             <div style={{ height:'calc(100% - 28px)' }}>
               <MapContainer center={center} zoom={13} style={{ height:'100%', width:'100%' }}>
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
