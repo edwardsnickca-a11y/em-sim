@@ -151,13 +151,14 @@ const JURISDICTIONS = ['Rural County','Mid-Size City','Large Urban Metro','Coast
 const DIFFICULTIES  = ['Basic','Moderate','Advanced','Brutal','Adaptive']
 
 const LIFELINES = [
-  { key:'safety',    label:'Safety & Security', icon:'🛡️' },
-  { key:'food',      label:'Food Water Shelter', icon:'🍽️' },
-  { key:'health',    label:'Health & Medical',   icon:'🏥' },
-  { key:'energy',    label:'Energy',             icon:'⚡' },
-  { key:'comms',     label:'Communications',     icon:'📡' },
-  { key:'transport', label:'Transportation',     icon:'🚗' },
-  { key:'hazmat',    label:'Hazardous Material', icon:'☣️' },
+  { key:'safety',    label:'Safety & Security',   icon:'/icons/safety.png' },
+  { key:'food',      label:'Food, Hydration, Shelter', icon:'/icons/food.png' },
+  { key:'health',    label:'Health & Medical',    icon:'/icons/health.png' },
+  { key:'energy',    label:'Energy',              icon:'/icons/energy.png' },
+  { key:'comms',     label:'Communications',      icon:'/icons/comms.png' },
+  { key:'transport', label:'Transportation',      icon:'/icons/transport.png' },
+  { key:'hazmat',    label:'Hazardous Material',  icon:'/icons/hazmat.png' },
+  { key:'water',     label:'Water Systems',       icon:'/icons/water.png' },
 ]
 
 const DEFAULT_LIFELINES = {
@@ -168,6 +169,7 @@ const DEFAULT_LIFELINES = {
   comms:     { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
   transport: { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
   hazmat:    { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
+  water:     { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
 }
 
 const LL_COLORS = {
@@ -233,6 +235,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
     "comms":     { "status": "GREEN | YELLOW | RED", "reason": "one sentence" },
     "transport": { "status": "GREEN | YELLOW | RED", "reason": "one sentence" },
     "hazmat":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence" }
+    "water":     { "status": "GREEN | YELLOW | RED", "reason": "one sentence" }
   }
 }
 
@@ -315,7 +318,7 @@ function LifelineTile({ ll, data, accent }) {
   return (
     <div ref={tileRef} onMouseEnter={handleMouseEnter} onMouseLeave={() => setHovered(false)}
       style={{ position:'relative', display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:4, border:`0.5px solid ${c.border}`, background:c.bg, flex:1, minWidth:0, cursor:'default' }}>
-      <span style={{ fontSize:13 }}>{ll.icon}</span>
+  <img src={ll.icon} alt={ll.label} style={{ width:16, height:16, objectFit:'contain', flexShrink:0 }} />
       <span style={{ fontSize:9, color:c.text, fontWeight:500, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{ll.label}</span>
       {hovered && (
         <div style={{ position:'fixed', left:tipPos.left, top:tipPos.top, transform:'translateX(-50%)', background:'#1a1a1a', border:`0.5px solid ${c.border}`, borderRadius:6, padding:'8px 12px', fontSize:10, color:'#ccc', lineHeight:1.6, width:300, zIndex:1000, boxShadow:'0 4px 16px rgba(0,0,0,0.8)', pointerEvents:'none' }}>
