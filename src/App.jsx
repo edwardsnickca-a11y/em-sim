@@ -90,14 +90,14 @@ const SCENARIO_REFS = {
     { label:'NHC Hurricane Preparedness',            url:'https://www.nhc.noaa.gov/prepare/' },
     { label:'ESF-13 Public Safety Annex',            url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_13_Public-Safety-Security.pdf' },
     { label:'FEMA Mass Evacuation Annex',            url:'https://www.fema.gov/sites/default/files/2020-07/fema_Mass-Evacuation-Incident-Annex_0.pdf' },
-    { label:'Hurricane Harvey AAR 2018',             url:'https://www.fema.gov/sites/default/files/2020-08/fema_hurricane-harvey_after-action-report_2018.pdf' },
+    { label:'2017 Hurricane Season AAR (Harvey/Irma/Maria)', url:'https://www.fema.gov/sites/default/files/2020-08/fema_hurricane-season-after-action-report_2017.pdf' },
   ],
   mci: [
     { label:'FEMA National Response Framework',      url:'https://www.fema.gov/emergency-managers/national-preparedness/frameworks/response' },
     { label:'CHEMM START Triage Reference',          url:'https://chemm.hhs.gov/startadult.htm' },
     { label:'ESF-8 Public Health & Medical Annex',   url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_8_Public-Health-Medical.pdf' },
-    { label:'NIMS ICS Field Operations Guide',       url:'https://www.fema.gov/sites/default/files/2020-07/fema_nims_ics-field-operations-guide.pdf' },
-    { label:'Boston Marathon Bombing AAR',           url:'https://www.mass.gov/doc/after-action-report-for-the-response-to-the-2013-boston-marathon-bombings/download' },
+    { label:'ICS Field Operations Guide (ICS 420-1)',url:'https://www.usfa.fema.gov/downloads/pdf/publications/field_operations_guide.pdf' },
+    { label:'Boston Marathon Bombing AAR 2014',      url:'https://www.policinginstitute.org/wp-content/uploads/2015/05/after-action-report-for-the-response-to-the-2013-boston-marathon-bombings_0.pdf' },
   ],
   hazmat: [
     { label:'EPA Emergency Response',                url:'https://www.epa.gov/emergency-response' },
@@ -107,7 +107,7 @@ const SCENARIO_REFS = {
     { label:'NTSB East Palestine Investigation',     url:'https://www.ntsb.gov/investigations/Pages/DCA23MR005.aspx' },
   ],
   cyber: [
-    { label:'CISA Critical Infrastructure',         url:'https://www.cisa.gov/topics/critical-infrastructure-security-and-resilience' },
+    { label:'CISA Critical Infrastructure',          url:'https://www.cisa.gov/topics/critical-infrastructure-security-and-resilience' },
     { label:'FEMA Cyber Incident Annex',             url:'https://www.fema.gov/sites/default/files/2020-07/fema_Cyber-Incident-Annex_0.pdf' },
     { label:'WaterISAC Resources',                   url:'https://www.waterisac.org/' },
     { label:'NERC CIP Standards',                    url:'https://www.nerc.com/pa/Stand/Pages/CIPStandards.aspx' },
@@ -118,7 +118,7 @@ const SCENARIO_REFS = {
     { label:'USGS Earthquake Hazards Program',       url:'https://www.usgs.gov/programs/earthquake-hazards' },
     { label:'FEMA Urban Search & Rescue',            url:'https://www.fema.gov/emergency-managers/practitioners/urban-search-rescue' },
     { label:'ATC-20 Rapid Safety Assessment',        url:'https://www.atcouncil.org/resources/atc-20' },
-    { label:'FEMA Northridge Earthquake Report',     url:'https://www.fema.gov/sites/default/files/2020-08/fema_northridge-earthquake_1994.pdf' },
+    { label:'Northridge Earthquake Disaster Page',   url:'https://www.fema.gov/disaster/1008' },
   ],
   flood: [
     { label:'FEMA Flood Response Guidance',          url:'https://www.fema.gov/emergency-managers/risk-management/flood' },
@@ -128,7 +128,6 @@ const SCENARIO_REFS = {
     { label:'ESF-3 Public Works & Engineering',      url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_3_Public-Works-Engineering.pdf' },
   ],
 }
-
 const ESFS = [
   { num:1,  name:'Transportation',                   lead:'DOT',     desc:'Aviation, maritime, surface transport coordination.' },
   { num:2,  name:'Communications',                   lead:'DHS/CISA',desc:'Restore and sustain communications infrastructure.' },
