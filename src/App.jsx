@@ -10,11 +10,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
-function makeIcon(color, label) {
+function makeIcon(color) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">
     <path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 28 14 28s14-17.5 14-28C28 6.3 21.7 0 14 0z" fill="${color}" stroke="#111" stroke-width="1.5"/>
     <circle cx="14" cy="14" r="6" fill="white" opacity="0.9"/>
-    ${label ? `<text x="14" y="18" text-anchor="middle" font-size="8" font-family="monospace" font-weight="bold" fill="#111">${label}</text>` : ''}
   </svg>`
   return L.divIcon({ html: svg, className: '', iconSize: [28, 40], iconAnchor: [14, 40], popupAnchor: [0, -40] })
 }
@@ -148,6 +147,41 @@ const ESFS = [
   { num:15, name:'External Affairs',                 lead:'FEMA',    desc:'Public information, intergovernmental, community affairs.' },
 ]
 
+const PANEL_INFO = {
+  lifelines: {
+    title: 'Community Lifelines',
+    body: 'The 8 FEMA Community Lifelines represent the most fundamental services a community needs to function. Each lifeline is color-coded: GREEN means fully operational, YELLOW means degraded, RED means compromised or non-functional. Status updates every turn based on your decisions and incident conditions. Click any lifeline tile to see the AI\'s one-sentence reasoning for its current status.'
+  },
+  media: {
+    title: 'Media Feed',
+    body: 'AI-generated fictional news headlines that reflect the current state of the incident each turn. LIVE badges mark headlines from the current turn. Older headlines fade to gray as the scenario progresses. These reflect what the public and media are seeing — factor them into your public information and JIC decisions.'
+  },
+  refs: {
+    title: 'Reference Links',
+    body: 'Curated real-world doctrine, guidance documents, and after-action reports relevant to the active scenario type. Links open in a new tab. Use these during or after play to cross-reference your decisions against actual federal guidance and historical incident reviews.'
+  },
+  esf: {
+    title: 'ESF Reference',
+    body: 'All 15 Emergency Support Functions from the National Response Framework. Each entry shows the ESF number, name, lead federal agency, and a one-line description. Use this as a memory jogger during play — which ESFs are relevant to your current incident, and who owns them? You\'re still responsible for knowing the doctrine.'
+  },
+  dispatch: {
+    title: 'Field Dispatch',
+    body: 'Incoming field reports from the incident. NEW cards highlighted in green are from the current turn — they reflect consequences of your last action and new developments. Older cards fade to gray but remain visible as a running log. The red badge shows total dispatch count. Some dispatches will generate map pins when they have a physical location.'
+  },
+  terminal: {
+    title: 'Scenario Terminal',
+    body: 'The main command interface. Type your decisions as the senior EM on scene — be specific about resources, priorities, communications, and who owns what. The AI evaluates your action and advances the incident clock. Type ENDEX at any time to end the scenario and receive a full After-Action Review. The situation status indicator in the header reflects overall incident trajectory.'
+  },
+  notepad: {
+    title: "Commander's Notepad",
+    body: 'A free-text scratch pad for tracking priorities, resource gaps, pending decisions, or anything else you need to remember. Content persists across turns and browser sessions — it will be here when you come back. Nothing you write here affects the simulation.'
+  },
+  map: {
+    title: 'Incident Map',
+    body: 'A live operational map of the incident area. Colored pins mark fixed infrastructure: green for EOC, blue for hospitals, orange for staging areas, purple for shelters, red for affected sites. White-bordered pins with turn numbers (T1, T2, etc.) are dynamic event pins dropped by the AI when dispatch events have a physical location. Click any pin for details. The map accumulates event pins across all turns.'
+  },
+}
+
 const SCENARIOS = {
   hurricane:  { name:'Hurricane Landfall',          icon:'🌀', desc:'Cat 4/5 landfall on a coastal county. 72-hour warning window closing fast.' },
   mci:        { name:'Mass Casualty Incident',       icon:'🚨', desc:'Explosion at a crowded public event. 200+ casualties. Cause unknown.' },
@@ -161,14 +195,14 @@ const JURISDICTIONS = ['Rural County','Mid-Size City','Large Urban Metro','Coast
 const DIFFICULTIES  = ['Basic','Moderate','Advanced','Brutal','Adaptive']
 
 const LIFELINES = [
-  { key:'safety',    label:'Safety & Security',       icon:'/icons/safety.png' },
-  { key:'food',      label:'Food, Hydration, Shelter', icon:'/icons/food.png' },
-  { key:'health',    label:'Health & Medical',         icon:'/icons/health.png' },
-  { key:'energy',    label:'Energy',                   icon:'/icons/energy.png' },
-  { key:'comms',     label:'Communications',           icon:'/icons/comms.png' },
-  { key:'transport', label:'Transportation',           icon:'/icons/transport.png' },
-  { key:'hazmat',    label:'Hazardous Material',       icon:'/icons/hazmat.png' },
-  { key:'water',     label:'Water Systems',            icon:'/icons/water.png' },
+  { key:'safety',    label:'Safety & Security',        icon:'/icons/safety.png' },
+  { key:'food',      label:'Food, Hydration, Shelter',  icon:'/icons/food.png' },
+  { key:'health',    label:'Health & Medical',          icon:'/icons/health.png' },
+  { key:'energy',    label:'Energy',                    icon:'/icons/energy.png' },
+  { key:'comms',     label:'Communications',            icon:'/icons/comms.png' },
+  { key:'transport', label:'Transportation',            icon:'/icons/transport.png' },
+  { key:'hazmat',    label:'Hazardous Material',        icon:'/icons/hazmat.png' },
+  { key:'water',     label:'Water Systems',             icon:'/icons/water.png' },
 ]
 
 const DEFAULT_LIFELINES = {
@@ -197,7 +231,7 @@ const DISPATCH_SEEDS = {
   flood:      ['Dam engineer recommending immediate downstream notification.','Two downstream communities ignoring evacuation order.','Emergency spillway activation requested — awaiting your authorization.','FEMA Region pre-positioned team requesting coordination call.','Local news helicopter flying over dam. Public anxiety rising.'],
 }
 
-const DEFAULT_SETTINGS = { fontSize: 11, accentColor: '#1D9E75', alertColor: '#EF9F27' }
+const DEFAULT_SETTINGS = { fontSize:11, accentColor:'#1D9E75', alertColor:'#EF9F27' }
 const SETTINGS_KEY = 'em_sim_settings'
 
 function buildSystemPrompt(scenario, jurisdiction, difficulty) {
@@ -226,8 +260,8 @@ RULES:
 - Generate 1-2 new field dispatch items after each consequence.
 - Embed NIMS/ICS/ESF/FEMA doctrine in realism — don't lecture.
 - Generate 3-4 realistic fictional news headlines reflecting current incident state.
-- When a dispatch event has a specific physical location (road closure, secondary incident, new staging area, shelter activation, casualty collection point, etc.), include it as a map pin. Not every dispatch needs a pin — only events with meaningful geographic context. Generate 0-2 pins per turn.
-- On ENDEX: thorough AAR covering: (1) command element continuity and whether it was maintained throughout the incident, (2) any continuity decisions made or that should have been made given the scenario type, (3) resource and coordination effectiveness, (4) communications and information management, (5) strengths, (6) critical gaps, (7) relevant doctrine references, (8) specific recommendations for improvement.
+- When a dispatch event has a specific physical location, include it as a map pin. Generate 0-2 pins per turn.
+- On ENDEX: thorough AAR covering: (1) command element continuity and whether it was maintained, (2) continuity decisions made or that should have been made, (3) resource and coordination effectiveness, (4) communications and information management, (5) strengths, (6) critical gaps, (7) relevant doctrine references, (8) specific recommendations.
 - Never break character.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
@@ -258,7 +292,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
 On ENDEX use same format with full AAR in consequence field, empty headlines and pins arrays.`
 }
 
-const SAVE_KEY = 'em_sim_v10'
+const SAVE_KEY = 'em_sim_v11'
 
 const defaultState = {
   screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive',
@@ -273,7 +307,7 @@ function useHorizDrag(containerRef, onUpdate) {
   function onMouseDown(idx, e) {
     e.preventDefault()
     const rect = containerRef.current.getBoundingClientRect()
-    drag.current = { idx, containerLeft: rect.left, containerW: rect.width }
+    drag.current = { idx, containerLeft:rect.left, containerW:rect.width }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }
@@ -296,7 +330,7 @@ function useVertDrag(containerRef, onUpdate) {
   function onMouseDown(e) {
     e.preventDefault()
     const rect = containerRef.current.getBoundingClientRect()
-    drag.current = { containerTop: rect.top, containerH: rect.height }
+    drag.current = { containerTop:rect.top, containerH:rect.height }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }
@@ -312,6 +346,51 @@ function useVertDrag(containerRef, onUpdate) {
     window.removeEventListener('mouseup', onUp)
   }
   return onMouseDown
+}
+
+// Info callout component
+function InfoCallout({ panelKey, anchorRef, onClose }) {
+  const info = PANEL_INFO[panelKey]
+  const [pos, setPos] = useState({ top:0, left:0 })
+  useEffect(() => {
+    if (anchorRef?.current) {
+      const rect = anchorRef.current.getBoundingClientRect()
+      setPos({ top: rect.bottom + 6, left: Math.min(rect.left, window.innerWidth - 320) })
+    }
+    const handler = (e) => {
+      if (!e.target.closest('[data-info-callout]') && !e.target.closest('[data-info-btn]')) onClose()
+    }
+    setTimeout(() => window.addEventListener('click', handler), 50)
+    return () => window.removeEventListener('click', handler)
+  }, [])
+  if (!info) return null
+  return (
+    <div data-info-callout="true" style={{ position:'fixed', top:pos.top, left:pos.left, width:300, background:'#141414', border:'0.5px solid #444', borderRadius:8, padding:'12px 14px', zIndex:3000, boxShadow:'0 8px 24px rgba(0,0,0,0.9)' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+        <span style={{ fontSize:11, fontWeight:500, color:'#ccc', letterSpacing:'0.04em' }}>{info.title}</span>
+        <button onClick={onClose} style={{ fontSize:12, color:'#555', border:'none', background:'none', cursor:'pointer', padding:'0 2px' }}>✕</button>
+      </div>
+      <p style={{ fontSize:10, color:'#777', lineHeight:1.7, margin:0 }}>{info.body}</p>
+    </div>
+  )
+}
+
+// Info button — small ⓘ next to panel header label
+function InfoBtn({ panelKey, activeInfo, setActiveInfo }) {
+  const btnRef = useRef(null)
+  const isActive = activeInfo === panelKey
+  return (
+    <>
+      <button
+        ref={btnRef}
+        data-info-btn="true"
+        onClick={e => { e.stopPropagation(); setActiveInfo(isActive ? null : panelKey) }}
+        style={{ marginLeft:6, width:14, height:14, borderRadius:'50%', border:'0.5px solid #444', background:isActive?'#333':'transparent', color:'#555', cursor:'pointer', fontSize:9, display:'inline-flex', alignItems:'center', justifyContent:'center', padding:0, flexShrink:0 }}>
+        ⓘ
+      </button>
+      {isActive && <InfoCallout panelKey={panelKey} anchorRef={btnRef} onClose={() => setActiveInfo(null)} />}
+    </>
+  )
 }
 
 function LifelineTile({ ll, data }) {
@@ -364,8 +443,8 @@ function SettingsPanel({ settings, onChange, onClose }) {
           <span style={{ fontSize:10, color:'#aaa' }}>{settings.fontSize}px</span>
         </div>
         <input type="range" min={9} max={16} value={settings.fontSize}
-          onChange={e => onChange({ ...settings, fontSize: Number(e.target.value) })}
-          style={{ width:'100%', accentColor: settings.accentColor }} />
+          onChange={e => onChange({ ...settings, fontSize:Number(e.target.value) })}
+          style={{ width:'100%', accentColor:settings.accentColor }} />
         <div style={{ display:'flex', justifyContent:'space-between', marginTop:2 }}>
           <span style={{ fontSize:9, color:'#444' }}>Small</span>
           <span style={{ fontSize:9, color:'#444' }}>Large</span>
@@ -378,11 +457,11 @@ function SettingsPanel({ settings, onChange, onClose }) {
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           <input type="color" value={settings.accentColor}
-            onChange={e => onChange({ ...settings, accentColor: e.target.value })}
+            onChange={e => onChange({ ...settings, accentColor:e.target.value })}
             style={{ width:36, height:28, border:'0.5px solid #333', borderRadius:4, background:'none', cursor:'pointer', padding:2 }} />
           <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
             {['#1D9E75','#4A90D9','#9B59B6','#E24B4A','#E8A838','#2ecc71'].map(c => (
-              <div key={c} onClick={() => onChange({ ...settings, accentColor: c })}
+              <div key={c} onClick={() => onChange({ ...settings, accentColor:c })}
                 style={{ width:18, height:18, borderRadius:3, background:c, cursor:'pointer', border:`2px solid ${settings.accentColor===c?'#fff':'transparent'}` }} />
             ))}
           </div>
@@ -395,11 +474,11 @@ function SettingsPanel({ settings, onChange, onClose }) {
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           <input type="color" value={settings.alertColor}
-            onChange={e => onChange({ ...settings, alertColor: e.target.value })}
+            onChange={e => onChange({ ...settings, alertColor:e.target.value })}
             style={{ width:36, height:28, border:'0.5px solid #333', borderRadius:4, background:'none', cursor:'pointer', padding:2 }} />
           <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
             {['#EF9F27','#E24B4A','#4A90D9','#ccc','#9B59B6','#F39C12'].map(c => (
-              <div key={c} onClick={() => onChange({ ...settings, alertColor: c })}
+              <div key={c} onClick={() => onChange({ ...settings, alertColor:c })}
                 style={{ width:18, height:18, borderRadius:3, background:c, cursor:'pointer', border:`2px solid ${settings.alertColor===c?'#fff':'transparent'}` }} />
             ))}
           </div>
@@ -421,6 +500,7 @@ export default function App() {
   const [leftBounds, setLeftBounds] = useState([40, 70])
   const [rightSplit, setRightSplit] = useState(45)
   const [showSettings, setShowSettings] = useState(false)
+  const [activeInfo, setActiveInfo] = useState(null)
   const [settings, setSettings]     = useState(() => {
     try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}') } }
     catch { return DEFAULT_SETTINGS }
@@ -478,7 +558,7 @@ export default function App() {
     return function(e) {
       e.preventDefault(); e.stopPropagation()
       const rect = leftColRef.current.getBoundingClientRect()
-      const info = { top: rect.top, h: rect.height }
+      const info = { top:rect.top, h:rect.height }
       function onMove(ev) {
         const pct = ((ev.clientY - info.top) / info.h) * 100
         setLeftBounds(prev => {
@@ -513,7 +593,7 @@ export default function App() {
         { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${state.jurisdiction} — ${state.difficulty}` },
         { type:'system',   text:'Type your decisions as the EM on scene. Be specific. Type ENDEX for AAR.' },
         { type:'divider' },
-        { type:'narrator', text: sc.desc + ' Your EOC is activating. What is your first action?' },
+        { type:'narrator', text:sc.desc + ' Your EOC is activating. What is your first action?' },
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
       notepad:'', lifelines:DEFAULT_LIFELINES, headlines:[], dynamicPins:[],
@@ -525,12 +605,12 @@ export default function App() {
     const action = input.trim()
     setInput(''); setLoading(true)
     const newTerm = [...state.terminal, { type:'player', text:`> ${action}` }]
-    update({ terminal: newTerm })
+    update({ terminal:newTerm })
     const msgs = [...state.history, { role:'user', content:action }]
     try {
       const res  = await fetch('/api/chat', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ system: buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty), messages: msgs }),
+        body: JSON.stringify({ system:buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty), messages:msgs }),
       })
       const data = await res.json()
       const raw  = data.content?.[0]?.text || ''
@@ -547,7 +627,6 @@ export default function App() {
         parsed.situation !== 'ENDEX' ? { type:'prompt', text:parsed.prompt } : null,
         { type:'divider' },
       ].filter(Boolean)
-
       const newDispatches = parsed.dispatches?.length
         ? [...parsed.dispatches.map((text,i) => ({ id:Date.now()+i, text, turn:nextTurn })), ...state.dispatches.slice(0,6)]
         : state.dispatches
@@ -622,8 +701,12 @@ export default function App() {
   const divInner  = { width:3, height:28, background:'#3a3a3a', borderRadius:2, pointerEvents:'none' }
   const hDivSty   = { height:10, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', borderTop:'0.5px solid #2a2a2a', borderBottom:'0.5px solid #2a2a2a', flexShrink:0 }
   const hDivInner = { width:28, height:3, background:'#3a3a3a', borderRadius:2 }
-  const panelHdr  = (label) => (
-    <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0 }}>{label}</div>
+
+  const panelHdr = (label, infoKey) => (
+    <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0, display:'flex', alignItems:'center' }}>
+      {label}
+      {infoKey && <InfoBtn panelKey={infoKey} activeInfo={activeInfo} setActiveInfo={setActiveInfo} />}
+    </div>
   )
 
   const staticPins  = state.scenario ? SCENARIO_PINS[state.scenario]||[] : []
@@ -648,7 +731,10 @@ export default function App() {
 
       {/* LIFELINE BAR */}
       <div style={{ display:'flex', gap:6, padding:'6px 10px', border:'0.5px solid #222', borderRadius:8, background:'#0d0d0d', alignItems:'center', flexShrink:0 }}>
-        <span style={{ fontSize:9, color:'#444', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:500, marginRight:4, whiteSpace:'nowrap' }}>Community Lifelines</span>
+        <span style={{ fontSize:9, color:'#444', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:500, marginRight:4, whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:4 }}>
+          Community Lifelines
+          <InfoBtn panelKey="lifelines" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
+        </span>
         {LIFELINES.map(ll => <LifelineTile key={ll.key} ll={ll} data={state.lifelines?.[ll.key]} />)}
         <button onClick={() => setShowSettings(s => !s)} title="Display Settings"
           style={{ marginLeft:8, flexShrink:0, width:26, height:26, borderRadius:5, border:'0.5px solid #333', background:showSettings?'#222':'transparent', color:'#666', cursor:'pointer', fontSize:14, display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
@@ -662,7 +748,7 @@ export default function App() {
         {/* LEFT COLUMN */}
         <div ref={leftColRef} style={{ width:`${colW[0]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
           <div style={{ height:`${leftBounds[0]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-            {panelHdr('Media Feed')}
+            {panelHdr('Media Feed', 'media')}
             <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:6 }}>
               {state.headlines.length === 0 && <div style={{ color:'#333', fontSize:10, padding:'8px', fontStyle:'italic' }}>Headlines appear after your first action.</div>}
               {state.headlines.map(h => (
@@ -676,7 +762,7 @@ export default function App() {
           </div>
           <div onMouseDown={makeLeftVertDrag(0)} style={hDivSty}><div style={hDivInner}/></div>
           <div style={{ height:`${leftBounds[1]-leftBounds[0]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-            {panelHdr('Reference Links')}
+            {panelHdr('Reference Links', 'refs')}
             <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:4 }}>
               {refs.length === 0 && <div style={{ color:'#333', fontSize:10, padding:'8px', fontStyle:'italic' }}>Launch a scenario to see references.</div>}
               {refs.map((r,i) => (
@@ -691,7 +777,7 @@ export default function App() {
           </div>
           <div onMouseDown={makeLeftVertDrag(1)} style={hDivSty}><div style={hDivInner}/></div>
           <div style={{ flex:1, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
-            {panelHdr('ESF Reference')}
+            {panelHdr('ESF Reference', 'esf')}
             <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:3 }}>
               {ESFS.map(esf => (
                 <div key={esf.num} style={{ padding:'5px 8px', borderRadius:5, border:'0.5px solid #1a1a1a', lineHeight:1.4 }}>
@@ -711,8 +797,11 @@ export default function App() {
 
         {/* DISPATCH */}
         <div style={{ width:`${colW[1]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-          <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', justifyContent:'space-between' }}>
-            <span>Field Dispatch</span>
+          <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <span style={{ display:'flex', alignItems:'center' }}>
+              Field Dispatch
+              <InfoBtn panelKey="dispatch" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
+            </span>
             <span style={{ background:'#E24B4A', color:'#fff', borderRadius:3, padding:'1px 5px', fontSize:9 }}>{state.dispatches.length}</span>
           </div>
           <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:6 }}>
@@ -733,7 +822,10 @@ export default function App() {
         {/* TERMINAL */}
         <div style={{ width:`${colW[2]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
           <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em' }}>{SCENARIOS[state.scenario]?.name} — {state.jurisdiction}</span>
+            <span style={{ fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', alignItems:'center' }}>
+              {SCENARIOS[state.scenario]?.name} — {state.jurisdiction}
+              <InfoBtn panelKey="terminal" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
+            </span>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
               <span style={{ fontSize:10, color:'#444' }}>{state.simTime}</span>
               <span style={{ fontSize:9, padding:'2px 6px', borderRadius:3, fontWeight:500, background:(sitColors[state.situation]||'#888')+'22', color:sitColors[state.situation]||'#888' }}>{state.situation}</span>
@@ -763,7 +855,7 @@ export default function App() {
         {/* RIGHT COLUMN */}
         <div ref={rightColRef} style={{ width:`${colW[3]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
           <div style={{ height:`${rightSplit}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-            {panelHdr("Commander's Notepad")}
+            {panelHdr("Commander's Notepad", 'notepad')}
             <textarea value={state.notepad} onChange={e => update({ notepad:e.target.value })}
               placeholder={'Priorities, resource gaps...\n\nPersists across sessions.'}
               style={{ flex:1, resize:'none', border:'none', padding:'8px 10px', background:'transparent', color:'#888', lineHeight:1.7, outline:'none', fontSize:fs }}/>
@@ -771,13 +863,16 @@ export default function App() {
           </div>
           <div onMouseDown={onRightDown} style={hDivSty}><div style={hDivInner}/></div>
           <div style={{ flex:1, border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
-            {panelHdr(`Incident Map — ${dynamicPins.length} event${dynamicPins.length!==1?'s':''}`)}
+            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0, display:'flex', alignItems:'center' }}>
+              Incident Map — {dynamicPins.length} event{dynamicPins.length!==1?'s':''}
+              <InfoBtn panelKey="map" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
+            </div>
             <div style={{ height:'calc(100% - 28px)' }}>
               <MapContainer center={center} zoom={13} style={{ height:'100%', width:'100%' }}>
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
                 <MapUpdater center={center}/>
                 {staticPins.map(pin => (
-                  <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT, null)}>
+                  <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT)}>
                     <Popup>
                       <div style={{ fontFamily:'monospace', fontSize:11 }}>
                         <strong>{pin.label}</strong><br/>
