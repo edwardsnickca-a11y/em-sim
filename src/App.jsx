@@ -365,12 +365,12 @@ function InfoCallout({ panelKey, anchorRef, onClose }) {
   }, [])
   if (!info) return null
   return (
-    <div data-info-callout="true" style={{ position:'fixed', top:pos.top, left:pos.left, width:300, background:'#141414', border:'0.5px solid #444', borderRadius:8, padding:'12px 14px', zIndex:3000, boxShadow:'0 8px 24px rgba(0,0,0,0.9)' }}>
+    <div data-info-callout="true" style={{ position:'fixed', top:pos.top, left:pos.left, width:340, background:'#141414', border:'0.5px solid #444', borderRadius:8, padding:'12px 14px', zIndex:3000, boxShadow:'0 8px 24px rgba(0,0,0,0.9)' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
         <span style={{ fontSize:11, fontWeight:500, color:'#ccc', letterSpacing:'0.04em' }}>{info.title}</span>
         <button onClick={onClose} style={{ fontSize:12, color:'#555', border:'none', background:'none', cursor:'pointer', padding:'0 2px' }}>✕</button>
       </div>
-      <p style={{ fontSize:10, color:'#777', lineHeight:1.7, margin:0 }}>{info.body}</p>
+      <p style={{ fontSize:10, color:'#777', lineHeight:1.7, margin:0, whiteSpace:'normal', wordBreak:'break-word' }}>{info.body}</p>
     </div>
   )
 }
