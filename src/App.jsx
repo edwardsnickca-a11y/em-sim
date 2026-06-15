@@ -583,6 +583,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [activeInfo, setActiveInfo] = useState(null)
   const [activeESFs, setActiveESFs] = useState({})
+  const [showEndDialog, setShowEndDialog] = useState(false)
   const [settings, setSettings]     = useState(() => {
     try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}') } }
     catch { return DEFAULT_SETTINGS }
@@ -920,7 +921,25 @@ export default function App() {
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
               <span style={{ fontSize:10, color:'#444' }}>{state.simTime}</span>
               <span style={{ fontSize:9, padding:'2px 6px', borderRadius:3, fontWeight:500, background:(sitColors[state.situation]||'#888')+'22', color:sitColors[state.situation]||'#888' }}>{state.situation}</span>
-              <button onClick={reset} style={{ fontSize:10, padding:'2px 8px', color:'#555' }}>New</button>
+              <div style={{ position:'relative' }}>
+  <button onClick={() => setShowEndDialog(s => !s)}
+    style={{ fontSize:10, padding:'2px 8px', color:'#555' }}>New</button>
+  {showEndDialog && (
+    <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, background:'#1a1a1a', border:'0.5px solid #333', borderRadius:6, padding:'10px 12px', zIndex:500, whiteSpace:'nowrap', boxShadow:'0 4px 12px rgba(0,0,0,0.8)' }}>
+      <div style={{ fontSize:10, color:'#666', marginBottom:8 }}>End scenario?</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+        <button onClick={() => { setShowEndDialog(false); setInput('ENDEX'); setTimeout(() => sendAction(), 50) }}
+          style={{ fontSize:10, padding:'4px 10px', color:al, borderColor:al, textAlign:'left' }}>
+          End with AAR ↗
+        </button>
+        <button onClick={() => { setShowEndDialog(false); reset() }}
+          style={{ fontSize:10, padding:'4px 10px', color:'#555', textAlign:'left' }}>
+          End without AAR
+        </button>
+      </div>
+    </div>
+  )}
+</div>
             </div>
           </div>
           <div ref={termRef} style={{ flex:1, overflowY:'auto', padding:'10px 14px', lineHeight:1.8 }}>
