@@ -10,12 +10,22 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
-function makeIcon(color) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="36" viewBox="0 0 24 36">
-    <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="${color}" stroke="#111" stroke-width="1.5"/>
-    <circle cx="12" cy="12" r="5" fill="white" opacity="0.9"/>
+function makeIcon(color, label) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">
+    <path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 28 14 28s14-17.5 14-28C28 6.3 21.7 0 14 0z" fill="${color}" stroke="#111" stroke-width="1.5"/>
+    <circle cx="14" cy="14" r="6" fill="white" opacity="0.9"/>
+    ${label ? `<text x="14" y="18" text-anchor="middle" font-size="8" font-family="monospace" font-weight="bold" fill="#111">${label}</text>` : ''}
   </svg>`
-  return L.divIcon({ html: svg, className: '', iconSize: [24, 36], iconAnchor: [12, 36], popupAnchor: [0, -36] })
+  return L.divIcon({ html: svg, className: '', iconSize: [28, 40], iconAnchor: [14, 40], popupAnchor: [0, -40] })
+}
+
+function makeDynamicIcon(turnNum) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">
+    <path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 28 14 28s14-17.5 14-28C28 6.3 21.7 0 14 0z" fill="#1a1a1a" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="14" cy="14" r="6" fill="white" opacity="0.15"/>
+    <text x="14" y="18" text-anchor="middle" font-size="9" font-family="monospace" font-weight="bold" fill="#ffffff">T${turnNum}</text>
+  </svg>`
+  return L.divIcon({ html: svg, className: '', iconSize: [28, 40], iconAnchor: [14, 40], popupAnchor: [0, -40] })
 }
 
 const PIN_COLORS = { EOC:'#1D9E75', HOSPITAL:'#4A90D9', DAM:'#E24B4A', STAGING:'#EF9F27', SHELTER:'#9B59B6', AFFECTED:'#E24B4A', DEFAULT:'#888' }
@@ -151,14 +161,14 @@ const JURISDICTIONS = ['Rural County','Mid-Size City','Large Urban Metro','Coast
 const DIFFICULTIES  = ['Basic','Moderate','Advanced','Brutal','Adaptive']
 
 const LIFELINES = [
-  { key:'safety',    label:'Safety & Security',   icon:'/icons/safety.png' },
+  { key:'safety',    label:'Safety & Security',       icon:'/icons/safety.png' },
   { key:'food',      label:'Food, Hydration, Shelter', icon:'/icons/food.png' },
-  { key:'health',    label:'Health & Medical',    icon:'/icons/health.png' },
-  { key:'energy',    label:'Energy',              icon:'/icons/energy.png' },
-  { key:'comms',     label:'Communications',      icon:'/icons/comms.png' },
-  { key:'transport', label:'Transportation',      icon:'/icons/transport.png' },
-  { key:'hazmat',    label:'Hazardous Material',  icon:'/icons/hazmat.png' },
-  { key:'water',     label:'Water Systems',       icon:'/icons/water.png' },
+  { key:'health',    label:'Health & Medical',         icon:'/icons/health.png' },
+  { key:'energy',    label:'Energy',                   icon:'/icons/energy.png' },
+  { key:'comms',     label:'Communications',           icon:'/icons/comms.png' },
+  { key:'transport', label:'Transportation',           icon:'/icons/transport.png' },
+  { key:'hazmat',    label:'Hazardous Material',       icon:'/icons/hazmat.png' },
+  { key:'water',     label:'Water Systems',            icon:'/icons/water.png' },
 ]
 
 const DEFAULT_LIFELINES = {
@@ -192,6 +202,7 @@ const SETTINGS_KEY = 'em_sim_settings'
 
 function buildSystemPrompt(scenario, jurisdiction, difficulty) {
   const sc = SCENARIOS[scenario]
+  const center = SCENARIO_CENTERS[scenario]
   const diffMap = {
     Basic:    'Evaluate actions generously. Surface one complication per turn.',
     Moderate: 'Evaluate with moderate rigor. Surface two complications per turn.',
@@ -205,6 +216,7 @@ SCENARIO: ${sc.name}
 JURISDICTION: ${jurisdiction}
 DIFFICULTY: ${difficulty} — ${diffMap[difficulty]}
 SETUP: ${sc.desc} Your EOC is activating.
+MAP CENTER: lat ${center[0]}, lng ${center[1]} — all coordinates must be geographically plausible within ~10 miles of this point.
 
 RULES:
 - Evaluate player actions with professional rigor. Never be encouraging. Be realistic.
@@ -214,6 +226,7 @@ RULES:
 - Generate 1-2 new field dispatch items after each consequence.
 - Embed NIMS/ICS/ESF/FEMA doctrine in realism — don't lecture.
 - Generate 3-4 realistic fictional news headlines reflecting current incident state.
+- When a dispatch event has a specific physical location (road closure, secondary incident, new staging area, shelter activation, casualty collection point, etc.), include it as a map pin. Not every dispatch needs a pin — only events with meaningful geographic context. Generate 0-2 pins per turn.
 - On ENDEX: thorough AAR covering: (1) command element continuity and whether it was maintained throughout the incident, (2) any continuity decisions made or that should have been made given the scenario type, (3) resource and coordination effectiveness, (4) communications and information management, (5) strengths, (6) critical gaps, (7) relevant doctrine references, (8) specific recommendations for improvement.
 - Never break character.
 
@@ -227,6 +240,9 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
   "headlines": [
     { "source": "News outlet name", "text": "Headline text", "time": "simulated time" }
   ],
+  "pins": [
+    { "label": "Location name", "type": "AFFECTED | STAGING | SHELTER | HOSPITAL | EOC | BLOCKED | OTHER", "lat": 0.000, "lng": 0.000, "note": "one sentence status note" }
+  ],
   "lifelines": {
     "safety":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence" },
     "food":      { "status": "GREEN | YELLOW | RED", "reason": "one sentence" },
@@ -234,20 +250,20 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
     "energy":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence" },
     "comms":     { "status": "GREEN | YELLOW | RED", "reason": "one sentence" },
     "transport": { "status": "GREEN | YELLOW | RED", "reason": "one sentence" },
-    "hazmat":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence" }
+    "hazmat":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence" },
     "water":     { "status": "GREEN | YELLOW | RED", "reason": "one sentence" }
   }
 }
 
-On ENDEX use same format with full AAR in consequence field and empty headlines array.`
+On ENDEX use same format with full AAR in consequence field, empty headlines and pins arrays.`
 }
 
-const SAVE_KEY = 'em_sim_v9'
+const SAVE_KEY = 'em_sim_v10'
 
 const defaultState = {
   screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive',
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
-  situation:'DEVELOPING', turn:0, lifelines:DEFAULT_LIFELINES, headlines:[],
+  situation:'DEVELOPING', turn:0, lifelines:DEFAULT_LIFELINES, headlines:[], dynamicPins:[],
 }
 
 const sitColors = { STABLE:'#1D9E75', DEVELOPING:'#EF9F27', CRITICAL:'#D85A30', DETERIORATING:'#E24B4A', ENDEX:'#888' }
@@ -298,7 +314,7 @@ function useVertDrag(containerRef, onUpdate) {
   return onMouseDown
 }
 
-function LifelineTile({ ll, data, accent }) {
+function LifelineTile({ ll, data }) {
   const [hovered, setHovered] = useState(false)
   const [tipPos, setTipPos]   = useState({ left:0, top:0 })
   const tileRef               = useRef(null)
@@ -318,7 +334,7 @@ function LifelineTile({ ll, data, accent }) {
   return (
     <div ref={tileRef} onMouseEnter={handleMouseEnter} onMouseLeave={() => setHovered(false)}
       style={{ position:'relative', display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:4, border:`0.5px solid ${c.border}`, background:c.bg, flex:1, minWidth:0, cursor:'default' }}>
-  <img src={ll.icon} alt={ll.label} style={{ width:20, height:20, objectFit:'contain', flexShrink:0 }} />
+      <img src={ll.icon} alt={ll.label} style={{ width:20, height:20, objectFit:'contain', flexShrink:0 }} />
       <span style={{ fontSize:9, color:c.text, fontWeight:500, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{ll.label}</span>
       {hovered && (
         <div style={{ position:'fixed', left:tipPos.left, top:tipPos.top, transform:'translateX(-50%)', background:'#1a1a1a', border:`0.5px solid ${c.border}`, borderRadius:6, padding:'8px 12px', fontSize:10, color:'#ccc', lineHeight:1.6, width:300, zIndex:1000, boxShadow:'0 4px 16px rgba(0,0,0,0.8)', pointerEvents:'none' }}>
@@ -342,7 +358,6 @@ function SettingsPanel({ settings, onChange, onClose }) {
         <span style={{ fontSize:11, fontWeight:500, color:'#aaa', textTransform:'uppercase', letterSpacing:'0.08em' }}>Display Settings</span>
         <button onClick={onClose} style={{ fontSize:14, color:'#555', padding:'0 4px', border:'none', background:'none', cursor:'pointer' }}>✕</button>
       </div>
-
       <div style={{ marginBottom:14 }}>
         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
           <span style={{ fontSize:10, color:'#666' }}>Font Size</span>
@@ -356,7 +371,6 @@ function SettingsPanel({ settings, onChange, onClose }) {
           <span style={{ fontSize:9, color:'#444' }}>Large</span>
         </div>
       </div>
-
       <div style={{ marginBottom:14 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
           <span style={{ fontSize:10, color:'#666' }}>Accent Color</span>
@@ -374,7 +388,6 @@ function SettingsPanel({ settings, onChange, onClose }) {
           </div>
         </div>
       </div>
-
       <div style={{ marginBottom:14 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
           <span style={{ fontSize:10, color:'#666' }}>Alert Color</span>
@@ -392,7 +405,6 @@ function SettingsPanel({ settings, onChange, onClose }) {
           </div>
         </div>
       </div>
-
       <button onClick={() => onChange(DEFAULT_SETTINGS)}
         style={{ width:'100%', padding:'6px', fontSize:10, color:'#555', border:'0.5px solid #333', borderRadius:6, cursor:'pointer', background:'transparent' }}>
         Reset to Defaults
@@ -464,8 +476,7 @@ export default function App() {
 
   function makeLeftVertDrag(divIdx) {
     return function(e) {
-      e.preventDefault()
-      e.stopPropagation()
+      e.preventDefault(); e.stopPropagation()
       const rect = leftColRef.current.getBoundingClientRect()
       const info = { top: rect.top, h: rect.height }
       function onMove(ev) {
@@ -505,7 +516,7 @@ export default function App() {
         { type:'narrator', text: sc.desc + ' Your EOC is activating. What is your first action?' },
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
-      notepad:'', lifelines:DEFAULT_LIFELINES, headlines:[],
+      notepad:'', lifelines:DEFAULT_LIFELINES, headlines:[], dynamicPins:[],
     })
   }
 
@@ -525,7 +536,8 @@ export default function App() {
       const raw  = data.content?.[0]?.text || ''
       let parsed
       try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
-      catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'What is your next action?', lifelines:state.lifelines, headlines:[] } }
+      catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'What is your next action?', lifelines:state.lifelines, headlines:[], pins:[] } }
+
       const nextTurn   = state.turn + 1
       const newHistory = [...msgs, { role:'assistant', content:JSON.stringify(parsed) }]
       const addedTerm  = [
@@ -535,13 +547,23 @@ export default function App() {
         parsed.situation !== 'ENDEX' ? { type:'prompt', text:parsed.prompt } : null,
         { type:'divider' },
       ].filter(Boolean)
+
       const newDispatches = parsed.dispatches?.length
         ? [...parsed.dispatches.map((text,i) => ({ id:Date.now()+i, text, turn:nextTurn })), ...state.dispatches.slice(0,6)]
         : state.dispatches
       const newHeadlines = parsed.headlines?.length
         ? [...parsed.headlines.map((h,i) => ({ ...h, id:Date.now()+i, turn:nextTurn })), ...state.headlines.slice(0,12)]
         : state.headlines
-      update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches, simTime:parsed.time||state.simTime, situation:parsed.situation||'DEVELOPING', turn:nextTurn, lifelines:parsed.lifelines||state.lifelines, headlines:newHeadlines })
+      const newDynamicPins = parsed.pins?.length
+        ? [...(state.dynamicPins||[]), ...parsed.pins.map((p,i) => ({ ...p, id:`dyn-${Date.now()}-${i}`, turn:nextTurn }))]
+        : (state.dynamicPins||[])
+
+      update({
+        terminal:addedTerm, history:newHistory, dispatches:newDispatches,
+        simTime:parsed.time||state.simTime, situation:parsed.situation||'DEVELOPING',
+        turn:nextTurn, lifelines:parsed.lifelines||state.lifelines,
+        headlines:newHeadlines, dynamicPins:newDynamicPins,
+      })
     } catch(e) {
       update({ terminal:[...newTerm, { type:'system', text:`[ERROR: ${e.message}]` }] })
     }
@@ -604,17 +626,18 @@ export default function App() {
     <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0 }}>{label}</div>
   )
 
-  const pins   = state.scenario ? SCENARIO_PINS[state.scenario]||[] : []
-  const center = state.scenario ? SCENARIO_CENTERS[state.scenario] : [39.5,-98.35]
-  const refs   = state.scenario ? SCENARIO_REFS[state.scenario]||[] : []
+  const staticPins  = state.scenario ? SCENARIO_PINS[state.scenario]||[] : []
+  const dynamicPins = state.dynamicPins || []
+  const center      = state.scenario ? SCENARIO_CENTERS[state.scenario] : [39.5,-98.35]
+  const refs        = state.scenario ? SCENARIO_REFS[state.scenario]||[] : []
 
   const termStyles = {
     header:      { color:'#aaa', fontWeight:500, marginBottom:4, fontSize:fs },
-    system:      { color:'#333', fontSize:Math.max(9, fs-2), marginBottom:6 },
+    system:      { color:'#333', fontSize:Math.max(9,fs-2), marginBottom:6 },
     narrator:    { color:'#ccc', marginBottom:6, fontSize:fs },
     player:      { color:ac, marginBottom:4, fontWeight:500, fontSize:fs },
     consequence: { color:'#777', marginBottom:6, borderLeft:'2px solid #2a2a2a', paddingLeft:10, fontSize:fs },
-    time:        { color:al, fontSize:Math.max(9, fs-1), marginBottom:2, fontWeight:500 },
+    time:        { color:al, fontSize:Math.max(9,fs-1), marginBottom:2, fontWeight:500 },
     prompt:      { color:al, fontStyle:'italic', marginBottom:4, fontSize:fs },
   }
 
@@ -626,9 +649,8 @@ export default function App() {
       {/* LIFELINE BAR */}
       <div style={{ display:'flex', gap:6, padding:'6px 10px', border:'0.5px solid #222', borderRadius:8, background:'#0d0d0d', alignItems:'center', flexShrink:0 }}>
         <span style={{ fontSize:9, color:'#444', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:500, marginRight:4, whiteSpace:'nowrap' }}>Community Lifelines</span>
-        {LIFELINES.map(ll => <LifelineTile key={ll.key} ll={ll} data={state.lifelines?.[ll.key]} accent={ac} />)}
-        <button onClick={() => setShowSettings(s => !s)}
-          title="Display Settings"
+        {LIFELINES.map(ll => <LifelineTile key={ll.key} ll={ll} data={state.lifelines?.[ll.key]} />)}
+        <button onClick={() => setShowSettings(s => !s)} title="Display Settings"
           style={{ marginLeft:8, flexShrink:0, width:26, height:26, borderRadius:5, border:'0.5px solid #333', background:showSettings?'#222':'transparent', color:'#666', cursor:'pointer', fontSize:14, display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
           ⚙️
         </button>
@@ -749,17 +771,28 @@ export default function App() {
           </div>
           <div onMouseDown={onRightDown} style={hDivSty}><div style={hDivInner}/></div>
           <div style={{ flex:1, border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
-            {panelHdr('Incident Map')}
+            {panelHdr(`Incident Map — ${dynamicPins.length} event${dynamicPins.length!==1?'s':''}`)}
             <div style={{ height:'calc(100% - 28px)' }}>
               <MapContainer center={center} zoom={13} style={{ height:'100%', width:'100%' }}>
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
                 <MapUpdater center={center}/>
-                {pins.map(pin => (
-                  <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT)}>
+                {staticPins.map(pin => (
+                  <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT, null)}>
                     <Popup>
                       <div style={{ fontFamily:'monospace', fontSize:11 }}>
                         <strong>{pin.label}</strong><br/>
                         <span style={{ color:'#666' }}>{pin.type}</span><br/>
+                        {pin.note}
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+                {dynamicPins.map(pin => (
+                  <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeDynamicIcon(pin.turn)}>
+                    <Popup>
+                      <div style={{ fontFamily:'monospace', fontSize:11 }}>
+                        <strong>{pin.label}</strong><br/>
+                        <span style={{ color:'#666' }}>Turn {pin.turn} — {pin.type}</span><br/>
                         {pin.note}
                       </div>
                     </Popup>
