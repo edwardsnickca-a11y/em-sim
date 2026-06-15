@@ -619,7 +619,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', height:'97vh', padding:'0.75rem', gap:8, fontFamily:'JetBrains Mono, monospace', fontSize:fs }}>
+    <div style={{ display:'flex', flexDirection:'column', height:'97vh', padding:'0.75rem', gap:8, fontFamily:'JetBrains Mono, monospace', fontSize:fs, width:'100%', boxSizing:'border-box' }}>
 
       {showSettings && <SettingsPanel settings={settings} onChange={updateSettings} onClose={() => setShowSettings(false)} />}
 
