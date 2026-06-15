@@ -214,7 +214,7 @@ RULES:
 - Generate 1-2 new field dispatch items after each consequence.
 - Embed NIMS/ICS/ESF/FEMA doctrine in realism — don't lecture.
 - Generate 3-4 realistic fictional news headlines reflecting current incident state.
-- On ENDEX: thorough AAR covering: (1) COOP activation timing, (2) command element continuity, (3) alternate facility readiness, (4) IT/comms at alternate sites, (5) strengths, (6) gaps, (7) doctrine references, (8) recommendations.
+- On ENDEX: thorough AAR covering: (1) command element continuity and whether it was maintained throughout the incident, (2) any continuity decisions made or that should have been made given the scenario type, (3) resource and coordination effectiveness, (4) communications and information management, (5) strengths, (6) critical gaps, (7) relevant doctrine references, (8) specific recommendations for improvement.
 - Never break character.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
