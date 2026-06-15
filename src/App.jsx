@@ -27,7 +27,7 @@ function makeDynamicIcon(turnNum) {
   return L.divIcon({ html: svg, className: '', iconSize: [28, 40], iconAnchor: [14, 40], popupAnchor: [0, -40] })
 }
 
-const PIN_COLORS = { EOC:'#1D9E75', HOSPITAL:'#4A90D9', DAM:'#E24B4A', STAGING:'#EF9F27', SHELTER:'#9B59B6', AFFECTED:'#E24B4A', DEFAULT:'#888' }
+const PIN_COLORS = { EOC:'#1D9E75', HOSPITAL:'#4A90D9', DAM:'#E24B4A', STAGING:'#EF9F27', SHELTER:'#9B59B6', AFFECTED:'#E24B4A', FIRE:'#FF6B35', HAZMAT:'#9B59B6', DEFAULT:'#888', BLOCKED:'#E24B4A' }
 
 const SCENARIO_PINS = {
   hurricane:  [
@@ -73,6 +73,42 @@ const SCENARIO_PINS = {
     { id:'hosp1',  label:'Regional Hospital',          type:'HOSPITAL', lat:38.575, lng:-121.500, note:'Preparing for casualties' },
     { id:'staging',label:'Rescue Staging',             type:'STAGING',  lat:38.590, lng:-121.470, note:'Boat teams pre-positioned' },
   ],
+  wildfire: [
+    { id:'eoc',      label:'LA County EOC',            type:'EOC',      lat:34.070, lng:-118.220, note:'EOC at full activation' },
+    { id:'fire1',    label:'Fire Origin — Altadena',   type:'FIRE',     lat:34.189, lng:-118.131, note:'Structure-to-structure spread active' },
+    { id:'fire2',    label:'Spotfire — Pasadena',      type:'FIRE',     lat:34.160, lng:-118.148, note:'New ignition confirmed' },
+    { id:'hosp1',    label:'Huntington Hospital',      type:'HOSPITAL', lat:34.149, lng:-118.108, note:'Receiving smoke inhalation casualties' },
+    { id:'shelter1', label:'Rose Bowl Shelter',        type:'SHELTER',  lat:34.161, lng:-118.168, note:'Capacity: 2,000' },
+    { id:'staging',  label:'Fire Staging — JPL Area',  type:'STAGING',  lat:34.201, lng:-118.174, note:'Air tanker coordination point' },
+    { id:'evac1',    label:'Evacuation Zone Alpha',    type:'AFFECTED', lat:34.175, lng:-118.120, note:'Mandatory evacuation order issued' },
+  ],
+  winter: [
+    { id:'eoc',      label:'Minneapolis EOC',          type:'EOC',      lat:44.979, lng:-93.265, note:'EOC activating — blizzard conditions' },
+    { id:'power1',   label:'Xcel Substation North',    type:'AFFECTED', lat:44.995, lng:-93.271, note:'Transformer failure — 40,000 customers out' },
+    { id:'power2',   label:'Xcel Substation East',     type:'AFFECTED', lat:44.972, lng:-93.228, note:'Cascading failure — offline' },
+    { id:'hosp1',    label:'Hennepin Healthcare',      type:'HOSPITAL', lat:44.974, lng:-93.263, note:'On generator — fuel supply 36 hrs' },
+    { id:'shelter1', label:'Convention Center Shelter',type:'SHELTER',  lat:44.973, lng:-93.272, note:'Opening — capacity 3,000' },
+    { id:'shelter2', label:'Target Center Shelter',    type:'SHELTER',  lat:44.979, lng:-93.276, note:'Standing by — capacity 2,000' },
+    { id:'staging',  label:'MnDOT Equipment Staging',  type:'STAGING',  lat:44.960, lng:-93.250, note:'Plows and sand trucks pre-positioned' },
+  ],
+  rdd: [
+    { id:'eoc',      label:'DC Emergency Mgmt Agency', type:'EOC',      lat:38.895, lng:-77.014, note:'EOC activating — federal coordination' },
+    { id:'incident', label:'Detonation Site',           type:'AFFECTED', lat:38.889, lng:-77.009, note:'Confirmed RDD detonation — hot zone active' },
+    { id:'hosp1',    label:'George Washington Univ Hospital', type:'HOSPITAL', lat:38.900, lng:-77.050, note:'Radiation casualty protocols activated' },
+    { id:'hosp2',    label:'MedStar Washington Hospital', type:'HOSPITAL', lat:38.930, lng:-77.017, note:'Decon station establishing' },
+    { id:'staging',  label:'FRMAC Staging — RFK Area', type:'STAGING',  lat:38.893, lng:-76.972, note:'Federal Radiological Monitoring and Assessment Center' },
+    { id:'shelter1', label:'Shelter-in-Place Zone',    type:'SHELTER',  lat:38.878, lng:-77.032, note:'1.5 mile radius — downwind sector' },
+    { id:'perim',    label:'Hot Zone Perimeter',        type:'AFFECTED', lat:38.884, lng:-77.018, note:'0.5 mile exclusion zone — HAZ teams only' },
+  ],
+  train: [
+    { id:'eoc',      label:'St. Clair County EOC',     type:'EOC',      lat:38.621, lng:-90.149, note:'EOC activating — multi-agency response' },
+    { id:'incident', label:'Derailment Site',           type:'AFFECTED', lat:38.628, lng:-90.142, note:'Confirmed derailment — hazmat release active' },
+    { id:'hazmat',   label:'Hazmat Hot Zone',           type:'HAZMAT',   lat:38.627, lng:-90.145, note:'Chlorine and vinyl chloride release confirmed' },
+    { id:'hosp1',    label:'Memorial Hospital Belleville', type:'HOSPITAL', lat:38.521, lng:-89.984, note:'MCI protocols activated' },
+    { id:'hosp2',    label:'HSHS St. Elizabeth',        type:'HOSPITAL', lat:38.518, lng:-89.972, note:'Receiving overflow casualties' },
+    { id:'staging',  label:'MCI Staging — Cahokia',    type:'STAGING',  lat:38.571, lng:-90.184, note:'Triage and treatment area establishing' },
+    { id:'evac1',    label:'Evacuation Zone — 1 mile', type:'AFFECTED', lat:38.635, lng:-90.150, note:'Mandatory evacuation downwind sector' },
+  ],
 }
 
 const SCENARIO_CENTERS = {
@@ -82,50 +118,82 @@ const SCENARIO_CENTERS = {
   cyber:      [40.712, -74.006],
   earthquake: [34.052, -118.243],
   flood:      [38.580, -121.494],
+  wildfire:   [34.160, -118.148],
+  winter:     [44.979, -93.265],
+  rdd:        [38.889, -77.009],
+  train:      [38.628, -90.142],
 }
 
 const SCENARIO_REFS = {
   hurricane: [
-    { label:'FEMA Hurricane Response',               url:'https://www.fema.gov/emergency-managers/risk-management/hurricanes' },
+    { label:'FEMA Federal Evacuation Support Annex 2025', url:'https://www.fema.gov/sites/default/files/documents/fema_rd_federal-evacuation-support-annex_042025.pdf' },
     { label:'NHC Hurricane Preparedness',            url:'https://www.nhc.noaa.gov/prepare/' },
     { label:'ESF-13 Public Safety Annex',            url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_13_Public-Safety-Security.pdf' },
-    { label:'FEMA Mass Evacuation Annex',            url:'https://www.fema.gov/sites/default/files/2020-07/fema_Mass-Evacuation-Incident-Annex_0.pdf' },
-    { label:'Hurricane Harvey AAR 2018',             url:'https://www.fema.gov/sites/default/files/2020-08/fema_hurricane-harvey_after-action-report_2018.pdf' },
+    { label:'2017 Hurricane Season AAR',             url:'https://www.fema.gov/sites/default/files/2020-08/fema_hurricane-season-after-action-report_2017.pdf' },
+    { label:'FEMA Hurricane Response',               url:'https://www.fema.gov/emergency-managers/risk-management/hurricanes' },
   ],
   mci: [
     { label:'FEMA National Response Framework',      url:'https://www.fema.gov/emergency-managers/national-preparedness/frameworks/response' },
     { label:'CHEMM START Triage Reference',          url:'https://chemm.hhs.gov/startadult.htm' },
     { label:'ESF-8 Public Health & Medical Annex',   url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_8_Public-Health-Medical.pdf' },
-    { label:'NIMS ICS Field Operations Guide',       url:'https://www.fema.gov/sites/default/files/2020-07/fema_nims_ics-field-operations-guide.pdf' },
-    { label:'Boston Marathon Bombing AAR',           url:'https://www.mass.gov/doc/after-action-report-for-the-response-to-the-2013-boston-marathon-bombings/download' },
+    { label:'ICS Field Operations Guide',            url:'https://www.usfa.fema.gov/downloads/pdf/publications/field_operations_guide.pdf' },
+    { label:'Boston Marathon Bombing AAR 2014',      url:'https://www.policinginstitute.org/wp-content/uploads/2015/05/after-action-report-for-the-response-to-the-2013-boston-marathon-bombings_0.pdf' },
   ],
   hazmat: [
     { label:'EPA Emergency Response',                url:'https://www.epa.gov/emergency-response' },
     { label:'DOT Emergency Response Guidebook',      url:'https://www.phmsa.dot.gov/hazmat/erg/emergency-response-guidebook-erg' },
     { label:'LEPC Guidance — EPA',                   url:'https://www.epa.gov/epcra/local-emergency-planning-committees' },
     { label:'ESF-10 Oil & Hazardous Materials',      url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_10_Oil-Hazardous-Materials.pdf' },
-    { label:'NTSB East Palestine Investigation',     url:'https://www.ntsb.gov/investigations/Pages/DCA23MR005.aspx' },
+    { label:'NTSB East Palestine Final Report 2024', url:'https://www.ntsb.gov/investigations/Pages/RRD23MR005.aspx' },
   ],
   cyber: [
-    { label:'CISA Critical Infrastructure',         url:'https://www.cisa.gov/topics/critical-infrastructure-security-and-resilience' },
-    { label:'FEMA Cyber Incident Annex',             url:'https://www.fema.gov/sites/default/files/2020-07/fema_Cyber-Incident-Annex_0.pdf' },
+    { label:'CISA Critical Infrastructure',          url:'https://www.cisa.gov/topics/critical-infrastructure-security-and-resilience' },
+    { label:'FEMA Planning Considerations for Cyber Incidents', url:'https://www.fema.gov/sites/default/files/documents/fema_planning-considerations-cyber-incidents_2023.pdf' },
     { label:'WaterISAC Resources',                   url:'https://www.waterisac.org/' },
     { label:'NERC CIP Standards',                    url:'https://www.nerc.com/pa/Stand/Pages/CIPStandards.aspx' },
-    { label:'CISA Colonial Pipeline Review',         url:'https://www.cisa.gov/news-events/news/attack-colonial-pipeline-what-weve-learned-what-weve-done' },
+    { label:'CISA Colonial Pipeline: What We Learned', url:'https://www.cisa.gov/news-events/news/attack-colonial-pipeline-what-weve-learned-what-weve-done-over-past-two-years' },
   ],
   earthquake: [
-    { label:'FEMA Earthquake Hazards',               url:'https://www.fema.gov/emergency-managers/risk-management/earthquakes' },
+    { label:'FEMA Earthquake Risk Program',          url:'https://www.fema.gov/emergency-managers/risk-management/earthquake' },
     { label:'USGS Earthquake Hazards Program',       url:'https://www.usgs.gov/programs/earthquake-hazards' },
     { label:'FEMA Urban Search & Rescue',            url:'https://www.fema.gov/emergency-managers/practitioners/urban-search-rescue' },
-    { label:'ATC-20 Rapid Safety Assessment',        url:'https://www.atcouncil.org/resources/atc-20' },
-    { label:'FEMA Northridge Earthquake Report',     url:'https://www.fema.gov/sites/default/files/2020-08/fema_northridge-earthquake_1994.pdf' },
+    { label:'ATC-20 Postearthquake Safety Evaluation', url:'https://www.atcouncil.org/atc-20' },
+    { label:'Northridge Earthquake FEMA Disaster Page', url:'https://www.fema.gov/disaster/1008' },
   ],
   flood: [
-    { label:'FEMA Flood Response Guidance',          url:'https://www.fema.gov/emergency-managers/risk-management/flood' },
+    { label:'FEMA Flood Risk — Know Your Risk',      url:'https://www.fema.gov/flood-maps/know-your-risk' },
     { label:'NWS Flood Safety',                      url:'https://www.weather.gov/safety/flood' },
     { label:'USACE Dam Safety Program',              url:'https://www.usace.army.mil/Missions/Civil-Works/Dam-Safety/' },
-    { label:'Oroville Dam Incident Review',          url:'https://www.water.ca.gov/LegacyFiles/pubs/flood/oroville_spillway_independent_forensic_team_report/oroville_spillway_incident_independent_forensic_team_final_report_jan_2018.pdf' },
+    { label:'Oroville Dam Incident AAR — CalOES 2017', url:'https://www.caloes.ca.gov/wp-content/uploads/Preparedness/Documents/2017-Oroville-Dam-Incident-AAR-Approved.pdf' },
     { label:'ESF-3 Public Works & Engineering',      url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_3_Public-Works-Engineering.pdf' },
+  ],
+  wildfire: [
+    { label:'FEMA Wildfire Mitigation & Response',   url:'https://www.fema.gov/emergency-managers/risk-management/wildfire' },
+    { label:'CAL FIRE Incident Command Handbook',    url:'https://www.fire.ca.gov/media/5584/incident-command-system-ics-training.pdf' },
+    { label:'NIFC Wildland Fire Response',           url:'https://www.nifc.gov/fire-information/fire-management' },
+    { label:'Palisades/Eaton Fire After-Action',     url:'https://www.lacounty.gov/emergency/' },
+    { label:'ESF-4 Firefighting Annex',              url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_4_Firefighting.pdf' },
+  ],
+  winter: [
+    { label:'FEMA Winter Storm Response',            url:'https://www.fema.gov/emergency-managers/risk-management/winter-storms' },
+    { label:'NWS Winter Storm Safety',               url:'https://www.weather.gov/safety/winter' },
+    { label:'ESF-12 Energy Annex',                   url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_12_Energy.pdf' },
+    { label:'FEMA Power Outage Incident Annex',      url:'https://www.fema.gov/sites/default/files/documents/fema_incident-annex_power-outage.pdf' },
+    { label:'Texas Winter Storm Uri AAR 2021',       url:'https://www.energy.gov/sites/default/files/2021/07/f82/DOE%20Winter%20Storm%20Uri%20Report%20-%20August%202021.pdf' },
+  ],
+  rdd: [
+    { label:'FEMA Radiological/Nuclear Response',    url:'https://www.fema.gov/emergency-managers/risk-management/radiological' },
+    { label:'DHS RDD/IND Response Guidance',         url:'https://www.dhs.gov/publication/radiological-attack-dirty-bombs' },
+    { label:'REAC/TS Medical Response to Radiation', url:'https://orise.orau.gov/reacts/' },
+    { label:'FEMA P-1017 IND Response Plan Review',  url:'https://www.fema.gov/sites/default/files/2020-07/fema_p-1017_ind-response-plan.pdf' },
+    { label:'Nuclear/Radiological Incident Annex',   url:'https://www.fema.gov/sites/default/files/2020-07/fema_Nuclear-Radiological-Incident-Annex_0.pdf' },
+  ],
+  train: [
+    { label:'DOT Emergency Response Guidebook',      url:'https://www.phmsa.dot.gov/hazmat/erg/emergency-response-guidebook-erg' },
+    { label:'NTSB East Palestine Final Report 2024', url:'https://www.ntsb.gov/investigations/Pages/RRD23MR005.aspx' },
+    { label:'CHEMM START Triage Reference',          url:'https://chemm.hhs.gov/startadult.htm' },
+    { label:'ESF-10 Oil & Hazardous Materials',      url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_10_Oil-Hazardous-Materials.pdf' },
+    { label:'LEPC Guidance — EPA',                   url:'https://www.epa.gov/epcra/local-emergency-planning-committees' },
   ],
 }
 
@@ -150,7 +218,7 @@ const ESFS = [
 const PANEL_INFO = {
   lifelines: {
     title: 'Community Lifelines',
-    body: 'The 8 FEMA Community Lifelines represent the most fundamental services a community needs to function. Each lifeline is color-coded: GREEN means fully operational, YELLOW means degraded, RED means compromised or non-functional. Status updates every turn based on your decisions and incident conditions. Click any lifeline tile to see the AI\'s one-sentence reasoning for its current status.'
+    body: 'The 8 FEMA Community Lifelines represent the most fundamental services a community needs to function. Each lifeline is color-coded: GREEN means fully operational, YELLOW means degraded, RED means compromised or non-functional. Status updates every turn based on your decisions and incident conditions. Hover any lifeline tile to see the AI\'s one-sentence reasoning for its current status.'
   },
   media: {
     title: 'Media Feed',
@@ -162,7 +230,7 @@ const PANEL_INFO = {
   },
   esf: {
     title: 'ESF Reference',
-    body: 'All 15 Emergency Support Functions from the National Response Framework. Each entry shows the ESF number, name, lead federal agency, and a one-line description. Use this as a memory jogger during play — which ESFs are relevant to your current incident, and who owns them? You\'re still responsible for knowing the doctrine.'
+    body: 'All 15 Emergency Support Functions from the National Response Framework. Click any ESF card to mark it active — use this to track which ESFs you have activated during your response. Click again to deactivate. Active ESFs are highlighted. This is your tracking layer only — the AI does not see your selections.'
   },
   dispatch: {
     title: 'Field Dispatch',
@@ -183,12 +251,16 @@ const PANEL_INFO = {
 }
 
 const SCENARIOS = {
-  hurricane:  { name:'Hurricane Landfall',          icon:'🌀', desc:'Cat 4/5 landfall on a coastal county. 72-hour warning window closing fast.' },
-  mci:        { name:'Mass Casualty Incident',       icon:'🚨', desc:'Explosion at a crowded public event. 200+ casualties. Cause unknown.' },
-  hazmat:     { name:'Hazardous Materials Release',  icon:'☣️', desc:'Railcar derailment with chlorine release. Urban corridor. Shelter-in-place decision imminent.' },
-  cyber:      { name:'Cyber-Infrastructure Cascade', icon:'💻', desc:'Ransomware hits water and power utilities simultaneously. Public services degrading.' },
-  earthquake: { name:'Major Earthquake',             icon:'🏚️', desc:'M7.1 strike-slip event. Urban core. Comms degraded. Damage picture unknown.' },
-  flood:      { name:'Flash Flood / Dam Failure',    icon:'🌊', desc:'Upstream dam showing structural compromise. Downstream communities in inundation zone.' },
+  hurricane:  { name:'Hurricane Landfall',              icon:'🌀', desc:'Cat 4/5 landfall on a coastal county. 72-hour warning window closing fast.' },
+  mci:        { name:'Mass Casualty Incident',           icon:'🚨', desc:'Explosion at a crowded public event. 200+ casualties. Cause unknown.' },
+  hazmat:     { name:'Hazardous Materials Release',      icon:'☣️', desc:'Railcar derailment with chlorine release. Urban corridor. Shelter-in-place decision imminent.' },
+  cyber:      { name:'Cyber-Infrastructure Cascade',     icon:'💻', desc:'Ransomware hits water and power utilities simultaneously. Public services degrading.' },
+  earthquake: { name:'Major Earthquake',                 icon:'🏚️', desc:'M7.1 strike-slip event. Urban core. Comms degraded. Damage picture unknown.' },
+  flood:      { name:'Flash Flood / Dam Failure',        icon:'🌊', desc:'Upstream dam showing structural compromise. Downstream communities in inundation zone.' },
+  wildfire:   { name:'Urban Wildfire',                   icon:'🔥', desc:'Wind-driven wildfire in LA Foothill corridor. Structure-to-structure spread. Mass evacuation underway.' },
+  winter:     { name:'Winter Storm Cascade',             icon:'❄️', desc:'Historic blizzard hitting Minneapolis. Power grid failing. Vulnerable populations at risk.' },
+  rdd:        { name:'Radiological Dispersal Device',    icon:'☢️', desc:'Dirty bomb detonated in downtown Washington DC. Contamination zone unknown. Federal coordination required.' },
+  train:      { name:'Train Derailment — MCI / HazMat',  icon:'🚂', desc:'Freight train derailment in East St. Louis. Multiple casualties. Chlorine and vinyl chloride release confirmed.' },
 }
 
 const JURISDICTIONS = ['Rural County','Mid-Size City','Large Urban Metro','Coastal Community','Tribal Nation','Interstate Corridor']
@@ -229,6 +301,10 @@ const DISPATCH_SEEDS = {
   cyber:      ['Water treatment SCADA offline. Manual operations possible but limited.','Hospital backup generators running. 72-hour fuel supply.','Public reporting water pressure loss on social media. Growing fast.','Utility CEO requesting EOC liaison — coming in person.','State fusion center reports similar attacks in two neighboring states.'],
   earthquake: ['Comms tower 4 is down. Switching to alternate freq.','Search and rescue teams requesting grid assignment.','Structural engineers not on scene. Tagging not started.','County road 7 bridge confirmed collapsed. Major evacuation route blocked.','Mutual aid request submitted to state. No ETA yet.'],
   flood:      ['Dam engineer recommending immediate downstream notification.','Two downstream communities ignoring evacuation order.','Emergency spillway activation requested — awaiting your authorization.','FEMA Region pre-positioned team requesting coordination call.','Local news helicopter flying over dam. Public anxiety rising.'],
+  wildfire:   ['CAL FIRE reports 0% containment. Wind gusts to 65mph. Fire doubling every 20 minutes.','Altadena residential neighborhoods under mandatory evacuation — compliance estimated at 60%.','Edison reporting downed power lines as ignition source — liability team en route.','Huntington Hospital requesting evacuation guidance — smoke making air quality dangerous.','Shelter at Rose Bowl reaching capacity. Secondary shelter needed immediately.'],
+  winter:     ['NWS issuing blizzard warning — 18-24 inches expected over 12 hours. Wind chills to -40F.','Xcel Energy reports 40,000 customers without power. Expects 72-hour restoration timeline.','Hennepin Healthcare on backup generator. Requesting priority fuel resupply.','MnDOT reporting I-94 closed both directions — multiple accidents. Zero visibility.','Welfare check requests flooding 911. Elderly residents not answering phones.'],
+  rdd:        ['FBI on scene. Confirming radiological dispersal device. Requesting unified command.','EPA ASPECT aircraft inbound for aerial radiological survey. ETA 45 minutes.','Metro transit shut down city-wide. 200,000 commuters stranded.','Three hospitals reporting walk-in radiation exposure patients — none decontaminated.','White House Situation Room requesting briefing within 30 minutes.'],
+  train:      ['BNSF reports 23 cars derailed. 11 carrying hazmat. Chlorine and vinyl chloride confirmed breached.','Incident commander on scene requesting HAZMAT team and MCI resources immediately.','St. Clair County EMS overwhelmed — 40+ casualties triaged at scene. More incoming.','Illinois EPA requesting unified command to coordinate with Missouri counterparts.','Railroad company refusing to release manifest without legal counsel present.'],
 }
 
 const DEFAULT_SETTINGS = { fontSize:11, accentColor:'#1D9E75', alertColor:'#EF9F27' }
@@ -244,6 +320,14 @@ function buildSystemPrompt(scenario, jurisdiction, difficulty) {
     Brutal:   'Evaluate ruthlessly. Every delayed or vague decision has cascading consequences.',
     Adaptive: 'Calibrate difficulty to demonstrated competence. Never make it easy.',
   }
+
+  const scenarioSpecific = {
+    wildfire: 'This is a wind-driven urban wildfire with structure-to-structure spread. Key pressure points: air resource allocation, evacuation route management, shelter capacity, public warning systems, and mutual aid from CAL FIRE vs local fire. Smoke and fire behavior modeling are critical. Media pressure is intense.',
+    winter: 'This is a cascading infrastructure failure driven by extreme cold. Key pressure points: power restoration prioritization, warming shelter activation and capacity, vulnerable population welfare checks, road clearance, fuel supply for hospitals and generators, and utility coordination. Death toll risk from exposure is high and time-sensitive.',
+    rdd: 'This is a radiological dispersal device (dirty bomb) event in an urban core. Key pressure points: hot zone establishment, federal agency coordination (FBI as LFA for terrorism, FEMA for consequence management, NRC, EPA FRMAC), decontamination of self-referred patients, public messaging to prevent panic, shelter-in-place vs evacuation decisions, and National Capital Region special considerations. Reference the Nuclear/Radiological Incident Annex and FEMA P-1017.',
+    train: 'This is a combined MCI and hazmat event. Key pressure points: unified command establishment bridging MCI and hazmat doctrine, railroad company cooperation, cross-state jurisdiction (Illinois and Missouri), simultaneous triage and hazmat containment operations, LEPC activation, and EPA coordination. The railroad company will resist releasing the manifest. Reference DOT ERG and ESF-10.',
+  }
+
   return `You are the AI engine for an emergency management training simulator. The player is a senior emergency manager.
 
 SCENARIO: ${sc.name}
@@ -251,6 +335,7 @@ JURISDICTION: ${jurisdiction}
 DIFFICULTY: ${difficulty} — ${diffMap[difficulty]}
 SETUP: ${sc.desc} Your EOC is activating.
 MAP CENTER: lat ${center[0]}, lng ${center[1]} — all coordinates must be geographically plausible within ~10 miles of this point.
+${scenarioSpecific[scenario] ? `SCENARIO NOTES: ${scenarioSpecific[scenario]}` : ''}
 
 RULES:
 - Evaluate player actions with professional rigor. Never be encouraging. Be realistic.
@@ -275,7 +360,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
     { "source": "News outlet name", "text": "Headline text", "time": "simulated time" }
   ],
   "pins": [
-    { "label": "Location name", "type": "AFFECTED | STAGING | SHELTER | HOSPITAL | EOC | BLOCKED | OTHER", "lat": 0.000, "lng": 0.000, "note": "one sentence status note" }
+    { "label": "Location name", "type": "AFFECTED | STAGING | SHELTER | HOSPITAL | EOC | BLOCKED | FIRE | HAZMAT | OTHER", "lat": 0.000, "lng": 0.000, "note": "one sentence status note" }
   ],
   "lifelines": {
     "safety":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence" },
@@ -292,7 +377,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
 On ENDEX use same format with full AAR in consequence field, empty headlines and pins arrays.`
 }
 
-const SAVE_KEY = 'em_sim_v11'
+const SAVE_KEY = 'em_sim_v12'
 
 const defaultState = {
   screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive',
@@ -348,14 +433,13 @@ function useVertDrag(containerRef, onUpdate) {
   return onMouseDown
 }
 
-// Info callout component
 function InfoCallout({ panelKey, anchorRef, onClose }) {
   const info = PANEL_INFO[panelKey]
   const [pos, setPos] = useState({ top:0, left:0 })
   useEffect(() => {
     if (anchorRef?.current) {
       const rect = anchorRef.current.getBoundingClientRect()
-      setPos({ top: rect.bottom + 6, left: Math.min(rect.left, window.innerWidth - 320) })
+      setPos({ top: rect.bottom + 6, left: Math.min(rect.left, window.innerWidth - 360) })
     }
     const handler = (e) => {
       if (!e.target.closest('[data-info-callout]') && !e.target.closest('[data-info-btn]')) onClose()
@@ -365,25 +449,22 @@ function InfoCallout({ panelKey, anchorRef, onClose }) {
   }, [])
   if (!info) return null
   return (
-    <div data-info-callout="true" style={{ position:'fixed', top:pos.top, left:pos.left, width:300, background:'#141414', border:'0.5px solid #444', borderRadius:8, padding:'12px 14px', zIndex:3000, boxShadow:'0 8px 24px rgba(0,0,0,0.9)' }}>
+    <div data-info-callout="true" style={{ position:'fixed', top:pos.top, left:pos.left, width:340, background:'#141414', border:'0.5px solid #444', borderRadius:8, padding:'12px 14px', zIndex:3000, boxShadow:'0 8px 24px rgba(0,0,0,0.9)' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
         <span style={{ fontSize:11, fontWeight:500, color:'#ccc', letterSpacing:'0.04em' }}>{info.title}</span>
         <button onClick={onClose} style={{ fontSize:12, color:'#555', border:'none', background:'none', cursor:'pointer', padding:'0 2px' }}>✕</button>
       </div>
-      <p style={{ fontSize:10, color:'#777', lineHeight:1.7, margin:0 }}>{info.body}</p>
+      <p style={{ fontSize:10, color:'#777', lineHeight:1.7, margin:0, whiteSpace:'normal', wordBreak:'break-word' }}>{info.body}</p>
     </div>
   )
 }
 
-// Info button — small ⓘ next to panel header label
 function InfoBtn({ panelKey, activeInfo, setActiveInfo }) {
   const btnRef = useRef(null)
   const isActive = activeInfo === panelKey
   return (
     <>
-      <button
-        ref={btnRef}
-        data-info-btn="true"
+      <button ref={btnRef} data-info-btn="true"
         onClick={e => { e.stopPropagation(); setActiveInfo(isActive ? null : panelKey) }}
         style={{ marginLeft:6, width:14, height:14, borderRadius:'50%', border:'0.5px solid #444', background:isActive?'#333':'transparent', color:'#555', cursor:'pointer', fontSize:9, display:'inline-flex', alignItems:'center', justifyContent:'center', padding:0, flexShrink:0 }}>
         ⓘ
@@ -587,6 +668,7 @@ export default function App() {
 
   function startScenario(key) {
     const sc = SCENARIOS[key], seeds = DISPATCH_SEEDS[key]
+    setActiveESFs({})
     update({
       screen:'game', scenario:key,
       dispatches: seeds.map((text, i) => ({ id:i, text, turn:0 })),
@@ -638,12 +720,10 @@ export default function App() {
         ? [...(state.dynamicPins||[]), ...parsed.pins.map((p,i) => ({ ...p, id:`dyn-${Date.now()}-${i}`, turn:nextTurn }))]
         : (state.dynamicPins||[])
 
-      update({
-        terminal:addedTerm, history:newHistory, dispatches:newDispatches,
-        simTime:parsed.time||state.simTime, situation:parsed.situation||'DEVELOPING',
-        turn:nextTurn, lifelines:parsed.lifelines||state.lifelines,
-        headlines:newHeadlines, dynamicPins:newDynamicPins,
-      })
+      update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
+               simTime:parsed.time||state.simTime, situation:parsed.situation||'DEVELOPING',
+               turn:nextTurn, lifelines:parsed.lifelines||state.lifelines,
+               headlines:newHeadlines, dynamicPins:newDynamicPins })
     } catch(e) {
       update({ terminal:[...newTerm, { type:'system', text:`[ERROR: ${e.message}]` }] })
     }
@@ -657,23 +737,23 @@ export default function App() {
 
   function reset() {
     try { localStorage.removeItem(SAVE_KEY) } catch {}
-    setState(defaultState); setInput('')
+    setState(defaultState); setInput(''); setActiveESFs({})
   }
 
   if (!state) return <div style={{ color:'#888', padding:'2rem', fontFamily:'monospace' }}>Loading...</div>
 
   if (state.screen === 'setup') return (
-    <div style={{ maxWidth:680, margin:'0 auto', padding:'2rem 1rem', fontFamily:'JetBrains Mono, monospace' }}>
+    <div style={{ maxWidth:900, margin:'0 auto', padding:'2rem 1rem', fontFamily:'JetBrains Mono, monospace' }}>
       <h1 style={{ fontSize:16, fontWeight:500, color:ac, marginBottom:'0.5rem', letterSpacing:'0.08em' }}>EM CRISIS SIMULATOR</h1>
       <p style={{ fontSize:12, color:'#555', marginBottom:'2rem' }}>Emergency Management Training System — Select scenario to begin</p>
       <p style={{ fontSize:11, color:'#666', marginBottom:'0.5rem', textTransform:'uppercase', letterSpacing:'0.08em' }}>Scenario</p>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8, marginBottom:'1.5rem' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:8, marginBottom:'1.5rem' }}>
         {Object.entries(SCENARIOS).map(([key, sc]) => (
           <button key={key} onClick={() => update({ scenario:key })}
             style={{ textAlign:'left', padding:'10px 12px', border:`0.5px solid ${state.scenario===key?ac:'#222'}`, background:state.scenario===key?'#0a1f18':'transparent' }}>
             <div style={{ fontSize:20, marginBottom:6 }}>{sc.icon}</div>
-            <div style={{ fontSize:12, fontWeight:500, color:'#ddd', marginBottom:4 }}>{sc.name}</div>
-            <div style={{ fontSize:10, color:'#555', lineHeight:1.5 }}>{sc.desc}</div>
+            <div style={{ fontSize:11, fontWeight:500, color:'#ddd', marginBottom:4 }}>{sc.name}</div>
+            <div style={{ fontSize:9, color:'#555', lineHeight:1.5 }}>{sc.desc}</div>
           </button>
         ))}
       </div>
@@ -702,8 +782,7 @@ export default function App() {
   const divInner  = { width:3, height:28, background:'#3a3a3a', borderRadius:2, pointerEvents:'none' }
   const hDivSty   = { height:10, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', borderTop:'0.5px solid #2a2a2a', borderBottom:'0.5px solid #2a2a2a', flexShrink:0 }
   const hDivInner = { width:28, height:3, background:'#3a3a3a', borderRadius:2 }
-
-  const panelHdr = (label, infoKey) => (
+  const panelHdr  = (label, infoKey) => (
     <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0, display:'flex', alignItems:'center' }}>
       {label}
       {infoKey && <InfoBtn panelKey={infoKey} activeInfo={activeInfo} setActiveInfo={setActiveInfo} />}
@@ -790,14 +869,14 @@ export default function App() {
                 return (
                   <div key={esf.num}
                     onClick={() => setActiveESFs(prev => ({ ...prev, [esf.num]: !prev[esf.num] }))}
-                    style={{ padding:'5px 8px', borderRadius:5, border:`0.5px solid ${isActive ? ac : '#1a1a1a'}`, lineHeight:1.4, cursor:'pointer', background:isActive ? ac + '11' : 'transparent', borderLeft:isActive ? `3px solid ${ac}` : '0.5px solid #1a1a1a', transition:'all 0.1s' }}>
+                    style={{ padding:'5px 8px', borderRadius:5, border:`0.5px solid ${isActive?ac:'#1a1a1a'}`, lineHeight:1.4, cursor:'pointer', background:isActive?ac+'11':'transparent', borderLeft:isActive?`3px solid ${ac}`:'0.5px solid #1a1a1a', transition:'all 0.1s' }}>
                     <div style={{ display:'flex', gap:6, alignItems:'center', marginBottom:2 }}>
-                      <span style={{ fontSize:9, color:isActive ? ac : al, fontWeight:500, whiteSpace:'nowrap' }}>ESF-{esf.num}</span>
-                      <span style={{ fontSize:fs-1, color:isActive ? '#ddd' : '#aaa', fontWeight:500, flex:1 }}>{esf.name}</span>
-                      <span style={{ fontSize:8, color:isActive ? ac : '#333', fontWeight:500 }}>{isActive ? '● ACTIVE' : '○'}</span>
+                      <span style={{ fontSize:9, color:isActive?ac:al, fontWeight:500, whiteSpace:'nowrap' }}>ESF-{esf.num}</span>
+                      <span style={{ fontSize:fs-1, color:isActive?'#ddd':'#aaa', fontWeight:500, flex:1 }}>{esf.name}</span>
+                      <span style={{ fontSize:8, color:isActive?ac:'#333', fontWeight:500 }}>{isActive?'● ACTIVE':'○'}</span>
                     </div>
-                    <div style={{ fontSize:9, color:isActive ? '#666' : '#444' }}>Lead: {esf.lead}</div>
-                    <div style={{ fontSize:9, color:isActive ? '#555' : '#333', marginTop:1 }}>{esf.desc}</div>
+                    <div style={{ fontSize:9, color:isActive?'#666':'#444' }}>Lead: {esf.lead}</div>
+                    <div style={{ fontSize:9, color:isActive?'#555':'#333', marginTop:1 }}>{esf.desc}</div>
                   </div>
                 )
               })}
@@ -867,7 +946,10 @@ export default function App() {
         {/* RIGHT COLUMN */}
         <div ref={rightColRef} style={{ width:`${colW[3]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
           <div style={{ height:`${rightSplit}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-            {panelHdr("Commander's Notepad", 'notepad')}
+            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', alignItems:'center' }}>
+              Commander's Notepad
+              <InfoBtn panelKey="notepad" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
+            </div>
             <textarea value={state.notepad} onChange={e => update({ notepad:e.target.value })}
               placeholder={'Priorities, resource gaps...\n\nPersists across sessions.'}
               style={{ flex:1, resize:'none', border:'none', padding:'8px 10px', background:'transparent', color:'#888', lineHeight:1.7, outline:'none', fontSize:fs }}/>
@@ -875,7 +957,7 @@ export default function App() {
           </div>
           <div onMouseDown={onRightDown} style={hDivSty}><div style={hDivInner}/></div>
           <div style={{ flex:1, border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
-            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0, display:'flex', alignItems:'center' }}>
+            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', alignItems:'center' }}>
               Incident Map — {dynamicPins.length} event{dynamicPins.length!==1?'s':''}
               <InfoBtn panelKey="map" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
             </div>
