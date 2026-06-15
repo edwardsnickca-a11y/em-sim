@@ -89,45 +89,46 @@ const SCENARIO_REFS = {
     { label:'FEMA Hurricane Response',               url:'https://www.fema.gov/emergency-managers/risk-management/hurricanes' },
     { label:'NHC Hurricane Preparedness',            url:'https://www.nhc.noaa.gov/prepare/' },
     { label:'ESF-13 Public Safety Annex',            url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_13_Public-Safety-Security.pdf' },
-    { label:'FEMA Federal Evacuation Support Annex 2025', url:'https://www.fema.gov/sites/default/files/documents/fema_rd_federal-evacuation-support-annex_042025.pdf' },
-    { label:'2017 Hurricane Season AAR (Harvey/Irma/Maria)', url:'https://www.fema.gov/sites/default/files/2020-08/fema_hurricane-season-after-action-report_2017.pdf' },
+    { label:'FEMA Mass Evacuation Annex',            url:'https://www.fema.gov/sites/default/files/2020-07/fema_Mass-Evacuation-Incident-Annex_0.pdf' },
+    { label:'Hurricane Harvey AAR 2018',             url:'https://www.fema.gov/sites/default/files/2020-08/fema_hurricane-harvey_after-action-report_2018.pdf' },
   ],
   mci: [
     { label:'FEMA National Response Framework',      url:'https://www.fema.gov/emergency-managers/national-preparedness/frameworks/response' },
     { label:'CHEMM START Triage Reference',          url:'https://chemm.hhs.gov/startadult.htm' },
     { label:'ESF-8 Public Health & Medical Annex',   url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_8_Public-Health-Medical.pdf' },
-    { label:'ICS Field Operations Guide (ICS 420-1)',url:'https://www.usfa.fema.gov/downloads/pdf/publications/field_operations_guide.pdf' },
-    { label:'Boston Marathon Bombing AAR 2014',      url:'https://www.policinginstitute.org/wp-content/uploads/2015/05/after-action-report-for-the-response-to-the-2013-boston-marathon-bombings_0.pdf' },
+    { label:'NIMS ICS Field Operations Guide',       url:'https://www.fema.gov/sites/default/files/2020-07/fema_nims_ics-field-operations-guide.pdf' },
+    { label:'Boston Marathon Bombing AAR',           url:'https://www.mass.gov/doc/after-action-report-for-the-response-to-the-2013-boston-marathon-bombings/download' },
   ],
   hazmat: [
     { label:'EPA Emergency Response',                url:'https://www.epa.gov/emergency-response' },
     { label:'DOT Emergency Response Guidebook',      url:'https://www.phmsa.dot.gov/hazmat/erg/emergency-response-guidebook-erg' },
     { label:'LEPC Guidance — EPA',                   url:'https://www.epa.gov/epcra/local-emergency-planning-committees' },
     { label:'ESF-10 Oil & Hazardous Materials',      url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_10_Oil-Hazardous-Materials.pdf' },
-    { label:'NTSB East Palestine Final Report 2024', url:'https://www.ntsb.gov/investigations/Pages/RRD23MR005.aspx' },,
+    { label:'NTSB East Palestine Investigation',     url:'https://www.ntsb.gov/investigations/Pages/DCA23MR005.aspx' },
   ],
   cyber: [
-    { label:'CISA Critical Infrastructure',          url:'https://www.cisa.gov/topics/critical-infrastructure-security-and-resilience' },
-   { label:'FEMA Planning Considerations for Cyber Incidents', url:'https://www.fema.gov/sites/default/files/documents/fema_planning-considerations-cyber-incidents_2023.pdf' },
+    { label:'CISA Critical Infrastructure',         url:'https://www.cisa.gov/topics/critical-infrastructure-security-and-resilience' },
+    { label:'FEMA Cyber Incident Annex',             url:'https://www.fema.gov/sites/default/files/2020-07/fema_Cyber-Incident-Annex_0.pdf' },
     { label:'WaterISAC Resources',                   url:'https://www.waterisac.org/' },
     { label:'NERC CIP Standards',                    url:'https://www.nerc.com/pa/Stand/Pages/CIPStandards.aspx' },
-  { label:'CISA Colonial Pipeline: What We Learned', url:'https://www.cisa.gov/news-events/news/attack-colonial-pipeline-what-weve-learned-what-weve-done-over-past-two-years' },
+    { label:'CISA Colonial Pipeline Review',         url:'https://www.cisa.gov/news-events/news/attack-colonial-pipeline-what-weve-learned-what-weve-done' },
   ],
   earthquake: [
-   { label:'FEMA Earthquake Risk Program', url:'https://www.fema.gov/emergency-managers/risk-management/earthquake' },
+    { label:'FEMA Earthquake Hazards',               url:'https://www.fema.gov/emergency-managers/risk-management/earthquakes' },
     { label:'USGS Earthquake Hazards Program',       url:'https://www.usgs.gov/programs/earthquake-hazards' },
     { label:'FEMA Urban Search & Rescue',            url:'https://www.fema.gov/emergency-managers/practitioners/urban-search-rescue' },
-   { label:'ATC-20 Postearthquake Safety Evaluation', url:'https://www.atcouncil.org/atc-20' },
-    { label:'Northridge Earthquake Disaster Page',   url:'https://www.fema.gov/disaster/1008' },
+    { label:'ATC-20 Rapid Safety Assessment',        url:'https://www.atcouncil.org/resources/atc-20' },
+    { label:'FEMA Northridge Earthquake Report',     url:'https://www.fema.gov/sites/default/files/2020-08/fema_northridge-earthquake_1994.pdf' },
   ],
   flood: [
-  { label:'FEMA Flood Risk — Know Your Risk', url:'https://www.fema.gov/flood-maps/know-your-risk' },
+    { label:'FEMA Flood Response Guidance',          url:'https://www.fema.gov/emergency-managers/risk-management/flood' },
     { label:'NWS Flood Safety',                      url:'https://www.weather.gov/safety/flood' },
     { label:'USACE Dam Safety Program',              url:'https://www.usace.army.mil/Missions/Civil-Works/Dam-Safety/' },
-   { label:'Oroville Dam Incident AAR — CalOES 2017', url:'https://www.caloes.ca.gov/wp-content/uploads/Preparedness/Documents/2017-Oroville-Dam-Incident-AAR-Approved.pdf' },
+    { label:'Oroville Dam Incident Review',          url:'https://www.water.ca.gov/LegacyFiles/pubs/flood/oroville_spillway_independent_forensic_team_report/oroville_spillway_incident_independent_forensic_team_final_report_jan_2018.pdf' },
     { label:'ESF-3 Public Works & Engineering',      url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_3_Public-Works-Engineering.pdf' },
   ],
 }
+
 const ESFS = [
   { num:1,  name:'Transportation',                   lead:'DOT',     desc:'Aviation, maritime, surface transport coordination.' },
   { num:2,  name:'Communications',                   lead:'DHS/CISA',desc:'Restore and sustain communications infrastructure.' },
@@ -364,12 +365,12 @@ function InfoCallout({ panelKey, anchorRef, onClose }) {
   }, [])
   if (!info) return null
   return (
-    <div data-info-callout="true" style={{ position:'fixed', top:pos.top, left:pos.left, width:340, background:'#141414', border:'0.5px solid #444', borderRadius:8, padding:'12px 14px', zIndex:3000, boxShadow:'0 8px 24px rgba(0,0,0,0.9)' }}>
+    <div data-info-callout="true" style={{ position:'fixed', top:pos.top, left:pos.left, width:300, background:'#141414', border:'0.5px solid #444', borderRadius:8, padding:'12px 14px', zIndex:3000, boxShadow:'0 8px 24px rgba(0,0,0,0.9)' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
         <span style={{ fontSize:11, fontWeight:500, color:'#ccc', letterSpacing:'0.04em' }}>{info.title}</span>
         <button onClick={onClose} style={{ fontSize:12, color:'#555', border:'none', background:'none', cursor:'pointer', padding:'0 2px' }}>✕</button>
       </div>
-      <p style={{ fontSize:10, color:'#777', lineHeight:1.7, margin:0, whiteSpace:'normal', wordBreak:'break-word' }}>{info.body}</p>
+      <p style={{ fontSize:10, color:'#777', lineHeight:1.7, margin:0 }}>{info.body}</p>
     </div>
   )
 }
@@ -500,6 +501,7 @@ export default function App() {
   const [rightSplit, setRightSplit] = useState(45)
   const [showSettings, setShowSettings] = useState(false)
   const [activeInfo, setActiveInfo] = useState(null)
+  const [activeESFs, setActiveESFs] = useState({})
   const [settings, setSettings]     = useState(() => {
     try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}') } }
     catch { return DEFAULT_SETTINGS }
@@ -778,16 +780,27 @@ export default function App() {
           <div style={{ flex:1, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
             {panelHdr('ESF Reference', 'esf')}
             <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:3 }}>
-              {ESFS.map(esf => (
-                <div key={esf.num} style={{ padding:'5px 8px', borderRadius:5, border:'0.5px solid #1a1a1a', lineHeight:1.4 }}>
-                  <div style={{ display:'flex', gap:6, alignItems:'baseline', marginBottom:2 }}>
-                    <span style={{ fontSize:9, color:al, fontWeight:500, whiteSpace:'nowrap' }}>ESF-{esf.num}</span>
-                    <span style={{ fontSize:fs-1, color:'#aaa', fontWeight:500 }}>{esf.name}</span>
-                  </div>
-                  <div style={{ fontSize:9, color:'#444' }}>Lead: {esf.lead}</div>
-                  <div style={{ fontSize:9, color:'#333', marginTop:1 }}>{esf.desc}</div>
+              {activeESFs && Object.values(activeESFs).some(v => v) && (
+                <div style={{ padding:'4px 8px', marginBottom:2, fontSize:9, color:ac, borderBottom:'0.5px solid #1a1a1a' }}>
+                  {Object.values(activeESFs).filter(Boolean).length} ESF{Object.values(activeESFs).filter(Boolean).length !== 1 ? 's' : ''} active — click to toggle
                 </div>
-              ))}
+              )}
+              {ESFS.map(esf => {
+                const isActive = !!activeESFs[esf.num]
+                return (
+                  <div key={esf.num}
+                    onClick={() => setActiveESFs(prev => ({ ...prev, [esf.num]: !prev[esf.num] }))}
+                    style={{ padding:'5px 8px', borderRadius:5, border:`0.5px solid ${isActive ? ac : '#1a1a1a'}`, lineHeight:1.4, cursor:'pointer', background:isActive ? ac + '11' : 'transparent', borderLeft:isActive ? `3px solid ${ac}` : '0.5px solid #1a1a1a', transition:'all 0.1s' }}>
+                    <div style={{ display:'flex', gap:6, alignItems:'center', marginBottom:2 }}>
+                      <span style={{ fontSize:9, color:isActive ? ac : al, fontWeight:500, whiteSpace:'nowrap' }}>ESF-{esf.num}</span>
+                      <span style={{ fontSize:fs-1, color:isActive ? '#ddd' : '#aaa', fontWeight:500, flex:1 }}>{esf.name}</span>
+                      <span style={{ fontSize:8, color:isActive ? ac : '#333', fontWeight:500 }}>{isActive ? '● ACTIVE' : '○'}</span>
+                    </div>
+                    <div style={{ fontSize:9, color:isActive ? '#666' : '#444' }}>Lead: {esf.lead}</div>
+                    <div style={{ fontSize:9, color:isActive ? '#555' : '#333', marginTop:1 }}>{esf.desc}</div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
