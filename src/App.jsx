@@ -1061,7 +1061,7 @@ export default function App() {
               Execute
             </button>
           </div>
-
+        </div>  
         <div style={divSty} onMouseDown={e => onColDown(2,e)}><div style={divInner}/></div>
 
         {/* RIGHT COLUMN */}
@@ -1114,7 +1114,7 @@ export default function App() {
                 ))}
               </MapContainer>
             </div>
-          </div>
+        </div>
         </div>
 
       </div>
