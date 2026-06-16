@@ -1032,7 +1032,7 @@ export default function App() {
               {initLoading ? 'Building scenario world...' : 'Evaluating action...'}
             </div>}
           </div>
-          <<div style={{ borderTop:'0.5px solid #222', height:8, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
+          <div style={{ borderTop:'0.5px solid #222', height:8, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
             onMouseDown={e => {
               e.preventDefault()
               const termEl = termRef.current
