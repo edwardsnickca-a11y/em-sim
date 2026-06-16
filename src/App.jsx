@@ -570,6 +570,7 @@ export default function App() {
   const [loading, setLoading]       = useState(false)
   const [initLoading, setInitLoading] = useState(false)
   const [input, setInput]           = useState('')
+  const [inputAreaHeight, setInputAreaHeight] = useState(80)
   const [boundaries, setBoundaries] = useState([14, 32, 80])
   const [leftBounds, setLeftBounds] = useState([40, 70])
   const [rightSplit, setRightSplit] = useState(45)
@@ -1031,17 +1032,35 @@ export default function App() {
               {initLoading ? 'Building scenario world...' : 'Evaluating action...'}
             </div>}
           </div>
-          <div style={{ borderTop:'0.5px solid #222', padding:'8px 10px', display:'flex', gap:6 }}>
+          <<div style={{ borderTop:'0.5px solid #222', height:8, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
+            onMouseDown={e => {
+              e.preventDefault()
+              const termEl = termRef.current
+              const startY = e.clientY
+              const startHeight = inputAreaHeight
+              function onMove(ev) {
+                const delta = startY - ev.clientY
+                setInputAreaHeight(Math.max(60, Math.min(400, startHeight + delta)))
+              }
+              function onUp() {
+                window.removeEventListener('mousemove', onMove)
+                window.removeEventListener('mouseup', onUp)
+              }
+              window.addEventListener('mousemove', onMove)
+              window.addEventListener('mouseup', onUp)
+            }}>
+            <div style={{ width:28, height:3, background:'#3a3a3a', borderRadius:2 }}/>
+          </div>
+          <div style={{ padding:'8px 10px', display:'flex', gap:6, height:inputAreaHeight, flexShrink:0 }}>
             <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
               placeholder={initLoading ? 'Generating scenario...' : 'Your action...'}
               disabled={initLoading}
-              rows={2} style={{ flex:1, resize:'none', lineHeight:1.6, fontSize:fs, background:'#0d0d0d', border:'0.5px solid #222', color:'#ccc', padding:'6px 8px', fontFamily:'JetBrains Mono, monospace' }}/>
+              style={{ flex:1, resize:'none', lineHeight:1.6, fontSize:fs, background:'#0d0d0d', border:'0.5px solid #222', color:'#ccc', padding:'6px 8px', fontFamily:'JetBrains Mono, monospace', height:'100%', boxSizing:'border-box' }}/>
             <button onClick={sendAction} disabled={loading||!input.trim()||initLoading}
               style={{ padding:'6px 14px', fontWeight:500, alignSelf:'stretch', color:ac, borderColor:ac, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', border:`0.5px solid ${ac}`, opacity:(loading||!input.trim()||initLoading)?0.4:1 }}>
               Execute
             </button>
           </div>
-        </div>
 
         <div style={divSty} onMouseDown={e => onColDown(2,e)}><div style={divInner}/></div>
 
