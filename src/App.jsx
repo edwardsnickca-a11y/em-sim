@@ -698,7 +698,7 @@ export default function App() {
 
       // Build initial dispatches and pins from world response
       const initDispatches = (world.dispatches || []).map((text, i) => ({ id:i, text, turn:0 }))
-      const initPins       = (world.pins || []).map((p, i) => ({ ...p, id: p.id || `init-${i}` }))
+      const initPins = (world.pins || []).map((p, i) => ({ ...p, id: `init-${i}` }))
 
       update({
         worldState: world,
