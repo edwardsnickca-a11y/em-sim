@@ -113,9 +113,9 @@ const SCENARIO_REFS = {
     { label:'ESF-3 Public Works & Engineering',           url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_3_Public-Works-Engineering.pdf' },
   ],
   wildfire: [
-    { label:'FEMA Wildfire Mitigation & Response',        url:'https://www.fema.gov/emergency-managers/risk-management/wildfire' },
-    { label:'CAL FIRE Incident Command Handbook',         url:'https://www.fire.ca.gov/media/5584/incident-command-system-ics-training.pdf' },
-    { label:'NIFC Wildland Fire Response',                url:'https://www.nifc.gov/fire-information/fire-management' },
+    { label:'FEMA Wildfire Mitigation & Response',       url:'https://www.fema.gov/emergency-managers/risk-management/wildfire' },
+    { label:'CAL FIRE Fire Protection Programs',         url:'https://www.fire.ca.gov/what-we-do/fire-protection' },
+    { label:'NIFC Fire Information',                     url:'https://www.nifc.gov/fire-information' },
     { label:'Palisades/Eaton Fire After-Action',         url:'https://www.lacounty.gov/emergency/' },
     { label:'ESF-4 Firefighting Annex',                  url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_4_Firefighting.pdf' },
   ],
