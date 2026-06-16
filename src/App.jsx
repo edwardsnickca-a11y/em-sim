@@ -794,55 +794,110 @@ export default function App() {
 
   // ─── SETUP SCREEN ──────────────────────────────────────────────────────────
   if (state.screen === 'setup') return (
-    <div style={{ maxWidth:900, margin:'0 auto', padding:'2rem 1rem', fontFamily:'JetBrains Mono, monospace' }}>
-      <h1 style={{ fontSize:16, fontWeight:500, color:ac, marginBottom:'0.5rem', letterSpacing:'0.08em' }}>EM CRISIS SIMULATOR</h1>
-      <p style={{ fontSize:12, color:'#555', marginBottom:'2rem' }}>Emergency Management Training System — Select scenario and jurisdiction to begin</p>
+    <div style={{ minHeight:'100vh', background:'#0a0a0a', fontFamily:'JetBrains Mono, monospace', display:'flex', flexDirection:'column' }}>
 
-      <p style={{ fontSize:11, color:'#666', marginBottom:'0.5rem', textTransform:'uppercase', letterSpacing:'0.08em' }}>Scenario</p>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:8, marginBottom:'1.5rem' }}>
-        {Object.entries(SCENARIOS).map(([key, sc]) => (
-          <button key={key} onClick={() => update({ scenario:key })}
-            style={{ textAlign:'left', padding:'10px 12px', border:`0.5px solid ${state.scenario===key?ac:'#222'}`, background:state.scenario===key?'#0a1f18':'transparent', cursor:'pointer' }}>
-            <div style={{ fontSize:20, marginBottom:6 }}>{sc.icon}</div>
-            <div style={{ fontSize:11, fontWeight:500, color:'#ddd', marginBottom:4 }}>{sc.name}</div>
-            <div style={{ fontSize:9, color:'#555', lineHeight:1.5 }}>{sc.desc}</div>
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:'1rem' }}>
-        <div>
-          <p style={{ fontSize:11, color:'#666', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.08em' }}>Jurisdiction</p>
-          <select value={state.jurisdiction} onChange={e => update({ jurisdiction:e.target.value })}
-            style={{ width:'100%', padding:'6px 8px', background:'#111', border:'0.5px solid #333', color:'#ccc', fontSize:11, fontFamily:'JetBrains Mono, monospace' }}>
-            {JURISDICTIONS.map(j => <option key={j}>{j}</option>)}
-          </select>
-        </div>
-        <div>
-          <p style={{ fontSize:11, color:'#666', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.08em' }}>Difficulty</p>
-          <select value={state.difficulty} onChange={e => update({ difficulty:e.target.value })}
-            style={{ width:'100%', padding:'6px 8px', background:'#111', border:'0.5px solid #333', color:'#ccc', fontSize:11, fontFamily:'JetBrains Mono, monospace' }}>
-            {DIFFICULTIES.map(d => <option key={d}>{d}</option>)}
-          </select>
+      {/* HEADER */}
+      <div style={{ borderBottom:'0.5px solid #1a1a1a', padding:'2rem 2.5rem 1.5rem', background:'#0a0a0a' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto' }}>
+          <div style={{ display:'flex', alignItems:'baseline', gap:12, marginBottom:8 }}>
+            <h1 style={{ fontSize:22, fontWeight:700, color:ac, letterSpacing:'0.12em', margin:0 }}>EM CRISIS SIMULATOR</h1>
+            <span style={{ fontSize:10, color:'#333', letterSpacing:'0.08em', textTransform:'uppercase' }}>v2.0</span>
+          </div>
+          <div style={{ width:48, height:2, background:ac, marginBottom:12, opacity:0.6 }}/>
+          <p style={{ fontSize:11, color:'#444', margin:0, letterSpacing:'0.04em' }}>Emergency Management Training System — Select scenario and jurisdiction to begin</p>
         </div>
       </div>
 
-      {/* Jurisdiction context callout */}
-      {state.jurisdiction && (
-        <div style={{ marginBottom:'1.5rem', padding:'10px 14px', border:'0.5px solid #1a2a1a', borderRadius:6, background:'#0a1a0a' }}>
-          <div style={{ fontSize:10, color:ac, fontWeight:500, marginBottom:4, textTransform:'uppercase', letterSpacing:'0.06em' }}>{state.jurisdiction}</div>
-          <div style={{ fontSize:10, color:'#555', lineHeight:1.7 }}>{JURISDICTION_CONTEXT[state.jurisdiction]?.desc}</div>
-          <div style={{ fontSize:9, color:'#333', lineHeight:1.6, marginTop:6, borderTop:'0.5px solid #1a2a1a', paddingTop:6 }}>
-            <span style={{ color:'#444' }}>Key constraints: </span>{JURISDICTION_CONTEXT[state.jurisdiction]?.constraints}
+      {/* MAIN CONTENT */}
+      <div style={{ flex:1, padding:'2rem 2.5rem', maxWidth:1100, margin:'0 auto', width:'100%', boxSizing:'border-box' }}>
+
+        {/* SCENARIO LABEL */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+          <span style={{ fontSize:10, color:'#444', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:600 }}>Scenario</span>
+          <div style={{ flex:1, height:'0.5px', background:'#1a1a1a' }}/>
+          {state.scenario && <span style={{ fontSize:9, color:ac, letterSpacing:'0.06em' }}>{SCENARIOS[state.scenario].name} selected</span>}
+        </div>
+
+        {/* SCENARIO GRID */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:6, marginBottom:'2rem' }}>
+          {Object.entries(SCENARIOS).map(([key, sc]) => {
+            const selected = state.scenario === key
+            return (
+              <button key={key} onClick={() => update({ scenario:key })}
+                style={{ textAlign:'left', padding:'14px 12px', border:`0.5px solid ${selected?ac:'#1e1e1e'}`, borderLeft:`${selected?3:0.5}px solid ${selected?ac:'#1e1e1e'}`, background:selected?ac+'0d':'#111', cursor:'pointer', borderRadius:4, transition:'all 0.12s', position:'relative', outline:'none' }}
+                onMouseEnter={e => { if (!selected) e.currentTarget.style.borderColor='#333'; e.currentTarget.style.background=selected?ac+'0d':'#161616' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor=selected?ac:'#1e1e1e'; e.currentTarget.style.background=selected?ac+'0d':'#111' }}>
+                {selected && <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:ac }}/>}
+                <div style={{ fontSize:24, marginBottom:8, lineHeight:1 }}>{sc.icon}</div>
+                <div style={{ fontSize:10, fontWeight:700, color:selected?ac:'#ccc', marginBottom:5, letterSpacing:'0.04em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
+                <div style={{ fontSize:9, color:selected?'#666':'#3a3a3a', lineHeight:1.6 }}>{sc.desc}</div>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* JURISDICTION + DIFFICULTY */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+          <span style={{ fontSize:10, color:'#444', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:600 }}>Configuration</span>
+          <div style={{ flex:1, height:'0.5px', background:'#1a1a1a' }}/>
+        </div>
+
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:'1.5rem' }}>
+          <div>
+            <p style={{ fontSize:9, color:'#444', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.1em', margin:'0 0 6px 0' }}>Jurisdiction Type</p>
+            <select value={state.jurisdiction} onChange={e => update({ jurisdiction:e.target.value })}
+              style={{ width:'100%', padding:'8px 10px', background:'#111', border:'0.5px solid #2a2a2a', color:'#ccc', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:4, outline:'none' }}>
+              {JURISDICTIONS.map(j => <option key={j}>{j}</option>)}
+            </select>
+          </div>
+          <div>
+            <p style={{ fontSize:9, color:'#444', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.1em', margin:'0 0 6px 0' }}>Difficulty</p>
+            <select value={state.difficulty} onChange={e => update({ difficulty:e.target.value })}
+              style={{ width:'100%', padding:'8px 10px', background:'#111', border:'0.5px solid #2a2a2a', color:'#ccc', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:4, outline:'none' }}>
+              {DIFFICULTIES.map(d => <option key={d}>{d}</option>)}
+            </select>
           </div>
         </div>
-      )}
 
-      <button onClick={() => state.scenario && startScenario(state.scenario)}
-        disabled={!state.scenario || initLoading}
-        style={{ width:'100%', padding:'10px', fontSize:13, fontWeight:500, border:`0.5px solid ${state.scenario?ac:'#333'}`, color:state.scenario?ac:'#555', cursor:state.scenario?'pointer':'not-allowed', background:'transparent', fontFamily:'JetBrains Mono, monospace' }}>
-        {state.scenario ? `LAUNCH — ${SCENARIOS[state.scenario].name} in ${state.jurisdiction} ↗` : 'Select a scenario to begin'}
-      </button>
+        {/* JURISDICTION CALLOUT */}
+        {state.jurisdiction && (
+          <div style={{ marginBottom:'2rem', padding:'14px 16px', border:'0.5px solid #1a2a1a', borderLeft:`3px solid ${ac}`, borderRadius:4, background:'#0c160c' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+              <span style={{ fontSize:9, color:ac, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em' }}>{state.jurisdiction}</span>
+              <div style={{ flex:1, height:'0.5px', background:'#1a2a1a' }}/>
+            </div>
+            <div style={{ fontSize:10, color:'#4a5a4a', lineHeight:1.8, marginBottom:8 }}>{JURISDICTION_CONTEXT[state.jurisdiction]?.desc}</div>
+            <div style={{ fontSize:9, color:'#2a3a2a', lineHeight:1.7, paddingTop:8, borderTop:'0.5px solid #1a2a1a' }}>
+              <span style={{ color:'#3a4a3a', fontWeight:600 }}>Key constraints: </span>
+              <span style={{ color:'#333' }}>{JURISDICTION_CONTEXT[state.jurisdiction]?.constraints}</span>
+            </div>
+          </div>
+        )}
+
+        {/* LAUNCH BUTTON */}
+        <button
+          onClick={() => state.scenario && !initLoading && startScenario(state.scenario)}
+          disabled={!state.scenario || initLoading}
+          style={{
+            width:'100%', padding:'14px', fontSize:12, fontWeight:700,
+            letterSpacing:'0.1em', textTransform:'uppercase',
+            border:`0.5px solid ${state.scenario?ac:'#222'}`,
+            color: state.scenario ? '#0a0a0a' : '#333',
+            background: state.scenario ? ac : 'transparent',
+            cursor: state.scenario && !initLoading ? 'pointer' : 'not-allowed',
+            fontFamily:'JetBrains Mono, monospace',
+            borderRadius:4,
+            opacity: initLoading ? 0.6 : 1,
+            transition:'all 0.15s',
+          }}>
+          {initLoading
+            ? '⟳  Generating scenario world...'
+            : state.scenario
+              ? `Launch — ${SCENARIOS[state.scenario].name} / ${state.jurisdiction} ↗`
+              : 'Select a scenario to begin'}
+        </button>
+
+      </div>
     </div>
   )
 
