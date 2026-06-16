@@ -859,13 +859,13 @@ export default function App() {
             </select>
             {state.difficulty && (
               <div style={{ marginTop:6, fontSize:9, color:'#3a4a3a', lineHeight:1.6, paddingLeft:2 }}>
-                {{
+                {({
                   Basic:    'Generous evaluation. One complication per turn. Good for learning the system.',
                   Moderate: 'Moderate rigor. Two complications per turn. Realistic resource pressure.',
                   Advanced: 'Professional rigor. 2-3 complications per turn. Resource constraints are real.',
                   Brutal:   'Ruthless evaluation. Every vague or delayed decision cascades.',
                   Adaptive: 'Difficulty scales to your performance. Never lets you get comfortable.',
-                }[state.difficulty]}
+                })[state.difficulty]}
               </div>
             )}
           </div>
