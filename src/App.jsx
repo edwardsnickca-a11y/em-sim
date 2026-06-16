@@ -851,13 +851,24 @@ export default function App() {
             </select>
           </div>
           <div>
+            <div>
             <p style={{ fontSize:9, color:'#444', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.1em', margin:'0 0 6px 0' }}>Difficulty</p>
             <select value={state.difficulty} onChange={e => update({ difficulty:e.target.value })}
               style={{ width:'100%', padding:'8px 10px', background:'#111', border:'0.5px solid #2a2a2a', color:'#ccc', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:4, outline:'none' }}>
               {DIFFICULTIES.map(d => <option key={d}>{d}</option>)}
             </select>
+            {state.difficulty && (
+              <div style={{ marginTop:6, fontSize:9, color:'#3a4a3a', lineHeight:1.6, paddingLeft:2 }}>
+                {{
+                  Basic:    'Generous evaluation. One complication per turn. Good for learning the system.',
+                  Moderate: 'Moderate rigor. Two complications per turn. Realistic resource pressure.',
+                  Advanced: 'Professional rigor. 2-3 complications per turn. Resource constraints are real.',
+                  Brutal:   'Ruthless evaluation. Every vague or delayed decision cascades.',
+                  Adaptive: 'Difficulty scales to your performance. Never lets you get comfortable.',
+                }[state.difficulty]}
+              </div>
+            )}
           </div>
-        </div>
 
         {/* JURISDICTION CALLOUT */}
         {state.jurisdiction && (
@@ -869,7 +880,7 @@ export default function App() {
             <div style={{ fontSize:10, color:'#4a5a4a', lineHeight:1.8, marginBottom:8 }}>{JURISDICTION_CONTEXT[state.jurisdiction]?.desc}</div>
             <div style={{ fontSize:9, color:'#2a3a2a', lineHeight:1.7, paddingTop:8, borderTop:'0.5px solid #1a2a1a' }}>
               <span style={{ color:'#3a4a3a', fontWeight:600 }}>Key constraints: </span>
-              <span style={{ color:'#333' }}>{JURISDICTION_CONTEXT[state.jurisdiction]?.constraints}</span>
+              <span style={{ color:'#4a5a4a' }}>{JURISDICTION_CONTEXT[state.jurisdiction]?.constraints}</span>
             </div>
           </div>
         )}
