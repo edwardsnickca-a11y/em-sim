@@ -133,7 +133,7 @@ const SCENARIO_REFS = {
   { label:'Nuclear/Radiological Incident Annex (NRIA)',      url:'https://www.fema.gov/sites/default/files/documents/fema_incident-annex_nuclear-radiological.pdf' },
   { label:'FEMA Nuclear Detonation Response — First 72 Hrs', url:'https://www.fema.gov/sites/default/files/documents/fema_oet-72-hour-nuclear-detonation-response-guidance.pdf' },
 ],
-  ],
+
   train: [
     { label:'DOT Emergency Response Guidebook',           url:'https://www.phmsa.dot.gov/hazmat/erg/emergency-response-guidebook-erg' },
     { label:'NTSB East Palestine Final Report 2024',      url:'https://www.ntsb.gov/investigations/Pages/RRD23MR005.aspx' },
