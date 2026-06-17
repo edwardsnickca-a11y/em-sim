@@ -127,11 +127,12 @@ const SCENARIO_REFS = {
     { label:'Texas Winter Storm Uri AAR 2021',            url:'https://www.energy.gov/sites/default/files/2021/07/f82/DOE%20Winter%20Storm%20Uri%20Report%20-%20August%202021.pdf' },
   ],
   rdd: [
-    { label:'FEMA Radiological/Nuclear Response',         url:'https://www.fema.gov/emergency-managers/risk-management/radiological' },
-    { label:'DHS RDD/IND Response Guidance',              url:'https://www.dhs.gov/publication/radiological-attack-dirty-bombs' },
-    { label:'REAC/TS Medical Response to Radiation',      url:'https://orise.orau.gov/reacts/' },
-    { label:'FEMA P-1017 IND Response Plan Review',       url:'https://www.fema.gov/sites/default/files/2020-07/fema_p-1017_ind-response-plan.pdf' },
-    { label:'Nuclear/Radiological Incident Annex',        url:'https://www.fema.gov/sites/default/files/2020-07/fema_Nuclear-Radiological-Incident-Annex_0.pdf' },
+  { label:'FEMA Radiological Emergency Preparedness',        url:'https://www.fema.gov/emergency-managers/practitioners/hazardous-response-capabilities/radiological' },
+  { label:'FEMA RDD Incident Planning Guidance',             url:'https://www.fema.gov/sites/default/files/documents/fema_rd-planning-guidance-for-responding-to-and-recovering-from-radiological-dispersal-device-rdd-incidents.pdf' },
+  { label:'REAC/TS Medical Response to Radiation',           url:'https://orise.orau.gov/reacts/' },
+  { label:'Nuclear/Radiological Incident Annex (NRIA)',      url:'https://www.fema.gov/sites/default/files/documents/fema_incident-annex_nuclear-radiological.pdf' },
+  { label:'FEMA Nuclear Detonation Response — First 72 Hrs', url:'https://www.fema.gov/sites/default/files/documents/fema_oet-72-hour-nuclear-detonation-response-guidance.pdf' },
+],
   ],
   train: [
     { label:'DOT Emergency Response Guidebook',           url:'https://www.phmsa.dot.gov/hazmat/erg/emergency-response-guidebook-erg' },
