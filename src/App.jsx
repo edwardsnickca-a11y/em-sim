@@ -821,7 +821,7 @@ export default function App() {
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 24px', borderBottom:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.6)' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:9, color:'#4a8a68', letterSpacing:'0.12em' }}>
               <div style={{ width:5, height:5, borderRadius:'50%', background:ac, animation:'pulse 2s infinite' }}/>
-              EMERGENCY OPERATIONS COMMAND SYSTEM
+              NEXUS EOC — SIMULATED EMERGENCY OPERATIONS PLATFORM
             </div>
             <div style={{ display:'flex', gap:24 }}>
               {[['SYSTEM STATUS','● OPERATIONAL'],['NETWORK','SECURE'],['DATA FEED','LIVE'],['AI ENGINE','ONLINE']].map(([k,v]) => (
@@ -838,12 +838,12 @@ export default function App() {
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
                 <div style={{ width:24, height:'0.5px', background:ac }}/>
-                <span style={{ fontSize:9, color:ac, letterSpacing:'0.2em', textTransform:'uppercase' }}>Advanced Training Platform</span>
+                <span style={{ fontSize:9, color:ac, letterSpacing:'0.2em', textTransform:'uppercase' }}>Simulated Emergency Operations Platform</span>
               </div>
               <h1 style={{ fontSize:32, fontWeight:700, lineHeight:1.05, margin:'0 0 6px', color:'#e8f5f0', letterSpacing:'0.04em' }}>
-                EM CRISIS <span style={{ color:ac }}>SIMULATOR</span>
+                NEXUS <span style={{ color:ac }}>EOC</span>
               </h1>
-              <p style={{ fontSize:13, color:'#5aaa80', letterSpacing:'0.04em', margin:'0 0 8px', fontWeight:400 }}>Advanced Emergency Operations Training Platform</p>
+              <p style={{ fontSize:13, color:'#5aaa80', letterSpacing:'0.04em', margin:'0 0 8px', fontWeight:400 }}>Simulated Emergency Operations Platform</p>
               <p style={{ fontSize:11, color:'#6aba88', lineHeight:1.8, margin:'0 0 20px', maxWidth:500 }}>
                 Scenario-based incident command simulations for emergency managers, EOCs, and response teams.
               </p>
@@ -972,7 +972,7 @@ export default function App() {
 {/* COPYRIGHT FOOTER */}
       <div style={{ position:'relative', zIndex:2, textAlign:'center', padding:'10px 32px', borderTop:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.7)' }}>
         <span style={{ fontSize:8, color:'#2a4a3a', letterSpacing:'0.1em' }}>
-          © {new Date().getFullYear()} NICHOLAS EDWARDS — ALL RIGHTS RESERVED — UNAUTHORIZED REPRODUCTION OR COMMERCIAL USE PROHIBITED
+          © {new Date().getFullYear()} NICHOLAS EDWARDS — NEXUS EOC — ALL RIGHTS RESERVED — UNAUTHORIZED REPRODUCTION OR COMMERCIAL USE PROHIBITED
         </span>
       </div>
       <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
