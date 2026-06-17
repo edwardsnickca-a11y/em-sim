@@ -969,7 +969,12 @@ export default function App() {
         </div>
 
       </div>
-
+{/* COPYRIGHT FOOTER */}
+      <div style={{ position:'relative', zIndex:2, textAlign:'center', padding:'10px 32px', borderTop:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.7)' }}>
+        <span style={{ fontSize:8, color:'#2a4a3a', letterSpacing:'0.1em' }}>
+          © {new Date().getFullYear()} NICHOLAS EDWARDS — ALL RIGHTS RESERVED — UNAUTHORIZED REPRODUCTION OR COMMERCIAL USE PROHIBITED
+        </span>
+      </div>
       <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
     </div>
   )
