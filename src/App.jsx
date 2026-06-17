@@ -798,155 +798,162 @@ export default function App() {
 
       {/* HERO */}
       <div style={{ position:'relative', overflow:'hidden', borderBottom:'0.5px solid #0f1f14' }}>
-        {/* Grid background */}
         <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(29,158,117,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(29,158,117,0.04) 1px, transparent 1px)', backgroundSize:'40px 40px', pointerEvents:'none' }}/>
-        {/* Corner brackets */}
         {[{top:10,left:10,borderWidth:'1px 0 0 1px'},{top:10,right:10,borderWidth:'1px 1px 0 0'},{bottom:10,left:10,borderWidth:'0 0 1px 1px'},{bottom:10,right:10,borderWidth:'0 1px 1px 0'}].map((s,i) => (
           <div key={i} style={{ position:'absolute', width:16, height:16, borderStyle:'solid', borderColor:ac, opacity:0.4, ...s }}/>
         ))}
         {/* Top status bar */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 24px', borderBottom:'0.5px solid #0f1f14', background:'rgba(8,12,10,0.9)' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:9, color:'#2a4a3a', letterSpacing:'0.12em' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:9, color:'#4a8a68', letterSpacing:'0.12em' }}>
             <div style={{ width:5, height:5, borderRadius:'50%', background:ac, animation:'pulse 2s infinite' }}/>
             EMERGENCY OPERATIONS COMMAND SYSTEM
           </div>
           <div style={{ display:'flex', gap:24 }}>
             {[['SYSTEM STATUS','● OPERATIONAL'],['NETWORK','SECURE'],['DATA FEED','LIVE'],['AI ENGINE','ONLINE']].map(([k,v]) => (
               <div key={k} style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:1 }}>
-                <span style={{ fontSize:8, color:'#2a4a3a', letterSpacing:'0.1em' }}>{k}</span>
+                <span style={{ fontSize:8, color:'#4a7a5a', letterSpacing:'0.1em' }}>{k}</span>
                 <span style={{ fontSize:9, color:ac, letterSpacing:'0.08em' }}>{v}</span>
               </div>
             ))}
           </div>
         </div>
         {/* Hero content */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:40, padding:'28px 32px 24px', position:'relative', zIndex:1 }}>
-          <div>
-            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-              <div style={{ width:24, height:'0.5px', background:ac }}/>
-              <span style={{ fontSize:9, color:ac, letterSpacing:'0.2em', textTransform:'uppercase' }}>Advanced Training Platform</span>
+        <div style={{ maxWidth:1100, margin:'0 auto', width:'100%', boxSizing:'border-box' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:40, padding:'28px 32px 24px', position:'relative', zIndex:1 }}>
+            <div>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+                <div style={{ width:24, height:'0.5px', background:ac }}/>
+                <span style={{ fontSize:9, color:ac, letterSpacing:'0.2em', textTransform:'uppercase' }}>Advanced Training Platform</span>
+              </div>
+              <h1 style={{ fontSize:28, fontWeight:700, lineHeight:1.1, margin:'0 0 4px', color:'#e8f5f0', letterSpacing:'0.04em' }}>
+                EM CRISIS <span style={{ color:ac }}>SIMULATOR</span>
+              </h1>
+              <p style={{ fontSize:11, color:'#5aaa80', letterSpacing:'0.06em', margin:'0 0 10px' }}>Advanced Emergency Operations Training Platform</p>
+              <p style={{ fontSize:10, color:'#4a8a68', lineHeight:1.8, margin:'0 0 16px', maxWidth:480, letterSpacing:'0.02em' }}>
+                Scenario-based incident command simulations for emergency managers, EOCs, and response teams.
+              </p>
+              <div style={{ display:'flex', gap:24 }}>
+                {[['TRAIN','Realistic scenarios built for your role'],['DECIDE','Sharpen judgment under pressure'],['COMMAND','Practice ICS doctrine in realistic conditions'],['REVIEW','AI after-action every scenario']].map(([label,desc]) => (
+                  <div key={label} style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                    <span style={{ fontSize:8, color:ac, letterSpacing:'0.12em', fontWeight:700 }}>{label}</span>
+                    <span style={{ fontSize:8, color:'#4a7a5a', lineHeight:1.5 }}>{desc}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h1 style={{ fontSize:28, fontWeight:700, lineHeight:1.1, margin:'0 0 4px', color:'#e8f5f0', letterSpacing:'0.04em' }}>
-              EM CRISIS <span style={{ color:ac }}>SIMULATOR</span>
-            </h1>
-            <p style={{ fontSize:11, color:'#2a5a40', letterSpacing:'0.06em', margin:'0 0 10px' }}>Advanced Emergency Operations Training Platform</p>
-            <p style={{ fontSize:10, color:'#1a3a28', lineHeight:1.8, margin:'0 0 16px', maxWidth:480, letterSpacing:'0.02em' }}>
-              Scenario-based incident command simulations for emergency managers, EOCs, and response teams.
-            </p>
-            <div style={{ display:'flex', gap:24 }}>
-              {[['TRAIN','Realistic scenarios built for your role'],['DECIDE','Sharpen judgment under pressure'],['COMMAND','Practice ICS doctrine in realistic conditions'],['REVIEW','AI after-action every scenario']].map(([label,desc]) => (
-                <div key={label} style={{ display:'flex', flexDirection:'column', gap:3 }}>
-                  <span style={{ fontSize:8, color:ac, letterSpacing:'0.12em', fontWeight:700 }}>{label}</span>
-                  <span style={{ fontSize:8, color:'#1a3028', lineHeight:1.5 }}>{desc}</span>
+            <div style={{ display:'flex', flexDirection:'column', gap:0, minWidth:170 }}>
+              {[['SCENARIOS','10 LOADED'],['JURISDICTIONS','6 TYPES'],['DIFFICULTY','5 LEVELS'],['AAR','AI-POWERED'],['VERSION','2.0']].map(([k,v]) => (
+                <div key={k} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'0.5px solid #0f1f14' }}>
+                  <span style={{ fontSize:8, color:'#4a7a5a', letterSpacing:'0.1em' }}>{k}</span>
+                  <span style={{ fontSize:8, color:ac, letterSpacing:'0.08em' }}>{v}</span>
                 </div>
               ))}
             </div>
           </div>
-          <div style={{ display:'flex', flexDirection:'column', gap:0, minWidth:170 }}>
-            {[['SCENARIOS','10 LOADED'],['JURISDICTIONS','6 TYPES'],['DIFFICULTY','5 LEVELS'],['AAR','AI-POWERED'],['VERSION','2.0']].map(([k,v]) => (
-              <div key={k} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'0.5px solid #0f1f14' }}>
-                <span style={{ fontSize:8, color:'#2a4a3a', letterSpacing:'0.1em' }}>{k}</span>
-                <span style={{ fontSize:8, color:ac, letterSpacing:'0.08em' }}>{v}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* SCENARIO SELECTION */}
-      <div style={{ flex:1, padding:'20px 32px', overflowY:'auto' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-          <span style={{ fontSize:9, color:'#2a4a3a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Select Scenario</span>
-          <div style={{ flex:1, height:'0.5px', background:'#0f1f14' }}/>
-          {state.scenario && <span style={{ fontSize:9, color:ac, letterSpacing:'0.06em' }}>✓ {SCENARIOS[state.scenario].name}</span>}
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:6, marginBottom:20 }}>
-          {Object.entries(SCENARIOS).map(([key, sc]) => {
-            const selected = state.scenario === key
-            return (
-              <button key={key} onClick={() => update({ scenario:key })}
-                style={{ textAlign:'left', padding:'12px 12px', border:`0.5px solid ${selected?ac:'#0f1f14'}`, borderLeft:`${selected?'3px':'0.5px'} solid ${selected?ac:'#0f1f14'}`, background:selected?ac+'12':'#0c120e', cursor:'pointer', borderRadius:3, outline:'none', position:'relative', transition:'border-color 0.1s' }}
-                onMouseEnter={e => { if(!selected){ e.currentTarget.style.borderColor='#1a3028'; e.currentTarget.style.background='#0f1a12' }}}
-                onMouseLeave={e => { if(!selected){ e.currentTarget.style.borderColor='#0f1f14'; e.currentTarget.style.background='#0c120e' }}}>
-                {selected && <div style={{ position:'absolute', top:5, right:5, width:4, height:4, borderRadius:'50%', background:ac }}/>}
-                <div style={{ fontSize:22, marginBottom:7, lineHeight:1 }}>{sc.icon}</div>
-                <div style={{ fontSize:9, fontWeight:700, color:selected?ac:'#4a7a5a', marginBottom:4, letterSpacing:'0.06em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
-                <div style={{ fontSize:8, color:selected?'#2a5a3a':'#1a3028', lineHeight:1.6 }}>{sc.desc}</div>
-              </button>
-            )
-          })}
-        </div>
+      {/* MAIN CONTENT */}
+      <div style={{ flex:1, overflowY:'auto', padding:'20px 32px' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto', width:'100%', boxSizing:'border-box' }}>
 
-        {/* CONFIGURATION */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-          <span style={{ fontSize:9, color:'#2a4a3a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Configuration</span>
-          <div style={{ flex:1, height:'0.5px', background:'#0f1f14' }}/>
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:16 }}>
-          <div>
-            <p style={{ fontSize:8, color:'#2a4a3a', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Jurisdiction Type</p>
-            <select value={state.jurisdiction} onChange={e => update({ jurisdiction:e.target.value })}
-              style={{ width:'100%', padding:'8px 10px', background:'#0c120e', border:'0.5px solid #1a3028', color:'#4a7a5a', fontSize:10, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
-              {JURISDICTIONS.map(j => <option key={j}>{j}</option>)}
-            </select>
+          {/* SCENARIO SELECTION */}
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+            <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Select Scenario</span>
+            <div style={{ flex:1, height:'0.5px', background:'#0f1f14' }}/>
+            {state.scenario && <span style={{ fontSize:9, color:ac, letterSpacing:'0.06em' }}>✓ {SCENARIOS[state.scenario].name}</span>}
           </div>
-          <div>
-            <p style={{ fontSize:8, color:'#2a4a3a', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Difficulty</p>
-            <select value={state.difficulty} onChange={e => update({ difficulty:e.target.value })}
-              style={{ width:'100%', padding:'8px 10px', background:'#0c120e', border:'0.5px solid #1a3028', color:'#4a7a5a', fontSize:10, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
-              {DIFFICULTIES.map(d => <option key={d}>{d}</option>)}
-            </select>
-            {state.difficulty && (
-              <div style={{ marginTop:6, fontSize:8, color:'#1a3a28', lineHeight:1.6, paddingLeft:2 }}>
-                {state.difficulty === 'Basic' && 'Generous evaluation. One complication per turn. Good for learning the system.'}
-                {state.difficulty === 'Moderate' && 'Moderate rigor. Two complications per turn. Realistic resource pressure.'}
-                {state.difficulty === 'Advanced' && 'Professional rigor. 2-3 complications per turn. Resource constraints are real.'}
-                {state.difficulty === 'Brutal' && 'Ruthless evaluation. Every vague or delayed decision cascades.'}
-                {state.difficulty === 'Adaptive' && 'Difficulty scales to your performance. Never lets you get comfortable.'}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:6, marginBottom:20 }}>
+            {Object.entries(SCENARIOS).map(([key, sc]) => {
+              const selected = state.scenario === key
+              return (
+                <button key={key} onClick={() => update({ scenario:key })}
+                  style={{ textAlign:'left', padding:'12px 12px', border:`0.5px solid ${selected?ac:'#1a2e20'}`, borderLeft:`${selected?'3px':'0.5px'} solid ${selected?ac:'#1a2e20'}`, background:selected?ac+'12':'#0c120e', cursor:'pointer', borderRadius:3, outline:'none', position:'relative', transition:'border-color 0.1s' }}
+                  onMouseEnter={e => { if(!selected){ e.currentTarget.style.borderColor='#2a4a32'; e.currentTarget.style.background='#0f1a12' }}}
+                  onMouseLeave={e => { if(!selected){ e.currentTarget.style.borderColor='#1a2e20'; e.currentTarget.style.background='#0c120e' }}}>
+                  {selected && <div style={{ position:'absolute', top:5, right:5, width:4, height:4, borderRadius:'50%', background:ac }}/>}
+                  <div style={{ fontSize:22, marginBottom:7, lineHeight:1 }}>{sc.icon}</div>
+                  <div style={{ fontSize:9, fontWeight:700, color:selected?ac:'#5a9a70', marginBottom:4, letterSpacing:'0.06em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
+                  <div style={{ fontSize:8, color:selected?'#4a8a60':'#3a6a48', lineHeight:1.6 }}>{sc.desc}</div>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* CONFIGURATION */}
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+            <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Configuration</span>
+            <div style={{ flex:1, height:'0.5px', background:'#0f1f14' }}/>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:16 }}>
+            <div>
+              <p style={{ fontSize:8, color:'#4a8a68', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Jurisdiction Type</p>
+              <select value={state.jurisdiction} onChange={e => update({ jurisdiction:e.target.value })}
+                style={{ width:'100%', padding:'8px 10px', background:'#0c120e', border:'0.5px solid #1a3028', color:'#6aaa80', fontSize:10, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
+                {JURISDICTIONS.map(j => <option key={j}>{j}</option>)}
+              </select>
+            </div>
+            <div>
+              <p style={{ fontSize:8, color:'#4a8a68', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Difficulty</p>
+              <select value={state.difficulty} onChange={e => update({ difficulty:e.target.value })}
+                style={{ width:'100%', padding:'8px 10px', background:'#0c120e', border:'0.5px solid #1a3028', color:'#6aaa80', fontSize:10, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
+                {DIFFICULTIES.map(d => <option key={d}>{d}</option>)}
+              </select>
+              {state.difficulty && (
+                <div style={{ marginTop:6, fontSize:8, color:'#4a8a68', lineHeight:1.6, paddingLeft:2 }}>
+                  {state.difficulty === 'Basic' && 'Generous evaluation. One complication per turn. Good for learning the system.'}
+                  {state.difficulty === 'Moderate' && 'Moderate rigor. Two complications per turn. Realistic resource pressure.'}
+                  {state.difficulty === 'Advanced' && 'Professional rigor. 2-3 complications per turn. Resource constraints are real.'}
+                  {state.difficulty === 'Brutal' && 'Ruthless evaluation. Every vague or delayed decision cascades.'}
+                  {state.difficulty === 'Adaptive' && 'Difficulty scales to your performance. Never lets you get comfortable.'}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* JURISDICTION CALLOUT */}
+          {state.jurisdiction && (
+            <div style={{ marginBottom:16, padding:'12px 16px', border:'0.5px solid #1a3028', borderLeft:`3px solid ${ac}`, borderRadius:3, background:'#0a140c' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                <span style={{ fontSize:8, color:ac, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em' }}>{state.jurisdiction}</span>
+                <div style={{ flex:1, height:'0.5px', background:'#1a3028' }}/>
               </div>
-            )}
-          </div>
+              <div style={{ fontSize:9, color:'#5aaa80', lineHeight:1.8, marginBottom:6 }}>{JURISDICTION_CONTEXT[state.jurisdiction].desc}</div>
+              <div style={{ fontSize:8, color:'#5aaa80', lineHeight:1.7, paddingTop:6, borderTop:'0.5px solid #1a3028' }}>
+                <span style={{ color:ac, fontWeight:600 }}>Key constraints: </span>
+                <span>{JURISDICTION_CONTEXT[state.jurisdiction].constraints}</span>
+              </div>
+            </div>
+          )}
+
+          {/* LAUNCH */}
+          <button
+            onClick={() => state.scenario && !initLoading && startScenario(state.scenario)}
+            disabled={!state.scenario || initLoading}
+            style={{ width:'100%', padding:'13px', fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', border:`0.5px solid ${state.scenario?ac:'#1a3028'}`, color:state.scenario?'#080c0a':'#3a6a48', background:state.scenario?ac:'transparent', cursor:(state.scenario&&!initLoading)?'pointer':'not-allowed', fontFamily:'JetBrains Mono, monospace', borderRadius:3, opacity:initLoading?0.6:1 }}>
+            {initLoading ? '⟳  Generating scenario world...' : state.scenario ? `Launch — ${SCENARIOS[state.scenario].name} / ${state.jurisdiction} ↗` : 'Select a scenario to begin'}
+          </button>
+
         </div>
-
-        {/* JURISDICTION CALLOUT */}
-        {state.jurisdiction && (
-          <div style={{ marginBottom:16, padding:'12px 16px', border:`0.5px solid #1a3028`, borderLeft:`3px solid ${ac}`, borderRadius:3, background:'#0a140c' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
-              <span style={{ fontSize:8, color:ac, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em' }}>{state.jurisdiction}</span>
-              <div style={{ flex:1, height:'0.5px', background:'#1a3028' }}/>
-            </div>
-            <div style={{ fontSize:9, color:'#2a5a3a', lineHeight:1.8, marginBottom:6 }}>{JURISDICTION_CONTEXT[state.jurisdiction].desc}</div>
-            <div style={{ fontSize:8, color:'#1a3a28', lineHeight:1.7, paddingTop:6, borderTop:'0.5px solid #1a3028' }}>
-              <span style={{ color:'#2a5a3a', fontWeight:600 }}>Key constraints: </span>
-              <span style={{ color:'#2a5a3a' }}>{JURISDICTION_CONTEXT[state.jurisdiction].constraints}</span>
-            </div>
-          </div>
-        )}
-
-        {/* LAUNCH */}
-        <button
-          onClick={() => state.scenario && !initLoading && startScenario(state.scenario)}
-          disabled={!state.scenario || initLoading}
-          style={{ width:'100%', padding:'13px', fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', border:`0.5px solid ${state.scenario?ac:'#1a3028'}`, color:state.scenario?'#080c0a':'#1a3028', background:state.scenario?ac:'transparent', cursor:(state.scenario&&!initLoading)?'pointer':'not-allowed', fontFamily:'JetBrains Mono, monospace', borderRadius:3, opacity:initLoading?0.6:1 }}>
-          {initLoading ? '⟳  Generating scenario world...' : state.scenario ? `Launch — ${SCENARIOS[state.scenario].name} / ${state.jurisdiction} ↗` : 'Select a scenario to begin'}
-        </button>
       </div>
 
       {/* BOTTOM STATUS BAR */}
       <div style={{ borderTop:'0.5px solid #0f1f14', background:'rgba(8,12,10,0.95)', padding:'8px 32px', display:'flex', gap:0, flexShrink:0 }}>
-        {[
-          ['EOC NETWORK', 'CONNECTED'],
-          ['MODE', 'TRAINING'],
-          ['SCENARIO', state.scenario ? SCENARIOS[state.scenario].name.toUpperCase() : '—'],
-          ['JURISDICTION', state.jurisdiction ? state.jurisdiction.toUpperCase() : '—'],
-          ['DIFFICULTY', state.difficulty ? state.difficulty.toUpperCase() : '—'],
-          ['STATUS', state.scenario ? 'READY TO LAUNCH' : 'AWAITING SELECTION'],
-        ].map(([k,v], i, arr) => (
-          <div key={k} style={{ display:'flex', flexDirection:'column', gap:2, paddingRight:20, marginRight:20, borderRight: i < arr.length-1 ? '0.5px solid #0f1f14' : 'none' }}>
-            <span style={{ fontSize:7, color:'#1a3028', letterSpacing:'0.12em' }}>{k}</span>
-            <span style={{ fontSize:9, color: k==='STATUS' && state.scenario ? ac : '#2a5a40', letterSpacing:'0.06em' }}>{v}</span>
-          </div>
-        ))}
+        <div style={{ maxWidth:1100, margin:'0 auto', width:'100%', display:'flex', gap:0 }}>
+          {[
+            ['EOC NETWORK', 'CONNECTED'],
+            ['MODE', 'TRAINING'],
+            ['SCENARIO', state.scenario ? SCENARIOS[state.scenario].name.toUpperCase() : '—'],
+            ['JURISDICTION', state.jurisdiction ? state.jurisdiction.toUpperCase() : '—'],
+            ['DIFFICULTY', state.difficulty ? state.difficulty.toUpperCase() : '—'],
+            ['STATUS', state.scenario ? 'READY TO LAUNCH' : 'AWAITING SELECTION'],
+          ].map(([k,v], i, arr) => (
+            <div key={k} style={{ display:'flex', flexDirection:'column', gap:2, paddingRight:20, marginRight:20, borderRight: i < arr.length-1 ? '0.5px solid #0f1f14' : 'none' }}>
+              <span style={{ fontSize:7, color:'#3a6a48', letterSpacing:'0.12em' }}>{k}</span>
+              <span style={{ fontSize:9, color: k==='STATUS' && state.scenario ? ac : '#5a9a70', letterSpacing:'0.06em' }}>{v}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
