@@ -937,7 +937,35 @@ export default function App() {
                 )}
               </div>
             </div>
-
+{/* DOCS */}
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+              <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Documentation</span>
+              <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
+            </div>
+            <div style={{ display:'flex', gap:8, marginBottom:16 }}>
+              <a href="/NEXUS_EOC_Overview_3.docx" target="_blank" rel="noopener noreferrer"
+                style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', border:'0.5px solid rgba(29,158,117,0.25)', borderRadius:3, background:'rgba(4,8,6,0.65)', textDecoration:'none', flex:1 }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.5)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.25)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}>
+                <span style={{ fontSize:18 }}>📄</span>
+                <div>
+                  <div style={{ fontSize:10, fontWeight:700, color:'#6aaa80', letterSpacing:'0.06em' }}>PLATFORM OVERVIEW</div>
+                  <div style={{ fontSize:8, color:'#4a7a5a', marginTop:2 }}>One-page summary — opens in new tab</div>
+                </div>
+                <span style={{ marginLeft:'auto', fontSize:9, color:'#3a6a48' }}>↗</span>
+              </a>
+              <a href="/NEXUS_EOC_User_Guide_3.docx" target="_blank" rel="noopener noreferrer"
+                style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', border:'0.5px solid rgba(29,158,117,0.25)', borderRadius:3, background:'rgba(4,8,6,0.65)', textDecoration:'none', flex:1 }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.5)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.25)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}>
+                <span style={{ fontSize:18 }}>📋</span>
+                <div>
+                  <div style={{ fontSize:10, fontWeight:700, color:'#6aaa80', letterSpacing:'0.06em' }}>USER GUIDE</div>
+                  <div style={{ fontSize:8, color:'#4a7a5a', marginTop:2 }}>Full interface reference — opens in new tab</div>
+                </div>
+                <span style={{ marginLeft:'auto', fontSize:9, color:'#3a6a48' }}>↗</span>
+              </a>
+            </div>
             {/* LAUNCH */}
             <button
               onClick={() => state.scenario && !initLoading && startScenario(state.scenario)}
