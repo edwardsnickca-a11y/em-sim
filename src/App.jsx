@@ -943,7 +943,7 @@ export default function App() {
               <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
             </div>
             <div style={{ display:'flex', gap:8, marginBottom:16 }}>
-              <a href="/NEXUS_EOC_Overview_3.docx" target="_blank" rel="noopener noreferrer"
+              <a href="/NEXUS_EOC_Overview.pdf" target="_blank" rel="noopener noreferrer"
                 style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', border:'0.5px solid rgba(29,158,117,0.25)', borderRadius:3, background:'rgba(4,8,6,0.65)', textDecoration:'none', flex:1 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.5)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.25)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}>
@@ -954,7 +954,7 @@ export default function App() {
                 </div>
                 <span style={{ marginLeft:'auto', fontSize:9, color:'#3a6a48' }}>↗</span>
               </a>
-              <a href="/NEXUS_EOC_User_Guide_3.docx" target="_blank" rel="noopener noreferrer"
+              <a href="/NEXUS_EOC_User_Guide.pdf" target="_blank" rel="noopener noreferrer"
                 style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', border:'0.5px solid rgba(29,158,117,0.25)', borderRadius:3, background:'rgba(4,8,6,0.65)', textDecoration:'none', flex:1 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.5)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.25)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}>
