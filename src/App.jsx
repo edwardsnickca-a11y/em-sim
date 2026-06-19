@@ -720,7 +720,7 @@ export default function App() {
         worldState: world,
         dispatches: initDispatches,
         terminal: [
-          { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${state.difficulty}${state.playerName ? ` — CDR ${state.playerName.toUpperCase()}` : ''}` },
+          { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${state.difficulty}${state.playerName ? ` — EM DIR. ${state.playerName.toUpperCase()}` : ''}` },
           { type:'system',   text:'Type your decisions as the EM on scene. Be specific. Type ENDEX for AAR.' },
           { type:'divider' },
           { type:'narrator', text:world.openingNarrative + ' What is your first action?' },
@@ -1253,7 +1253,16 @@ export default function App() {
               if (line.type==='divider') return <hr key={i} style={{ border:'none', borderTop:'0.5px solid #1a1a1a', margin:'8px 0' }}/>
               return <div key={i} style={termStyles[line.type]||{ fontSize:fs }}>{line.text}</div>
             })}
-            {(loading || initLoading) && <div style={{ color:'#333', fontStyle:'italic', fontSize:fs }}>
+            
+            {state.situation === 'ENDEX' && (
+  <div style={{ marginTop:16, paddingTop:12, borderTop:'0.5px solid #1a1a1a' }}>
+    <button onClick={reset}
+      style={{ padding:'8px 20px', fontSize:fs, fontWeight:500, color:ac, border:`0.5px solid ${ac}`, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3 }}>
+      ↩ Return to Mission Select
+    </button>
+  </div>
+)}
+{(loading || initLoading) && <div style={{ color:'#333', fontStyle:'italic', fontSize:fs }}>
               {initLoading ? 'Building scenario world...' : 'Evaluating action...'}
             </div>}
           </div>
@@ -1293,7 +1302,7 @@ export default function App() {
         <div ref={rightColRef} style={{ width:`${colW[3]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
           <div style={{ height:`${rightSplit}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
             <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', alignItems:'center' }}>
-              Commander's Notepad
+              {state.playerName ? `${state.playerName}'s Notepad` : "Director's Notepad"}
               <InfoBtn panelKey="notepad" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
             </div>
             <textarea value={state.notepad} onChange={e => update({ notepad:e.target.value })}
