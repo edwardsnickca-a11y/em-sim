@@ -300,7 +300,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 }
 
 // ─── MAIN SYSTEM PROMPT ──────────────────────────────────────────────────────
-function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState) {
+function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playerName) {
   const sc = SCENARIOS[scenario]
   const jc = JURISDICTION_CONTEXT[jurisdiction]
   const diffMap = {
@@ -343,6 +343,7 @@ RULES:
 - Embed NIMS/ICS/ESF/FEMA doctrine in realism — don't lecture.
 - Generate 3-4 realistic fictional news headlines reflecting current incident state and local media outlets.
 - When a dispatch event has a specific physical location, include it as a map pin. Generate 0-2 pins per turn. Coordinates must be accurate for ${worldState?.location || jurisdiction}.
+${playerName ? `PLAYER NAME: ${playerName} — on ENDEX, address them by name in the AAR opening.` : ''}
 - On ENDEX: thorough AAR covering: (1) command element continuity, (2) continuity decisions made or that should have been made, (3) resource and coordination effectiveness, (4) communications and information management, (5) strengths, (6) critical gaps, (7) relevant doctrine references, (8) specific recommendations calibrated to this jurisdiction type.
 - Never break character.
 
@@ -376,8 +377,8 @@ On ENDEX use same format with full AAR in consequence field, empty headlines and
 
 const SAVE_KEY = 'em_sim_v13'
 
-const defaultState = {
-  screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive',
+  const defaultState = {
+  screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'',
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:DEFAULT_LIFELINES, headlines:[],
   dynamicPins:[], worldState:null,
@@ -719,7 +720,7 @@ export default function App() {
         worldState: world,
         dispatches: initDispatches,
         terminal: [
-          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${state.difficulty}` },
+          { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${state.difficulty}${state.playerName ? ` — CDR ${state.playerName.toUpperCase()}` : ''}` },
           { type:'system',   text:'Type your decisions as the EM on scene. Be specific. Type ENDEX for AAR.' },
           { type:'divider' },
           { type:'narrator', text:world.openingNarrative + ' What is your first action?' },
@@ -760,7 +761,7 @@ export default function App() {
       const res  = await fetch('/api/chat', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({
-          system: buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState),
+          system: buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, state.playerName),
           messages: msgs,
         }),
       })
@@ -933,6 +934,24 @@ export default function App() {
             </div>
 
             {/* CONFIGURATION */}
+            {/* PLAYER NAME */}
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+              <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Commander</span>
+              <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
+            </div>
+            <div style={{ marginBottom:16 }}>
+              <input
+                type="text"
+                placeholder="Enter your name (optional)"
+                value={state.playerName||''}
+                onChange={e => update({ playerName: e.target.value })}
+                maxLength={40}
+                style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none', boxSizing:'border-box' }}
+              />
+              <div style={{ marginTop:6, fontSize:8, color:'#3a6a48', lineHeight:1.6 }}>
+                Your name is used locally to personalize your session only. We collect anonymous play statistics — no personal data is stored.
+              </div>
+            </div>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
               <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Configuration</span>
               <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
