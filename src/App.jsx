@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import posthog from 'posthog-js'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -686,6 +687,14 @@ export default function App() {
     const jurisdiction = state.jurisdiction
     setActiveESFs({})
     setInitLoading(true)
+    if (typeof window !== 'undefined' && window.posthog) {
+  window.posthog.capture('scenario_launched', {
+    scenario: scenarioKey,
+    jurisdiction: state.jurisdiction,
+    difficulty: state.difficulty,
+  })
+}
+    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty })
 
     // Show the game screen immediately with a loading state
     update({
@@ -739,6 +748,11 @@ export default function App() {
     if (!input.trim() || loading || !state) return
     const action = input.trim()
     setInput(''); setLoading(true)
+    const isEndex = action.trim().toUpperCase() === 'ENDEX'
+    posthog.capture(isEndex ? 'scenario_ended' : 'action_submitted', {
+      scenario: state.scenario, jurisdiction: state.jurisdiction,
+      difficulty: state.difficulty, turn: state.turn,
+    })
     const newTerm = [...state.terminal, { type:'player', text:`> ${action}` }]
     update({ terminal:newTerm })
     const msgs = [...state.history, { role:'user', content:action }]
@@ -757,6 +771,14 @@ export default function App() {
       catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'What is your next action?', lifelines:state.lifelines, headlines:[], pins:[] } }
 
       const nextTurn   = state.turn + 1
+      if (typeof window !== 'undefined' && window.posthog) {
+  window.posthog.capture('turn_completed', {
+    scenario: state.scenario,
+    jurisdiction: state.jurisdiction,
+    difficulty: state.difficulty,
+    turn: nextTurn,
+  })
+}
       const newHistory = [...msgs, { role:'assistant', content:JSON.stringify(parsed) }]
       const addedTerm  = [
         ...newTerm,
@@ -779,6 +801,15 @@ export default function App() {
                simTime:parsed.time||state.simTime, situation:parsed.situation||'DEVELOPING',
                turn:nextTurn, lifelines:parsed.lifelines||state.lifelines,
                headlines:newHeadlines, dynamicPins:newDynamicPins })
+
+      if (parsed.situation === 'ENDEX' && typeof window !== 'undefined' && window.posthog) {
+        window.posthog.capture('scenario_completed', {
+          scenario: state.scenario,
+          jurisdiction: state.jurisdiction,
+          difficulty: state.difficulty,
+          total_turns: nextTurn,
+        })
+      }
     } catch(e) {
       update({ terminal:[...newTerm, { type:'system', text:`[ERROR: ${e.message}]` }] })
     }
