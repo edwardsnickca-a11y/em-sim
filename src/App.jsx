@@ -927,7 +927,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                     onMouseLeave={e => { if(!selected){ e.currentTarget.style.borderColor='rgba(29,158,117,0.18)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}}>
                     {selected && <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:ac }}/>}
                     <div style={{ fontSize:24, marginBottom:8, lineHeight:1 }}>{sc.icon}</div>
-                    <<div style={{ fontSize:12, fontWeight:700, color:selected?ac:'#6aaa80', marginBottom:5, letterSpacing:'0.06em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
+                    <div style={{ fontSize:12, fontWeight:700, color:selected?ac:'#6aaa80', marginBottom:5, letterSpacing:'0.06em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
                     <div style={{ fontSize:11, color:'#ccc', lineHeight:1.7 }}>{sc.desc}</div>
                   </button>
                 )
