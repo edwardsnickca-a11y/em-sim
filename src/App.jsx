@@ -45,7 +45,7 @@ const JURISDICTION_CONTEXT = {
   'Mid-Size City': {
     desc: 'A mid-size city of 100,000-400,000 with a professional fire department, dedicated EOC, one or two regional hospitals, and established mutual aid agreements with surrounding counties.',
     constraints: 'Moderate resource base, some specialized capabilities (HazMat, SAR), urban-rural interface issues at city limits, may lack USAR or DMORT assets locally.',
-    examples: 'Wilmington DE, Shreveport LA, Spokane WA, Fayetteville NC, Huntsville AL, Boise ID, Green Bay WI.',
+    examples: 'Wilmington DE, Shreveport LA, Fayetteville NC, Huntsville AL, Green Bay WI, Duluth MN, Pueblo CO, Macon GA, Rockford IL, Beaumont TX, Erie PA, Peoria IL, Springfield MO, Davenport IA, Lansing MI.',
   },
   'Large Urban Metro': {
     desc: 'A major metropolitan area with full-spectrum emergency services, Level I trauma centers, dedicated OES/OCEM, USAR teams, and complex multi-jurisdictional coordination requirements.',
