@@ -277,7 +277,7 @@ EXAMPLE LOCATIONS: ${jc.examples}
 SCENARIO PLACEMENT NOTES: ${scenarioNotes[scenario] || ''}
 
 YOUR TASK:
-Generate a specific, realistic, geographically accurate opening world state for this exact combination of scenario and jurisdiction. Do not use generic placeholder locations. Pick a real, named place that fits both the scenario requirements and the jurisdiction type. The place must be real and the coordinates must be accurate.
+Generate a specific, realistic, geographically accurate opening world state for this exact combination of scenario and jurisdiction. Pick a DIFFERENT city every time — do not default to the same locations repeatedly. Prioritize geographic diversity across the US.
 
 Generate 4-7 initial map pins representing key infrastructure for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically accurate and within ~15 miles of your chosen center point.
 
@@ -856,14 +856,14 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
 
           {/* Top status bar */}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 24px', borderBottom:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.6)' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:9, color:'#4a8a68', letterSpacing:'0.12em' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:9, color:'#6aaa80', letterSpacing:'0.12em' }}>
               <div style={{ width:5, height:5, borderRadius:'50%', background:ac, animation:'pulse 2s infinite' }}/>
               NEXUS EOC — SIMULATED EMERGENCY OPERATIONS PLATFORM
             </div>
             <div style={{ display:'flex', gap:24 }}>
               {[['SYSTEM STATUS','● OPERATIONAL'],['NETWORK','SECURE'],['DATA FEED','LIVE'],['AI ENGINE','ONLINE']].map(([k,v]) => (
                 <div key={k} style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:1 }}>
-                  <span style={{ fontSize:8, color:'#4a7a5a', letterSpacing:'0.1em' }}>{k}</span>
+                  <span style={{ fontSize:8, color:'#5a9a70', letterSpacing:'0.1em' }}>{k}</span>
                   <span style={{ fontSize:9, color:ac, letterSpacing:'0.08em' }}>{v}</span>
                 </div>
               ))}
@@ -898,7 +898,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
             <div style={{ minWidth:180, border:'0.5px solid rgba(29,158,117,0.2)', borderRadius:3, background:'rgba(4,8,6,0.75)', padding:'10px 14px' }}>
               {[['SCENARIOS','10 LOADED'],['JURISDICTIONS','6 TYPES'],['DIFFICULTY','5 LEVELS'],['AAR','AI-POWERED'],['VERSION','2.0']].map(([k,v]) => (
                 <div key={k} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'0.5px solid rgba(29,158,117,0.08)' }}>
-                  <span style={{ fontSize:8, color:'#4a7a5a', letterSpacing:'0.1em' }}>{k}</span>
+                  <span style={{ fontSize:8, color:'#5a9a70', letterSpacing:'0.1em' }}>{k}</span>
                   <span style={{ fontSize:8, color:ac, letterSpacing:'0.08em' }}>{v}</span>
                 </div>
               ))}
@@ -912,7 +912,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
 
             {/* SCENARIO SELECTION */}
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-              <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Select Scenario</span>
+              <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Select Scenario</span>
               <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
               {state.scenario && <span style={{ fontSize:9, color:ac, letterSpacing:'0.06em' }}>✓ {SCENARIOS[state.scenario].name}</span>}
             </div>
@@ -927,8 +927,8 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                     onMouseLeave={e => { if(!selected){ e.currentTarget.style.borderColor='rgba(29,158,117,0.18)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}}>
                     {selected && <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:ac }}/>}
                     <div style={{ fontSize:24, marginBottom:8, lineHeight:1 }}>{sc.icon}</div>
-                    <div style={{ fontSize:10, fontWeight:700, color:selected?ac:'#6aaa80', marginBottom:5, letterSpacing:'0.06em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
-                    <div style={{ fontSize:9, color:'#bbb', lineHeight:1.7 }}>{sc.desc}</div>
+                    <<div style={{ fontSize:12, fontWeight:700, color:selected?ac:'#6aaa80', marginBottom:5, letterSpacing:'0.06em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
+                    <div style={{ fontSize:11, color:'#ccc', lineHeight:1.7 }}>{sc.desc}</div>
                   </button>
                 )
               })}
@@ -937,7 +937,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
             {/* CONFIGURATION */}
             {/* PLAYER NAME */}
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-              <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Commander</span>
+              <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Commander</span>
               <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
             </div>
             <div style={{ marginBottom:16 }}>
@@ -954,13 +954,13 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
               </div>
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-              <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Configuration</span>
+              <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Configuration</span>
               <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
             </div>
 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:16 }}>
               <div>
-                <p style={{ fontSize:9, color:'#4a8a68', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Jurisdiction Type</p>
+                <p style={{ fontSize:9, color:'#6aaa80', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Jurisdiction Type</p>
                 <select value={state.jurisdiction} onChange={e => update({ jurisdiction:e.target.value })}
                   style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
                   {JURISDICTIONS.map(j => <option key={j} style={{ background:'#0a140c' }}>{j}</option>)}
@@ -976,7 +976,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                 )}
               </div>
               <div>
-                <p style={{ fontSize:9, color:'#4a8a68', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Difficulty</p>
+                <p style={{ fontSize:9, color:'#6aaa80', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Difficulty</p>
                 <select value={state.difficulty} onChange={e => update({ difficulty:e.target.value })}
                   style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
                   {DIFFICULTIES.map(d => <option key={d} style={{ background:'#0a140c' }}>{d}</option>)}
@@ -994,7 +994,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
             </div>
 {/* DOCS */}
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-              <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Documentation</span>
+              <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Documentation</span>
               <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
             </div>
             <div style={{ display:'flex', gap:8, marginBottom:16 }}>
@@ -1005,7 +1005,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                 <span style={{ fontSize:18 }}>📄</span>
                 <div>
                   <div style={{ fontSize:10, fontWeight:700, color:'#6aaa80', letterSpacing:'0.06em' }}>PLATFORM OVERVIEW</div>
-                  <div style={{ fontSize:8, color:'#4a7a5a', marginTop:2 }}>One-page summary — opens in new tab</div>
+                  <div style={{ fontSize:8, color:'#5a9a70', marginTop:2 }}>One-page summary — opens in new tab</div>
                 </div>
                 <span style={{ marginLeft:'auto', fontSize:9, color:'#3a6a48' }}>↗</span>
               </a>
@@ -1016,7 +1016,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                 <span style={{ fontSize:18 }}>📋</span>
                 <div>
                   <div style={{ fontSize:10, fontWeight:700, color:'#6aaa80', letterSpacing:'0.06em' }}>USER GUIDE</div>
-                  <div style={{ fontSize:8, color:'#4a7a5a', marginTop:2 }}>Full interface reference — opens in new tab</div>
+                  <div style={{ fontSize:8, color:'#5a9a70', marginTop:2 }}>Full interface reference — opens in new tab</div>
                 </div>
                 <span style={{ marginLeft:'auto', fontSize:9, color:'#3a6a48' }}>↗</span>
               </a>
@@ -1027,7 +1027,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                 <span style={{ fontSize:18 }}>📊</span>
                 <div>
                   <div style={{ fontSize:10, fontWeight:700, color:'#6aaa80', letterSpacing:'0.06em' }}>RESOURCE GUIDE</div>
-                  <div style={{ fontSize:8, color:'#4a7a5a', marginTop:2 }}>All reference links by scenario — Excel</div>
+                  <div style={{ fontSize:8, color:'#5a9a70', marginTop:2 }}>All reference links by scenario — Excel</div>
                 </div>
                 <span style={{ marginLeft:'auto', fontSize:9, color:'#3a6a48' }}>↓</span>
               </a>
