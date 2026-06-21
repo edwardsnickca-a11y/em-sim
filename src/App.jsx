@@ -219,7 +219,36 @@ const PANEL_INFO = {
     body: 'A live operational map of the incident area. Colored pins mark fixed infrastructure: green for EOC, blue for hospitals, orange for staging areas, purple for shelters, red for affected sites. White-bordered pins with turn numbers (T1, T2, etc.) are dynamic event pins dropped by the AI when dispatch events have a physical location. Click any pin for details. The map accumulates event pins across all turns.'
   },
 }
+const ROLES = {
+  'EOC Director': 'You are the EOC Director — the senior emergency manager responsible for overall coordination, resource prioritization, and strategic decision-making across all sections and ESFs.',
+  'Operations Section Chief': 'You are the Operations Section Chief — responsible for directing tactical operations, coordinating field resources, and managing the operational branches executing the response.',
+  'Planning Section Chief': 'You are the Planning Section Chief — responsible for collecting and analyzing incident information, maintaining situational awareness, developing the IAP, and tracking resources.',
+  'Logistics Section Chief': 'You are the Logistics Section Chief — responsible for providing facilities, services, and materials to support incident operations including supply, ground support, and communications.',
+  'Finance & Admin Section Chief': 'You are the Finance & Administration Section Chief — responsible for tracking incident costs, managing procurement, processing claims, and maintaining time records.',
+  'Public Information Officer': 'You are the Public Information Officer — responsible for coordinating public messaging, managing media relations, operating the JIC, and ensuring accurate information reaches the public.',
+  'Safety Officer': 'You are the Safety Officer — responsible for monitoring incident operations for unsafe conditions, advising the IC on safety matters, and implementing the site safety plan.',
+  'Liaison Officer': 'You are the Liaison Officer — responsible for coordinating with assisting and cooperating agency representatives, managing agency rep assignments, and facilitating interagency coordination.',
+  'ESF-1 — Transportation': 'You are the ESF-1 Transportation Liaison Officer — responsible for coordinating aviation, maritime, and surface transportation assets, managing evacuation routes, and coordinating with DOT.',
+  'ESF-2 — Communications': 'You are the ESF-2 Communications Liaison Officer — responsible for restoring and sustaining communications infrastructure, managing interoperability, coordinating with carriers and CISA, and activating backup systems.',
+  'ESF-3 — Public Works & Engineering': 'You are the ESF-3 Public Works & Engineering Liaison Officer — responsible for infrastructure assessment, emergency repair, debris clearance, and coordinating with USACE.',
+  'ESF-4 — Firefighting': 'You are the ESF-4 Firefighting Liaison Officer — responsible for coordinating wildland and structural firefighting resources, managing mutual aid requests, and interfacing with USDA Forest Service.',
+  'ESF-5 — Information & Planning': 'You are the ESF-5 Information & Planning Liaison Officer — responsible for collecting, analyzing, and disseminating incident information and supporting the Planning Section.',
+  'ESF-6 — Mass Care': 'You are the ESF-6 Mass Care Liaison Officer — responsible for coordinating sheltering, feeding, emergency assistance, and reunification operations with FEMA and voluntary organizations.',
+  'ESF-7 — Logistics': 'You are the ESF-7 Logistics Liaison Officer — responsible for coordinating resource and supply chain management, staging areas, and federal logistics support.',
+  'ESF-8 — Public Health & Medical': 'You are the ESF-8 Public Health & Medical Liaison Officer — responsible for coordinating medical surge, public health response, behavioral health, and fatality management with HHS.',
+  'ESF-9 — Search & Rescue': 'You are the ESF-9 Search & Rescue Liaison Officer — responsible for coordinating urban, swift-water, and wilderness SAR operations and managing FEMA USAR task force deployment.',
+  'ESF-10 — Oil & Hazardous Materials': 'You are the ESF-10 Oil & Hazardous Materials Liaison Officer — responsible for coordinating environmental response, hazmat containment, cleanup operations, and EPA/USCG coordination.',
+  'ESF-11 — Agriculture & Natural Resources': 'You are the ESF-11 Agriculture & Natural Resources Liaison Officer — responsible for food safety, agriculture protection, and natural and cultural resource coordination with USDA.',
+  'ESF-12 — Energy': 'You are the ESF-12 Energy Liaison Officer — responsible for coordinating restoration of electric power, natural gas, and petroleum systems and managing utility company coordination.',
+  'ESF-13 — Public Safety & Security': 'You are the ESF-13 Public Safety & Security Liaison Officer — responsible for law enforcement coordination, facility security, access control, and evacuation enforcement.',
+  'ESF-14 — Cross-Sector Business & Infrastructure': 'You are the ESF-14 Cross-Sector Business & Infrastructure Liaison Officer — responsible for private sector coordination, critical infrastructure restoration, and business continuity support.',
+  'ESF-15 — External Affairs': 'You are the ESF-15 External Affairs Liaison Officer — responsible for public information, intergovernmental affairs, community relations, and congressional coordination.',
+}
 
+const ROLE_GROUPS = {
+  'EOC Leadership': ['EOC Director','Operations Section Chief','Planning Section Chief','Logistics Section Chief','Finance & Admin Section Chief','Public Information Officer','Safety Officer','Liaison Officer'],
+  'ESF Liaison Officers': ['ESF-1 — Transportation','ESF-2 — Communications','ESF-3 — Public Works & Engineering','ESF-4 — Firefighting','ESF-5 — Information & Planning','ESF-6 — Mass Care','ESF-7 — Logistics','ESF-8 — Public Health & Medical','ESF-9 — Search & Rescue','ESF-10 — Oil & Hazardous Materials','ESF-11 — Agriculture & Natural Resources','ESF-12 — Energy','ESF-13 — Public Safety & Security','ESF-14 — Cross-Sector Business & Infrastructure','ESF-15 — External Affairs'],
+}
 const SCENARIOS = {
   hurricane:  { name:'Hurricane Landfall',             icon:'🌀', desc:'A major hurricane is closing on the coast. The 72-hour warning window is tightening. Jurisdiction and geography will shape every evacuation and resource decision.' },
   mci:        { name:'Mass Casualty Incident',          icon:'🚨', desc:'Explosion at a crowded public event. 200+ casualties. Cause unknown. Your resources and hospital capacity depend heavily on where this happened.' },
@@ -319,7 +348,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 }
 
 // ─── MAIN SYSTEM PROMPT ──────────────────────────────────────────────────────
-function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playerName) {
+function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playerName, role) {
   const sc = SCENARIOS[scenario]
   const jc = JURISDICTION_CONTEXT[jurisdiction]
   const diffMap = {
@@ -363,7 +392,8 @@ RULES:
 - Generate 3-4 realistic fictional news headlines reflecting current incident state and local media outlets.
 - When a dispatch event has a specific physical location, include it as a map pin. Generate 0-2 pins per turn. Coordinates must be accurate for ${worldState?.location || jurisdiction}.
 ${playerName ? `PLAYER NAME: ${playerName} — on ENDEX, address them by name in the AAR opening.` : ''}
-- On ENDEX: thorough AAR covering: (1) command element continuity, (2) continuity decisions made or that should have been made, (3) resource and coordination effectiveness, (4) communications and information management, (5) strengths, (6) critical gaps, (7) relevant doctrine references, (8) specific recommendations calibrated to this jurisdiction type.
+ROLE: ${role || 'EOC Director'} — ${ROLES[role] || ROLES['EOC Director']}
+Evaluate all decisions from the perspective of this role. Surface complications appropriate to this role's responsibilities and span of control. On ENDEX, calibrate the AAR to this role's specific doctrine, coordination responsibilities, and performance expectations.- On ENDEX: thorough AAR covering: (1) command element continuity, (2) continuity decisions made or that should have been made, (3) resource and coordination effectiveness, (4) communications and information management, (5) strengths, (6) critical gaps, (7) relevant doctrine references, (8) specific recommendations calibrated to this jurisdiction type.
 - Never break character.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
@@ -397,7 +427,7 @@ On ENDEX use same format with full AAR in consequence field, empty headlines and
 const SAVE_KEY = 'em_sim_v13'
 
   const defaultState = {
-  screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'',
+  screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'', role:'EOC Director',
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:DEFAULT_LIFELINES, headlines:[],
   dynamicPins:[], worldState:null,
@@ -739,7 +769,7 @@ export default function App() {
         worldState: world,
         dispatches: initDispatches,
         terminal: [
-          { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${state.difficulty}${state.playerName ? ` — EM DIR. ${state.playerName.toUpperCase()}` : ''}` },
+          { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${state.difficulty} — ${(state.role||'EOC Director').toUpperCase()}${state.playerName ? ` — ${state.playerName.toUpperCase()}` : ''}` },
           { type:'system',   text:'Type your decisions as the EM on scene. Be specific. Type ENDEX for AAR.' },
           { type:'divider' },
           { type:'narrator', text:world.openingNarrative + ' What is your first action?' },
@@ -780,7 +810,7 @@ export default function App() {
       const res  = await fetch('/api/chat', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({
-          system: buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, state.playerName),
+          system: buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, state.playerName, state.role),
           messages: msgs,
         }),
       })
@@ -954,6 +984,26 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
             </div>
 
             {/* CONFIGURATION */}
+            {/* ROLE SELECTOR */}
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+              <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Role</span>
+              <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
+            </div>
+            <div style={{ marginBottom:16 }}>
+              <select value={state.role||'EOC Director'} onChange={e => update({ role:e.target.value })}
+                style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
+                {Object.entries(ROLE_GROUPS).map(([group, roles]) => (
+                  <optgroup key={group} label={group} style={{ background:'#0a140c', color:'#4a8a68' }}>
+                    {roles.map(r => <option key={r} value={r} style={{ background:'#0a140c' }}>{r}</option>)}
+                  </optgroup>
+                ))}
+              </select>
+              {state.role && (
+                <div style={{ marginTop:6, fontSize:9, color:'#bbb', lineHeight:1.7, paddingLeft:2 }}>
+                  {ROLES[state.role]}
+                </div>
+              )}
+            </div>
             {/* PLAYER NAME */}
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
               <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Commander</span>
@@ -1070,6 +1120,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
               ['MODE','TRAINING'],
               ['SCENARIO', state.scenario ? SCENARIOS[state.scenario].name.toUpperCase() : '—'],
               ['JURISDICTION', state.jurisdiction ? state.jurisdiction.toUpperCase() : '—'],
+              ['ROLE', state.role ? state.role.toUpperCase() : 'EOC DIRECTOR'],
               ['DIFFICULTY', state.difficulty ? state.difficulty.toUpperCase() : '—'],
               ['STATUS', state.scenario ? 'READY TO LAUNCH' : 'AWAITING SELECTION'],
             ].map(([k,v], i, arr) => (
