@@ -880,7 +880,10 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
   if (!state) return <div style={{ color:'#888', padding:'2rem', fontFamily:'monospace' }}>Loading...</div>
 
   // ─── SETUP SCREEN ──────────────────────────────────────────────────────────
- if (state.screen === 'setup') return (
+ if (state.screen === 'setup') {
+    const sac = '#1D9E75'
+    const sal = '#EF9F27'
+    return (
     <div style={{ minHeight:'100vh', fontFamily:'JetBrains Mono, monospace', display:'flex', flexDirection:'column', position:'relative' }}>
 
       {/* FULL PAGE BACKGROUND IMAGE */}
@@ -906,7 +909,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
           {/* Top status bar */}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 24px', borderBottom:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.6)' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:9, color:'#6aaa80', letterSpacing:'0.12em' }}>
-              <div style={{ width:5, height:5, borderRadius:'50%', background:ac, animation:'pulse 2s infinite' }}/>
+              background:sac, animation:'pulse 2s infinite'
               NEXUS EOC — SIMULATED EMERGENCY OPERATIONS PLATFORM
             </div>
             <div style={{ display:'flex', gap:24 }}>
@@ -923,7 +926,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
           <div style={{ maxWidth:1200, margin:'0 auto', width:'100%', boxSizing:'border-box', padding:'28px 32px 24px', display:'grid', gridTemplateColumns:'1fr auto', gap:40, alignItems:'start' }}>
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-                <div style={{ width:24, height:'0.5px', background:ac }}/>
+                <div style={{ width:24, height:'0.5px', background:sac }}/>
                 <span style={{ fontSize:9, color:ac, letterSpacing:'0.2em', textTransform:'uppercase' }}>Simulated Emergency Operations Platform</span>
               </div>
               <h1 style={{ fontSize:32, fontWeight:700, lineHeight:1.05, margin:'0 0 6px', color:'#e8f5f0', letterSpacing:'0.04em' }}>
@@ -963,7 +966,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
               <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Select Scenario</span>
               <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
-              {state.scenario && <span style={{ fontSize:9, color:ac, letterSpacing:'0.06em' }}>✓ {SCENARIOS[state.scenario].name}</span>}
+              {state.scenario && <span style={{ fontSize:9, color:sac, letterSpacing:'0.06em' }}>✓ {SCENARIOS[state.scenario].name}</span>}
             </div>
 
             <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:6, marginBottom:20 }}>
@@ -971,12 +974,12 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                 const selected = state.scenario === key
                 return (
                   <button key={key} onClick={() => update({ scenario:key })}
-                    style={{ textAlign:'left', padding:'14px 12px', border:`0.5px solid ${selected?ac:'rgba(29,158,117,0.18)'}`, borderLeft:`${selected?'3px':'0.5px'} solid ${selected?ac:'rgba(29,158,117,0.18)'}`, background:selected?'rgba(29,158,117,0.12)':'rgba(4,8,6,0.65)', cursor:'pointer', borderRadius:3, outline:'none', position:'relative' }}
+                    style={{ textAlign:'left', padding:'14px 12px', border:`0.5px solid ${selected?sac:'rgba(29,158,117,0.18)'}`, borderLeft:`${selected?'3px':'0.5px'} solid ${selected?sac:'rgba(29,158,117,0.18)'}`, background:selected?'rgba(29,158,117,0.12)':'rgba(4,8,6,0.65)', cursor:'pointer', borderRadius:3, outline:'none', position:'relative' }}
                     onMouseEnter={e => { if(!selected){ e.currentTarget.style.borderColor='rgba(29,158,117,0.4)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}}
                     onMouseLeave={e => { if(!selected){ e.currentTarget.style.borderColor='rgba(29,158,117,0.18)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}}>
-                    {selected && <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:ac }}/>}
+                    {selected && <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:sac }}/>}
                     <div style={{ fontSize:24, marginBottom:8, lineHeight:1 }}>{sc.icon}</div>
-                    <div style={{ fontSize:12, fontWeight:700, color:selected?ac:'#6aaa80', marginBottom:5, letterSpacing:'0.06em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
+                    <div style={{ fontSize:12, fontWeight:700, color:selected?sac:'#6aaa80', marginBottom:5, letterSpacing:'0.06em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
                     <div style={{ fontSize:11, color:'#ccc', lineHeight:1.7 }}>{sc.desc}</div>
                   </button>
                 )
@@ -1038,7 +1041,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                   <div style={{ marginTop:7, fontSize:9, color:'#bbb', lineHeight:1.7, paddingLeft:2 }}>
                     {JURISDICTION_CONTEXT[state.jurisdiction].desc}
                     <div style={{ marginTop:5, color:'#888' }}>
-                      <span style={{ color:ac }}>Constraints: </span>
+                      <span style={{ color:sac }}>Constraints: </span>
                       {JURISDICTION_CONTEXT[state.jurisdiction].constraints}
                     </div>
                   </div>
@@ -1105,7 +1108,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
             <button
               onClick={() => state.scenario && !initLoading && startScenario(state.scenario)}
               disabled={!state.scenario || initLoading}
-              style={{ width:'100%', padding:'14px', fontSize:12, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', border:`0.5px solid ${state.scenario?ac:'rgba(29,158,117,0.2)'}`, color:state.scenario?'#040806':'#3a6a48', background:state.scenario?ac:'rgba(4,8,6,0.6)', cursor:(state.scenario&&!initLoading)?'pointer':'not-allowed', fontFamily:'JetBrains Mono, monospace', borderRadius:3, opacity:initLoading?0.6:1 }}>
+              style={{ width:'100%', padding:'14px', fontSize:12, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', border:`0.5px solid ${state.scenario?sac:'rgba(29,158,117,0.2)'}`, color:state.scenario?'#040806':'#3a6a48', background:state.scenario?sac:'rgba(4,8,6,0.6)', cursor:(state.scenario&&!initLoading)?'pointer':'not-allowed', fontFamily:'JetBrains Mono, monospace', borderRadius:3, opacity:initLoading?0.6:1 }}>
               {initLoading ? '⟳  Generating scenario world...' : state.scenario ? `Launch — ${SCENARIOS[state.scenario].name} / ${state.jurisdiction} ↗` : 'Select a scenario to begin'}
             </button>
 
@@ -1126,7 +1129,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
             ].map(([k,v], i, arr) => (
               <div key={k} style={{ display:'flex', flexDirection:'column', gap:2, paddingRight:24, marginRight:24, borderRight: i < arr.length-1 ? '0.5px solid rgba(29,158,117,0.1)' : 'none' }}>
                 <span style={{ fontSize:8, color:'#3a6a48', letterSpacing:'0.12em' }}>{k}</span>
-                <span style={{ fontSize:10, color: k==='STATUS' && state.scenario ? ac : '#5a9a70', letterSpacing:'0.06em' }}>{v}</span>
+                <span style={{ fontSize:10, color: k==='STATUS' && state.scenario ? sac : '#5a9a70', letterSpacing:'0.06em' }}>{v}</span>
               </div>
             ))}
           </div>
@@ -1135,7 +1138,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
       </div>
 {/* COPYRIGHT FOOTER */}
       <div style={{ position:'relative', zIndex:2, textAlign:'center', padding:'10px 32px', borderTop:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.7)' }}>
-        <span style={{ fontSize:8, color:'#2a4a3a', letterSpacing:'0.1em' }}>
+        <span style={{ fontSize:9, color:'#2a4a3a', letterSpacing:'0.1em' }}>
           © {new Date().getFullYear()} NICHOLAS EDWARDS — NEXUS EOC — ALL RIGHTS RESERVED — UNAUTHORIZED REPRODUCTION OR COMMERCIAL USE PROHIBITED
         </span>
       </div>
