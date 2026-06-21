@@ -929,7 +929,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                 <span style={{ fontSize:9, color:sac, letterSpacing:'0.2em', textTransform:'uppercase' }}>Simulated Emergency Operations Platform</span>
               </div>
               <h1 style={{ fontSize:32, fontWeight:700, lineHeight:1.05, margin:'0 0 6px', color:'#e8f5f0', letterSpacing:'0.04em' }}>
-                NEXUS EOC — SIMULATED EMERGENCY OPERATIONS PLATFORM
+                NEXUS EOC 
               </h1>
               <p style={{ fontSize:13, color:'#5aaa80', letterSpacing:'0.04em', margin:'0 0 8px', fontWeight:400 }}>Simulated Emergency Operations Platform</p>
               <p style={{ fontSize:11, color:'#6aba88', lineHeight:1.8, margin:'0 0 20px', maxWidth:500 }}>
