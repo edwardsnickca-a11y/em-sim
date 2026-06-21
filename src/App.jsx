@@ -938,7 +938,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
               <div style={{ display:'flex', gap:32 }}>
                 {[['TRAIN','Realistic scenarios built for your role'],['DECIDE','Sharpen judgment under pressure'],['COMMAND','Practice ICS doctrine'],['REVIEW','AI after-action every scenario']].map(([label,desc]) => (
                   <div key={label} style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                    <span style={{ fontSize:9, color:ac, letterSpacing:'0.12em', fontWeight:700 }}>{label}</span>
+                    <span style={{ fontSize:9, color:sac, letterSpacing:'0.12em', fontWeight:700 }}>{label}</span>
                     <span style={{ fontSize:9, color:'#5a8a70', lineHeight:1.5 }}>{desc}</span>
                   </div>
                 ))}
@@ -950,7 +950,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
               {[['SCENARIOS','10 LOADED'],['JURISDICTIONS','6 TYPES'],['DIFFICULTY','5 LEVELS'],['AAR','AI-POWERED'],['VERSION','2.0']].map(([k,v]) => (
                 <div key={k} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'0.5px solid rgba(29,158,117,0.08)' }}>
                   <span style={{ fontSize:8, color:'#5a9a70', letterSpacing:'0.1em' }}>{k}</span>
-                  <span style={{ fontSize:8, color:ac, letterSpacing:'0.08em' }}>{v}</span>
+                  <span style={{ fontSize:8, color:sac, letterSpacing:'0.08em' }}>{v}</span>
                 </div>
               ))}
             </div>
