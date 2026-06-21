@@ -799,7 +799,7 @@ export default function App() {
     const action = input.trim()
 const isEndex = action.toUpperCase() === 'ENDEX'
 setInput(''); setLoading(true)
-    const isEndex = action.trim().toUpperCase() === 'ENDEX'
+    
     posthog.capture(isEndex ? 'scenario_ended' : 'action_submitted', {
       scenario: state.scenario, jurisdiction: state.jurisdiction,
       difficulty: state.difficulty, turn: state.turn,
@@ -847,8 +847,7 @@ setInput(''); setLoading(true)
       const newDynamicPins = parsed.pins?.length
         ? [...(state.dynamicPins||[]), ...parsed.pins.map((p,i) => ({ ...p, id:`dyn-${Date.now()}-${i}`, turn:nextTurn }))]
         : (state.dynamicPins||[])
-
-      const resolvedSituation = parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') || (parsed.consequence||'').toUpperCase().includes('AFTER-ACTION') || (parsed.consequence||'').toUpperCase().includes('AAR') ? 'ENDEX' : (parsed.situation||'DEVELOPING')
+const resolvedSituation = isEndex || parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') ? 'ENDEX' : (parsed.situation||'DEVELOPING')const resolvedSituation = parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') || (parsed.consequence||'').toUpperCase().includes('AFTER-ACTION') || (parsed.consequence||'').toUpperCase().includes('AAR') ? 'ENDEX' : (parsed.situation||'DEVELOPING')
 update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                simTime:parsed.time||state.simTime, situation:resolvedSituation,
                turn:nextTurn, lifelines:parsed.lifelines||state.lifelines,
