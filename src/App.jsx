@@ -797,7 +797,8 @@ export default function App() {
   async function sendAction() {
     if (!input.trim() || loading || !state) return
     const action = input.trim()
-    setInput(''); setLoading(true)
+const isEndex = action.toUpperCase() === 'ENDEX'
+setInput(''); setLoading(true)
     const isEndex = action.trim().toUpperCase() === 'ENDEX'
     posthog.capture(isEndex ? 'scenario_ended' : 'action_submitted', {
       scenario: state.scenario, jurisdiction: state.jurisdiction,
