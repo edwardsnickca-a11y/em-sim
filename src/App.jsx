@@ -847,7 +847,7 @@ export default function App() {
         ? [...(state.dynamicPins||[]), ...parsed.pins.map((p,i) => ({ ...p, id:`dyn-${Date.now()}-${i}`, turn:nextTurn }))]
         : (state.dynamicPins||[])
 
-      const resolvedSituation = parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') ? 'ENDEX' : (parsed.situation||'DEVELOPING')
+      const resolvedSituation = parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') || (parsed.consequence||'').toUpperCase().includes('AFTER-ACTION') || (parsed.consequence||'').toUpperCase().includes('AAR') ? 'ENDEX' : (parsed.situation||'DEVELOPING')
 update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                simTime:parsed.time||state.simTime, situation:resolvedSituation,
                turn:nextTurn, lifelines:parsed.lifelines||state.lifelines,
