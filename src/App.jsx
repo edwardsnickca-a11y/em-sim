@@ -909,7 +909,6 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
           {/* Top status bar */}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 24px', borderBottom:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.6)' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:9, color:'#6aaa80', letterSpacing:'0.12em' }}>
-              background:sac, animation:'pulse 2s infinite'
               NEXUS EOC — SIMULATED EMERGENCY OPERATIONS PLATFORM
             </div>
             <div style={{ display:'flex', gap:24 }}>
@@ -927,10 +926,10 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
                 <div style={{ width:24, height:'0.5px', background:sac }}/>
-                <span style={{ fontSize:9, color:ac, letterSpacing:'0.2em', textTransform:'uppercase' }}>Simulated Emergency Operations Platform</span>
+                <span style={{ fontSize:9, color:sac, letterSpacing:'0.2em', textTransform:'uppercase' }}>Simulated Emergency Operations Platform</span>
               </div>
               <h1 style={{ fontSize:32, fontWeight:700, lineHeight:1.05, margin:'0 0 6px', color:'#e8f5f0', letterSpacing:'0.04em' }}>
-                NEXUS <span style={{ color:ac }}>EOC</span>
+                NEXUS EOC — SIMULATED EMERGENCY OPERATIONS PLATFORM
               </h1>
               <p style={{ fontSize:13, color:'#5aaa80', letterSpacing:'0.04em', margin:'0 0 8px', fontWeight:400 }}>Simulated Emergency Operations Platform</p>
               <p style={{ fontSize:11, color:'#6aba88', lineHeight:1.8, margin:'0 0 20px', maxWidth:500 }}>
@@ -1145,6 +1144,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
       <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
     </div>
   )
+   }
   // ─── GAME SCREEN ───────────────────────────────────────────────────────────
   const divSty    = { width:10, cursor:'col-resize', background:'#161616', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', borderLeft:'0.5px solid #2a2a2a', borderRight:'0.5px solid #2a2a2a' }
   const divInner  = { width:3, height:28, background:'#3a3a3a', borderRadius:2, pointerEvents:'none' }
@@ -1424,7 +1424,6 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
             </div>
         </div>
         </div>
-
       </div>
     </div>
   )
