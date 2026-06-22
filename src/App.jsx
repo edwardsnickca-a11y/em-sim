@@ -744,7 +744,9 @@ export default function App() {
     difficulty: state.difficulty,
   })
 }
-    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty })
+    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, role: state.role,
+  ...(state.playerName ? { player: state.playerName } : {}),
+})
 
     // Show the game screen immediately with a loading state
     update({
@@ -801,9 +803,10 @@ const isEndex = action.toUpperCase() === 'ENDEX'
 setInput(''); setLoading(true)
     
     posthog.capture(isEndex ? 'scenario_ended' : 'action_submitted', {
-      scenario: state.scenario, jurisdiction: state.jurisdiction,
-      difficulty: state.difficulty, turn: state.turn,
-    })
+  scenario: state.scenario, jurisdiction: state.jurisdiction,
+  difficulty: state.difficulty, turn: state.turn, role: state.role,
+  ...(state.playerName ? { player: state.playerName } : {}),
+})
     const newTerm = [...state.terminal, { type:'player', text:`> ${action}` }]
     update({ terminal:newTerm })
     const msgs = [...state.history, { role:'user', content:action }]
@@ -855,11 +858,10 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
 
       if (parsed.situation === 'ENDEX' && typeof window !== 'undefined' && window.posthog) {
         window.posthog.capture('scenario_completed', {
-          scenario: state.scenario,
-          jurisdiction: state.jurisdiction,
-          difficulty: state.difficulty,
-          total_turns: nextTurn,
-        })
+  scenario: state.scenario, jurisdiction: state.jurisdiction,
+  difficulty: state.difficulty, total_turns: nextTurn, role: state.role,
+  ...(state.playerName ? { player: state.playerName } : {}),
+})
       }
     } catch(e) {
       update({ terminal:[...newTerm, { type:'system', text:`[ERROR: ${e.message}]` }] })
