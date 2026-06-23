@@ -1,22 +1,22 @@
 From: <Saved by Blink>
-Snapshot-Content-Location: file:///C:/Users/edwar/Downloads/about.html
+Snapshot-Content-Location: file:///C:/Users/edwar/Downloads/about_v2.html
 Subject: =?utf-8?Q?About=20=E2=80=94=20NEXUS=20EOC?=
-Date: Mon, 22 Jun 2026 09:43:42 -0400
+Date: Tue, 23 Jun 2026 18:56:24 -0400
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----MultipartBoundary--EGaX6vOJJl93WZxzHZlH8YbQNJZi0emJcJrzpxfvOB----"
+	boundary="----MultipartBoundary--17j9YsAREWymX4g0BxUNvcg6wqHR5pwmGGLdspEl0H----"
 
 
-------MultipartBoundary--EGaX6vOJJl93WZxzHZlH8YbQNJZi0emJcJrzpxfvOB----
+------MultipartBoundary--17j9YsAREWymX4g0BxUNvcg6wqHR5pwmGGLdspEl0H----
 Content-Type: text/html
-Content-ID: <frame-3B82B7F8550D3A414CBE2E1B9B6A4990@mhtml.blink>
+Content-ID: <frame-A752984F11011D597BD29855A9C02FA9@mhtml.blink>
 Content-Transfer-Encoding: quoted-printable
-Content-Location: file:///C:/Users/edwar/Downloads/about.html
+Content-Location: file:///C:/Users/edwar/Downloads/about_v2.html
 
 <!DOCTYPE html><html lang=3D"en"><head><meta http-equiv=3D"Content-Type" co=
 ntent=3D"text/html; charset=3DUTF-8"><link rel=3D"stylesheet" type=3D"text/=
-css" href=3D"cid:css-c412018c-ebe9-4ef8-b3b2-9a61c196f08e@mhtml.blink" />
+css" href=3D"cid:css-f575c71c-fd49-4817-9c29-5b5f8bc62a21@mhtml.blink" />
  =20
   <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D=
 1.0">
@@ -60,16 +60,16 @@ rience across disaster response, remote sensing, WMD consequence management=
     <div class=3D"rule"></div>
 
     <main>
-      <!-- LEFT COLUMN -->
       <div>
-        <!-- ABOUT THE DEVELOPER -->
         <div class=3D"about-block">
           <div class=3D"section-label">About the Developer</div>
-          <p>Nicholas Edwards is a Lieutenant Colonel in the California Air National Guard and an emergency management professional currently completing a Ma=
-ster of Science in Emergency Management at the University of Southern Calif=
-ornia. He holds an Active Federal Security Clearance and is a Certified =
-Business Continuity Professional (CBCP) through DRI International.</p>
-          <p>His career spans nearly 25 years of active and Air National Guard militar=
+          <p>Nicholas Edwards is a Lieutenant Colonel in the California Air=
+ National Guard and an emergency management professional currently completi=
+ng a Master of Science in Emergency Management at the University of Souther=
+n California. He is a Certified Business Continuity Professional (CBCP) thr=
+ough DRI International and a member of the National Emergency Management As=
+sociation (NEMA).</p>
+          <p>His career spans nearly 25 years of active and reserve militar=
 y service across intelligence, ISR operations, WMD consequence management, =
 and all-hazards disaster response. He has served as a Remote Sensing Coordi=
 nator at Joint Command Posts during major wildfire incidents, commanded a f=
@@ -77,15 +77,14 @@ ederally certified WMD Civil Support Team responsible for CBRN reconnaissan=
 ce and consequence management across California, and led national-level ope=
 rations teams delivering real-time situational awareness to senior DoD and =
 interagency leadership across all 54 states and territories.</p>
-          <p>Edwards served as National Program Manager of FireGuard, a remote sensing and geospatial int=
-elligence capability built in response to the 2018 Camp Fire and scaled to =
-support CAL FIRE, FEMA, and state Emergency Operations Centers during major=
- disasters. He has trained emergency managers at the national, state, and l=
-ocal level and taught incident awareness and assessment courses across the =
-country.</p>
+          <p>Edwards served as National Program Manager of FireGuard, a rem=
+ote sensing and geospatial intelligence capability built in response to the=
+ 2018 Camp Fire and scaled to support CAL FIRE, FEMA, and state Emergency O=
+perations Centers during major disasters. He has trained emergency managers=
+ at the national, state, and local level and taught incident awareness and =
+assessment courses across the country.</p>
         </div>
 
-        <!-- CREDENTIALS -->
         <div class=3D"about-block">
           <div class=3D"section-label">Credentials &amp; Background</div>
           <div class=3D"cred-grid">
@@ -100,7 +99,7 @@ cted Fall 2026.</div>
               </div>
             </div>
             <div class=3D"cred-item">
-              <div class=3D"cred-icon">=F0=9F=9B=A1=EF=B8=8F</div>
+              <div class=3D"cred-icon">=F0=9F=9B=A1</div>
               <div class=3D"cred-text">
                 <div class=3D"cred-title">Certified Business Continuity Pro=
 fessional (CBCP) =E2=80=94 DRI International</div>
@@ -111,14 +110,15 @@ ness continuity planning, COOP/COG, and organizational resilience.</div>
             <div class=3D"cred-item">
               <div class=3D"cred-icon">=E2=AD=90</div>
               <div class=3D"cred-text">
-                <div class=3D"cred-title">Lieutenant Colonel, California Air National Gaurd</div>
+                <div class=3D"cred-title">Lieutenant Colonel, California Ai=
+r National Guard</div>
                 <div class=3D"cred-desc">Nearly 25 years of active and rese=
 rve service. Current role: Emergency Action Officer supporting the National=
  Leadership Command Capability (NLCC).</div>
               </div>
             </div>
             <div class=3D"cred-item">
-              <div class=3D"cred-icon">=E2=98=A3=EF=B8=8F</div>
+              <div class=3D"cred-icon">=E2=98=A3</div>
               <div class=3D"cred-text">
                 <div class=3D"cred-title">Commanding Officer =E2=80=94 9th =
 WMD Civil Support Team, CA National Guard</div>
@@ -128,14 +128,14 @@ equence management support to civil authorities statewide.</div>
               </div>
             </div>
             <div class=3D"cred-item">
-              <div class=3D"cred-icon">=F0=9F=9B=B0=EF=B8=8F</div>
+              <div class=3D"cred-icon">=F0=9F=9B=B0</div>
               <div class=3D"cred-text">
-                <div class=3D"cred-title">Remote Sensing Coordinator =E2=80=
-=94 National, State &amp; Local Level</div>
-                <div class=3D"cred-desc">Founded FireGuard remote sensing c=
-apability. Served as Remote Sensing Coordinator at Joint Command Posts duri=
-ng major fire incidents. Delivered satellite imagery and geospatial product=
-s to CAL FIRE, FEMA, and state EOCs.</div>
+                <div class=3D"cred-title">National Program Manager =E2=80=
+=94 FireGuard Remote Sensing Program</div>
+                <div class=3D"cred-desc">Built and scaled a remote sensing =
+and geospatial intelligence capability delivering satellite imagery and geo=
+spatial products to CAL FIRE, FEMA, and state EOCs during major disasters.<=
+/div>
               </div>
             </div>
             <div class=3D"cred-item">
@@ -145,14 +145,25 @@ s to CAL FIRE, FEMA, and state EOCs.</div>
 =80=94 Wildfires, Hurricanes, WMD, Public Health</div>
                 <div class=3D"cred-desc">Deployed in support of wildfires, =
 civil unrest, and public health emergencies. Coordinated interagency respon=
-se across federal, state, and tribal partners. FEMA ICS 100/200/300/400/700/800 cer=
+se across federal, state, and tribal partners. FEMA ICS 100/200/300/400 cer=
 tified.</div>
               </div>
             </div>
             <div class=3D"cred-item">
-              <div class=3D"cred-icon">=F0=9F=94=90</div>
+              <div class=3D"cred-icon">=F0=9F=8F=9B</div>
               <div class=3D"cred-text">
-                <div class="cred-title">Active Federal Security Clearance</div>
+                <div class=3D"cred-title">Member =E2=80=94 National Emergen=
+cy Management Association (NEMA)</div>
+                <div class=3D"cred-desc">Professional association represent=
+ing state and territory emergency management directors and senior practitio=
+ners across the United States.</div>
+              </div>
+            </div>
+            <div class=3D"cred-item">
+              <div class=3D"cred-icon">=F0=9F=94=92</div>
+              <div class=3D"cred-text">
+                <div class=3D"cred-title">Active Federal Security Clearance=
+</div>
                 <div class=3D"cred-desc">Available for engagements requirin=
 g cleared personnel. Extensive experience in classified operations, NC3, an=
 d sensitive national security programs.</div>
@@ -161,7 +172,6 @@ d sensitive national security programs.</div>
           </div>
         </div>
 
-        <!-- ABOUT THE PLATFORM -->
         <div class=3D"platform-block">
           <div class=3D"section-label">About NEXUS EOC</div>
           <p>NEXUS EOC is a web-based emergency management training simulat=
@@ -178,7 +188,6 @@ red.</p>
         </div>
       </div>
 
-      <!-- RIGHT COLUMN -->
       <div class=3D"contact-panel">
         <div class=3D"contact-card">
           <div class=3D"contact-header">Contact</div>
@@ -222,18 +231,17 @@ help..." required=3D""></textarea>
 lopment team. We respond within 2 business days.</p>
             </form>
             <div class=3D"success-msg" id=3D"successMsg">
-              =E2=9C=93 Message sent.<br>
-              We'll be in touch within 2 business days.
+              =E2=9C=93 Message sent.<br>We'll be in touch within 2 busines=
+s days.
             </div>
           </div>
         </div>
 
-        <!-- Quick Links -->
         <div class=3D"section-label" style=3D"margin-bottom:10px;">Resource=
 s</div>
         <div class=3D"quick-links">
           <a href=3D"file:///C:/" class=3D"quick-link">
-            <span class=3D"quick-link-icon">=F0=9F=96=A5=EF=B8=8F</span>
+            <span class=3D"quick-link-icon">=F0=9F=96=A5</span>
             <div class=3D"quick-link-text">
               <div class=3D"quick-link-title">LAUNCH NEXUS EOC</div>
               <div class=3D"quick-link-sub">Open the training platform</div=
@@ -283,7 +291,7 @@ ck-link">
 
 
 </body></html>
-------MultipartBoundary--EGaX6vOJJl93WZxzHZlH8YbQNJZi0emJcJrzpxfvOB----
+------MultipartBoundary--17j9YsAREWymX4g0BxUNvcg6wqHR5pwmGGLdspEl0H----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap
@@ -433,10 +441,10 @@ ono/v24/tDbV2o-flEEny0FZhsfKu5WU4xD7OwE.woff2") format("woff2"); unicode-ra=
 nge: U+0-FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308=
 , U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEF=
 F, U+FFFD; }
-------MultipartBoundary--EGaX6vOJJl93WZxzHZlH8YbQNJZi0emJcJrzpxfvOB----
+------MultipartBoundary--17j9YsAREWymX4g0BxUNvcg6wqHR5pwmGGLdspEl0H----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
-Content-Location: cid:css-c412018c-ebe9-4ef8-b3b2-9a61c196f08e@mhtml.blink
+Content-Location: cid:css-f575c71c-fd49-4817-9c29-5b5f8bc62a21@mhtml.blink
 
 @charset "utf-8";
 
@@ -499,7 +507,7 @@ h1 { font-size: 30px; font-weight: 700; color: var(--text); letter-spacing:=
 h1 em { color: var(--teal); font-style: normal; }
 
 .hero-sub { font-size: 12px; color: var(--mid); line-height: 1.8; max-width=
-: 600px; margin-bottom: 0px; }
+: 600px; }
 
 .rule { height: 0.5px; background: var(--teal-dim); margin: 0px 32px; }
 
@@ -531,8 +539,6 @@ eft: 3px solid var(--teal); border-radius: 3px; background: var(--teal-fain=
 t); }
 
 .cred-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-
-.cred-text { }
 
 .cred-title { font-size: 10px; font-weight: 700; color: var(--teal); letter=
 -spacing: 0.04em; margin-bottom: 2px; }
@@ -601,8 +607,6 @@ or 0.12s, background 0.12s; }
 
 .quick-link-icon { font-size: 16px; }
 
-.quick-link-text { }
-
 .quick-link-title { font-size: 10px; font-weight: 700; color: rgb(106, 170,=
  128); letter-spacing: 0.04em; }
 
@@ -630,4 +634,4 @@ border-color: var(--teal); opacity: 0.4; z-index: 3; }
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
-------MultipartBoundary--EGaX6vOJJl93WZxzHZlH8YbQNJZi0emJcJrzpxfvOB------
+------MultipartBoundary--17j9YsAREWymX4g0BxUNvcg6wqHR5pwmGGLdspEl0H------
