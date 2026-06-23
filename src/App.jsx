@@ -620,7 +620,91 @@ function SettingsPanel({ settings, onChange, onClose }) {
     </div>
   )
 }
+function EndexFeedback({ scenario, role, jurisdiction, difficulty, turns, fs, ac, al }) {
+  const [rating, setRating]       = useState(0)
+  const [aiReal, setAiReal]       = useState('')
+  const [aarUseful, setAarUseful] = useState('')
+  const [comments, setComments]   = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const [sending, setSending]     = useState(false)
 
+  async function submit() {
+    if (!rating) return
+    setSending(true)
+    const body = `NEXUS EOC — Post-ENDEX Feedback\n\nScenario: ${scenario}\nJurisdiction: ${jurisdiction}\nDifficulty: ${difficulty}\nRole: ${role}\nTurns: ${turns}\n\nOverall Rating: ${rating}/5\nAI Evaluation Realistic: ${aiReal}\nAAR Useful: ${aarUseful}\n\nComments:\n${comments || '(none)'}`
+    try {
+      await fetch('https://formsubmit.co/ajax/edwardsnick.ca@gmail.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ name:'NEXUS EOC Feedback', email:'feedback@nexuseoc.com', subject:`NEXUS EOC Feedback — ${scenario} / ${role}`, message: body, _captcha:'false' })
+      })
+    } catch(e) {}
+    setSending(false)
+    setSubmitted(true)
+  }
+
+  const btnStyle = (val, current) => ({
+    padding:'4px 10px', fontSize:fs-1, fontFamily:'JetBrains Mono, monospace', cursor:'pointer', borderRadius:3, border:`0.5px solid ${current===val?ac:'#333'}`, background:current===val?ac+'22':'transparent', color:current===val?ac:'#666'
+  })
+
+  if (submitted) return (
+    <div style={{ marginTop:16, padding:'12px 14px', border:'0.5px solid #222', borderRadius:6, background:'#0d0d0d' }}>
+      <div style={{ fontSize:fs-1, color:ac }}>&#10003; Feedback received. Thank you.</div>
+    </div>
+  )
+
+  return (
+    <div style={{ marginTop:16, padding:'14px', border:'0.5px solid #222', borderRadius:6, background:'#0d0d0d' }}>
+      <div style={{ fontSize:fs-1, color:'#555', marginBottom:12, textTransform:'uppercase', letterSpacing:'0.08em' }}>Session Feedback — Optional</div>
+
+      {/* Star rating */}
+      <div style={{ marginBottom:12 }}>
+        <div style={{ fontSize:fs-2, color:'#444', marginBottom:6 }}>Overall experience</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {[1,2,3,4,5].map(n => (
+            <button key={n} onClick={() => setRating(n)}
+              style={{ fontSize:18, background:'none', border:'none', cursor:'pointer', color:n<=rating?al:'#333', padding:'0 2px' }}>
+              &#9733;
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* AI realistic */}
+      <div style={{ marginBottom:12 }}>
+        <div style={{ fontSize:fs-2, color:'#444', marginBottom:6 }}>Was the AI evaluation realistic?</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {['Yes','Somewhat','No'].map(v => (
+            <button key={v} onClick={() => setAiReal(v)} style={btnStyle(v, aiReal)}>{v}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* AAR useful */}
+      <div style={{ marginBottom:12 }}>
+        <div style={{ fontSize:fs-2, color:'#444', marginBottom:6 }}>Was the after-action review useful?</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {['Yes','Somewhat','No'].map(v => (
+            <button key={v} onClick={() => setAarUseful(v)} style={btnStyle(v, aarUseful)}>{v}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Comments */}
+      <div style={{ marginBottom:12 }}>
+        <div style={{ fontSize:fs-2, color:'#444', marginBottom:6 }}>What could be improved? (optional)</div>
+        <textarea value={comments} onChange={e => setComments(e.target.value)}
+          placeholder="Any feedback..."
+          style={{ width:'100%', height:60, resize:'none', background:'#0a0a0a', border:'0.5px solid #222', color:'#888', fontSize:fs-1, fontFamily:'JetBrains Mono, monospace', padding:'6px 8px', borderRadius:3, outline:'none', boxSizing:'border-box' }}/>
+      </div>
+
+      <button onClick={submit} disabled={!rating || sending}
+        style={{ padding:'6px 16px', fontSize:fs-1, fontFamily:'JetBrains Mono, monospace', color:rating?ac:'#444', border:`0.5px solid ${rating?ac:'#333'}`, background:'transparent', cursor:rating?'pointer':'not-allowed', borderRadius:3, opacity:sending?0.6:1 }}>
+        {sending ? 'Sending...' : 'Submit Feedback'}
+      </button>
+    </div>
+  )
+}
 export default function App() {
   const [state, setState]           = useState(null)
   const [loading, setLoading]       = useState(false)
@@ -1338,6 +1422,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
       style={{ padding:'8px 20px', fontSize:fs, fontWeight:500, color:ac, border:`0.5px solid ${ac}`, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3 }}>
       ↩ Return to Mission Select
     </button>
+    <EndexFeedback scenario={state.scenario} role={state.role} jurisdiction={state.jurisdiction} difficulty={state.difficulty} turns={state.turn} fs={fs} ac={ac} al={al} />
   </div>
 )}
 {(loading || initLoading) && <div style={{ color:'#333', fontStyle:'italic', fontSize:fs }}>
