@@ -1139,9 +1139,11 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
       </div>
 {/* COPYRIGHT FOOTER */}
       <div style={{ position:'relative', zIndex:2, textAlign:'center', padding:'10px 32px', borderTop:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.7)' }}>
-        <span style={{ fontSize:9, color:'#2a4a3a', letterSpacing:'0.1em' }}>
-          © {new Date().getFullYear()} NICHOLAS EDWARDS — NEXUS EOC — ALL RIGHTS RESERVED — UNAUTHORIZED REPRODUCTION OR COMMERCIAL USE PROHIBITED
-        </span>
+        <span style={{ fontSize:8, color:'#2a4a3a', letterSpacing:'0.1em' }}>
+  © {new Date().getFullYear()} NICHOLAS EDWARDS — NEXUS EOC — ALL RIGHTS RESERVED — UNAUTHORIZED REPRODUCTION OR COMMERCIAL USE PROHIBITED
+  &nbsp;&nbsp;|&nbsp;&nbsp;
+  <a href="/about.html" style={{ color:'#3a6a48', textDecoration:'none', letterSpacing:'0.1em' }} onMouseEnter={e => e.target.style.color='#1D9E75'} onMouseLeave={e => e.target.style.color='#3a6a48'}>ABOUT</a>
+</span>
       </div>
       <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
     </div>
