@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About — NEXUS EOC</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #1D9E75;
+      --teal-dim: rgba(29,158,117,0.15);
+      --teal-faint: rgba(29,158,117,0.06);
+      --bg: #080c0a;
+      --overlay: rgba(4,8,6,0.88);
+      --text: #e8f5f0;
+      --mid: #6aba88;
+      --dim: #4a8a68;
+      --muted: #2a5a40;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; position: relative; }
+    .bg { position: fixed; inset: 0; z-index: 0; background-image: url(/bg-map.png); background-size: cover; background-position: center; }
+    .bg-overlay { position: fixed; inset: 0; z-index: 1; background: var(--overlay); }
+    .bg-grid { position: fixed; inset: 0; z-index: 1; background-image: linear-gradient(rgba(29,158,117,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(29,158,117,0.04) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
+    .wrap { position: relative; z-index: 2; min-height: 100vh; display: flex; flex-direction: column; }
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 32px; border-bottom: 0.5px solid var(--teal-dim); background: rgba(4,8,6,0.7); }
+    .nav-left { display: flex; align-items: center; gap: 10px; font-size: 9px; color: var(--dim); letter-spacing: 0.12em; }
+    .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); animation: pulse 2s infinite; }
+    .nav-right a { font-size: 10px; color: var(--teal); text-decoration: none; letter-spacing: 0.1em; border: 0.5px solid var(--teal); padding: 6px 14px; border-radius: 3px; transition: background 0.15s; }
+    .nav-right a:hover { background: rgba(29,158,117,0.1); }
+    .hero { padding: 48px 32px 40px; max-width: 1100px; margin: 0 auto; width: 100%; }
+    .eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .eyebrow-line { width: 24px; height: 0.5px; background: var(--teal); }
+    .eyebrow span { font-size: 9px; color: var(--teal); letter-spacing: 0.2em; text-transform: uppercase; }
+    h1 { font-size: 30px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; line-height: 1.1; margin-bottom: 8px; }
+    h1 em { color: var(--teal); font-style: normal; }
+    .hero-sub { font-size: 12px; color: var(--mid); line-height: 1.8; max-width: 600px; }
+    .rule { height: 0.5px; background: var(--teal-dim); margin: 0 32px; }
+    main { flex: 1; padding: 40px 32px; max-width: 1100px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 380px; gap: 48px; align-items: start; }
+    .section-label { font-size: 9px; color: var(--teal); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .section-label::after { content: ''; flex: 1; height: 0.5px; background: var(--teal-dim); }
+    .about-block { margin-bottom: 36px; }
+    .about-block p { font-size: 10px; color: #9dd8b8; line-height: 1.9; margin-bottom: 12px; }
+    .cred-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 36px; }
+    .cred-item { display: flex; gap: 12px; padding: 10px 14px; border: 0.5px solid var(--teal-dim); border-left: 3px solid var(--teal); border-radius: 3px; background: var(--teal-faint); }
+    .cred-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .cred-title { font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 0.04em; margin-bottom: 2px; }
+    .cred-desc { font-size: 9px; color: var(--dim); line-height: 1.6; }
+    .platform-block { margin-bottom: 36px; }
+    .platform-block p { font-size: 10px; color: #9dd8b8; line-height: 1.9; }
+    .contact-panel { position: sticky; top: 24px; }
+    .contact-card { border: 0.5px solid var(--teal-dim); border-radius: 4px; background: rgba(4,8,6,0.8); overflow: hidden; margin-bottom: 12px; }
+    .contact-header { padding: 12px 16px; background: rgba(29,158,117,0.08); border-bottom: 0.5px solid var(--teal-dim); font-size: 9px; color: var(--teal); letter-spacing: 0.12em; text-transform: uppercase; }
+    .contact-body { padding: 16px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 8px; color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 5px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px 10px; background: rgba(4,8,6,0.9); border: 0.5px solid rgba(29,158,117,0.25); border-radius: 3px; color: #8adaaa; font-size: 10px; font-family: var(--mono); outline: none; transition: border-color 0.15s; resize: none; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--teal); }
+    .form-group textarea { height: 100px; }
+    .form-group select option { background: #0a140c; }
+    .submit-btn { width: 100%; padding: 11px; background: var(--teal); color: #040806; border: none; border-radius: 3px; font-size: 10px; font-weight: 700; font-family: var(--mono); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: opacity 0.15s; }
+    .submit-btn:hover { opacity: 0.85; }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .form-note { margin-top: 8px; font-size: 8px; color: var(--muted); line-height: 1.6; text-align: center; }
+    .success-msg { display: none; padding: 16px; text-align: center; font-size: 10px; color: var(--teal); line-height: 1.7; }
+    .quick-links { display: flex; flex-direction: column; gap: 6px; }
+    .quick-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 0.5px solid rgba(29,158,117,0.18); border-radius: 3px; background: rgba(4,8,6,0.65); text-decoration: none; transition: border-color 0.12s, background 0.12s; }
+    .quick-link:hover { border-color: rgba(29,158,117,0.5); background: rgba(29,158,117,0.07); }
+    .quick-link-icon { font-size: 16px; }
+    .quick-link-title { font-size: 10px; font-weight: 700; color: #6aaa80; letter-spacing: 0.04em; }
+    .quick-link-sub { font-size: 8px; color: var(--dim); margin-top: 1px; }
+    .quick-link-arrow { margin-left: auto; font-size: 10px; color: var(--muted); }
+    footer { border-top: 0.5px solid var(--teal-dim); background: rgba(4,8,6,0.92); padding: 10px 32px; text-align: center; font-size: 8px; color: var(--muted); letter-spacing: 0.08em; }
+    .corner { position: fixed; width: 16px; height: 16px; border-style: solid; border-color: var(--teal); opacity: 0.4; z-index: 3; }
+    .corner-tl { top: 10px; left: 10px; border-width: 1px 0 0 1px; }
+    .corner-tr { top: 10px; right: 10px; border-width: 1px 1px 0 0; }
+    .corner-bl { bottom: 10px; left: 10px; border-width: 0 0 1px 1px; }
+    .corner-br { bottom: 10px; right: 10px; border-width: 0 1px 1px 0; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="bg-overlay"></div>
+  <div class="bg-grid"></div>
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <div class="wrap">
+    <nav>
+      <div class="nav-left">
+        <div class="nav-dot"></div>
+        NEXUS EOC — SIMULATED EMERGENCY OPERATIONS PLATFORM
+      </div>
+      <div class="nav-right">
+        <a href="/">&#8592; Launch Platform</a>
+      </div>
+    </nav>
+
+    <div class="hero">
+      <div class="eyebrow">
+        <div class="eyebrow-line"></div>
+        <span>About</span>
+      </div>
+      <h1>Built by a practitioner.<br><em>For practitioners.</em></h1>
+      <p class="hero-sub">NEXUS EOC was designed from the ground up by an emergency management professional with nearly 25 years of operational experience across disaster response, remote sensing, WMD consequence management, and national-level continuity operations.</p>
+    </div>
+
+    <div class="rule"></div>
+
+    <main>
+      <div>
+        <div class="about-block">
+          <div class="section-label">About the Developer</div>
+          <p>Nicholas Edwards is a Lieutenant Colonel in the California Air National Guard and an emergency management professional currently completing a Master of Science in Emergency Management at the University of Southern California. He is a Certified Business Continuity Professional (CBCP) through DRI International and a member of the National Emergency Management Association (NEMA).</p>
+          <p>His career spans nearly 25 years of active and reserve military service across intelligence, ISR operations, WMD consequence management, and all-hazards disaster response. He has served as a Remote Sensing Coordinator at Joint Command Posts during major wildfire incidents, commanded a federally certified WMD Civil Support Team responsible for CBRN reconnaissance and consequence management across California, and led national-level operations teams delivering real-time situational awareness to senior DoD and interagency leadership across all 54 states and territories.</p>
+          <p>Edwards served as National Program Manager of FireGuard, a remote sensing and geospatial intelligence capability built in response to the 2018 Camp Fire and scaled to support CAL FIRE, FEMA, and state Emergency Operations Centers during major disasters. He has trained emergency managers at the national, state, and local level and taught incident awareness and assessment courses across the country.</p>
+        </div>
+
+        <div class="about-block">
+          <div class="section-label">Credentials &amp; Background</div>
+          <div class="cred-grid">
+            <div class="cred-item">
+              <div class="cred-icon">&#127891;</div>
+              <div class="cred-text">
+                <div class="cred-title">M.S. Emergency Management — University of Southern California</div>
+                <div class="cred-desc">Graduate program in emergency management with focus on all-hazards preparedness, response, and recovery. Expected Fall 2026.</div>
+              </div>
+            </div>
+            <div class="cred-item">
+              <div class="cred-icon">&#128737;</div>
+              <div class="cred-text">
+                <div class="cred-title">Certified Business Continuity Professional (CBCP) — DRI International</div>
+                <div class="cred-desc">Professional certification in business continuity planning, COOP/COG, and organizational resilience.</div>
+              </div>
+            </div>
+            <div class="cred-item">
+              <div class="cred-icon">&#11088;</div>
+              <div class="cred-text">
+                <div class="cred-title">Lieutenant Colonel, California Air National Guard</div>
+                <div class="cred-desc">Nearly 25 years of active and reserve service. Current role: Emergency Action Officer supporting the National Leadership Command Capability (NLCC).</div>
+              </div>
+            </div>
+            <div class="cred-item">
+              <div class="cred-icon">&#9763;</div>
+              <div class="cred-text">
+                <div class="cred-title">Commanding Officer — 9th WMD Civil Support Team, CA National Guard</div>
+                <div class="cred-desc">Commanded 22-person federally certified team responsible for CBRN reconnaissance, hazard assessment, and consequence management support to civil authorities statewide.</div>
+              </div>
+            </div>
+            <div class="cred-item">
+              <div class="cred-icon">&#128752;</div>
+              <div class="cred-text">
+                <div class="cred-title">National Program Manager — FireGuard Remote Sensing Program</div>
+                <div class="cred-desc">Built and scaled a remote sensing and geospatial intelligence capability delivering satellite imagery and geospatial products to CAL FIRE, FEMA, and state EOCs during major disasters.</div>
+              </div>
+            </div>
+            <div class="cred-item">
+              <div class="cred-icon">&#128293;</div>
+              <div class="cred-text">
+                <div class="cred-title">All-Hazards Disaster Response — Wildfires, Hurricanes, WMD, Public Health</div>
+                <div class="cred-desc">Deployed in support of wildfires, civil unrest, and public health emergencies. Coordinated interagency response across federal, state, and tribal partners. FEMA ICS 100/200/300/400 certified.</div>
+              </div>
+            </div>
+            <div class="cred-item">
+              <div class="cred-icon">&#127963;</div>
+              <div class="cred-text">
+                <div class="cred-title">Member — National Emergency Management Association (NEMA)</div>
+                <div class="cred-desc">Professional association representing state and territory emergency management directors and senior practitioners across the United States.</div>
+              </div>
+            </div>
+            <div class="cred-item">
+              <div class="cred-icon">&#128274;</div>
+              <div class="cred-text">
+                <div class="cred-title">Active Federal Security Clearance</div>
+                <div class="cred-desc">Available for engagements requiring cleared personnel. Extensive experience in classified operations, NC3, and sensitive national security programs.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="platform-block">
+          <div class="section-label">About NEXUS EOC</div>
+          <p>NEXUS EOC is a web-based emergency management training simulator that generates a unique, geographically accurate scenario for every session based on the selected incident type and jurisdiction. An AI engine evaluates player decisions against NIMS, ICS, ESF, and FEMA doctrine in real time, then delivers a comprehensive after-action review calibrated to the player's role and jurisdiction when they type ENDEX.</p>
+          <p>The platform supports 23 roles — including EOC Director, all four Section Chiefs, PIO, Safety Officer, and all 15 Emergency Support Function Liaison Officers — and six jurisdiction types from Rural County to Tribal Nation. Every session is different. No facilitator required.</p>
+        </div>
+      </div>
+
+      <div class="contact-panel">
+        <div class="contact-card">
+          <div class="contact-header">Contact</div>
+          <div class="contact-body">
+            <form id="contactForm">
+              <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="name" placeholder="Your name" required/>
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="your@email.com" required/>
+              </div>
+              <div class="form-group">
+                <label>Organization</label>
+                <input type="text" id="org" placeholder="Agency, jurisdiction, or institution"/>
+              </div>
+              <div class="form-group">
+                <label>Subject</label>
+                <select id="subject">
+                  <option value="">Select a topic</option>
+                  <option>General inquiry</option>
+                  <option>Licensing / institutional access</option>
+                  <option>Training program partnership</option>
+                  <option>Feedback or bug report</option>
+                  <option>Media or press</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Message</label>
+                <textarea id="message" placeholder="Tell us how we can help..." required></textarea>
+              </div>
+              <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
+              <p class="form-note">Messages are sent directly to the development team. We respond within 2 business days.</p>
+            </form>
+            <div class="success-msg" id="successMsg">
+              &#10003; Message sent.<br/>We'll be in touch within 2 business days.
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label" style="margin-bottom:10px;">Resources</div>
+        <div class="quick-links">
+          <a href="/" class="quick-link">
+            <span class="quick-link-icon">&#128421;</span>
+            <div class="quick-link-text">
+              <div class="quick-link-title">LAUNCH NEXUS EOC</div>
+              <div class="quick-link-sub">Open the training platform</div>
+            </div>
+            <span class="quick-link-arrow">&#8599;</span>
+          </a>
+          <a href="/NEXUS_EOC_Overview.pdf" target="_blank" class="quick-link">
+            <span class="quick-link-icon">&#128196;</span>
+            <div class="quick-link-text">
+              <div class="quick-link-title">PLATFORM OVERVIEW</div>
+              <div class="quick-link-sub">One-page summary PDF</div>
+            </div>
+            <span class="quick-link-arrow">&#8599;</span>
+          </a>
+          <a href="/NEXUS_EOC_User_Guide.pdf" target="_blank" class="quick-link">
+            <span class="quick-link-icon">&#128203;</span>
+            <div class="quick-link-text">
+              <div class="quick-link-title">USER GUIDE</div>
+              <div class="quick-link-sub">Full interface reference</div>
+            </div>
+            <span class="quick-link-arrow">&#8599;</span>
+          </a>
+          <a href="/NEXUS_EOC_Resource_Guide.xlsx" class="quick-link">
+            <span class="quick-link-icon">&#128202;</span>
+            <div class="quick-link-text">
+              <div class="quick-link-title">RESOURCE GUIDE</div>
+              <div class="quick-link-sub">All reference links by scenario</div>
+            </div>
+            <span class="quick-link-arrow">&#8595;</span>
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      &copy; 2026 NICHOLAS EDWARDS &mdash; NEXUS EOC &mdash; ALL RIGHTS RESERVED &mdash; UNAUTHORIZED REPRODUCTION OR COMMERCIAL USE PROHIBITED
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('contactForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      const name    = document.getElementById('name').value;
+      const email   = document.getElementById('email').value;
+      const org     = document.getElementById('org').value;
+      const subject = document.getElementById('subject').value;
+      const message = document.getElementById('message').value;
+      const body = 'Name: ' + name + '\nEmail: ' + email + '\nOrganization: ' + org + '\nSubject: ' + subject + '\n\nMessage:\n' + message;
+      try {
+        const res = await fetch('https://formsubmit.co/ajax/edwardsnick.ca@gmail.com', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ name, email, subject: 'NEXUS EOC Contact: ' + (subject || 'General inquiry'), message: body, _captcha: 'false' })
+        });
+        if (res.ok) {
+          document.getElementById('contactForm').style.display = 'none';
+          document.getElementById('successMsg').style.display = 'block';
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Send Message';
+          alert('Something went wrong. Please try again.');
+        }
+      } catch(err) {
+        btn.disabled = false;
+        btn.textContent = 'Send Message';
+        alert('Something went wrong. Please try again.');
+      }
+    });
+  </script>
+</body>
+</html>
