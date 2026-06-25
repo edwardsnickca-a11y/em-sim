@@ -481,6 +481,7 @@ const sitColors = { STABLE:'#1D9E75', DEVELOPING:'#EF9F27', CRITICAL:'#D85A30', 
 // ─── AAR DISPLAY COMPONENT ────────────────────────────────────────────────────
 function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName, turns, simTime, onReset, fs, ac, al }) {
   const [activeSection, setActiveSection] = useState(null)
+  const [showFeedback, setShowFeedback] = useState(false)
 
   function downloadAAR() {
     const scenarioName = SCENARIOS[scenario]?.name || scenario
@@ -543,6 +544,10 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
               style={{ padding:'5px 12px', fontSize:fs-1, color:ac, border:`0.5px solid ${ac}`, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3, letterSpacing:'0.06em' }}>
               ↓ Download
             </button>
+            <button onClick={() => setShowFeedback(s => !s)}
+              style={{ padding:'5px 12px', fontSize:fs-1, color:showFeedback ? al : '#555', border:`0.5px solid ${showFeedback ? al : '#333'}`, background:showFeedback ? al+'11' : 'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3 }}>
+              ★ Feedback
+            </button>
             <button onClick={onReset}
               style={{ padding:'5px 12px', fontSize:fs-1, color:'#555', border:'0.5px solid #333', background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3 }}>
               ↩ New Scenario
@@ -569,6 +574,14 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
 
       {/* AAR BODY */}
       <div style={{ flex:1, overflowY:'auto', padding:'16px' }}>
+        {showFeedback && (
+          <div style={{ marginBottom:16 }}>
+            <EndexFeedback
+              scenario={scenario} role={role} jurisdiction={jurisdiction}
+              difficulty={difficulty} turns={turns} fs={fs} ac={ac} al={al}
+            />
+          </div>
+        )}
         {AAR_SECTIONS.filter(s => !activeSection || s.key === activeSection).map((s, idx) => {
           const content = aar[s.key]
           if (!content) return null
@@ -1514,12 +1527,6 @@ export default function App() {
                 ac={ac}
                 al={al}
               />
-              <div style={{ borderTop:'0.5px solid #1a1a1a', padding:'12px 16px', flexShrink:0 }}>
-                <EndexFeedback
-                  scenario={state.scenario} role={state.role} jurisdiction={state.jurisdiction}
-                  difficulty={state.difficulty} turns={state.turn} fs={fs} ac={ac} al={al}
-                />
-              </div>
             </div>
           ) : (
             /* Normal terminal */
