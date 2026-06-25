@@ -34,8 +34,6 @@ const PIN_COLORS = {
   DEFAULT:'#888', BLOCKED:'#E24B4A'
 }
 
-// ─── JURISDICTION CONTEXT ────────────────────────────────────────────────────
-// Used in the world-init prompt to give the AI rich context for location generation
 const JURISDICTION_CONTEXT = {
   'Rural County': {
     desc: 'A sparsely populated rural county with limited local resources, long response distances, volunteer fire departments, a small county seat, and heavy reliance on mutual aid and state assistance. Population under 30,000.',
@@ -69,7 +67,6 @@ const JURISDICTION_CONTEXT = {
   },
 }
 
-// ─── SCENARIO REFS (stay scenario-locked — doctrine is doctrine) ──────────────
 const SCENARIO_REFS = {
   hurricane: [
     { label:'FEMA Federal Evacuation Support Annex 2025', url:'https://www.fema.gov/sites/default/files/documents/fema_rd_federal-evacuation-support-annex_042025.pdf' },
@@ -219,6 +216,7 @@ const PANEL_INFO = {
     body: 'A live operational map of the incident area. Colored pins mark fixed infrastructure: green for EOC, blue for hospitals, orange for staging areas, purple for shelters, red for affected sites. White-bordered pins with turn numbers (T1, T2, etc.) are dynamic event pins dropped by the AI when dispatch events have a physical location. Click any pin for details. The map accumulates event pins across all turns.'
   },
 }
+
 const ROLES = {
   'EOC Director': 'You are the EOC Director — the senior emergency manager responsible for overall coordination, resource prioritization, and strategic decision-making across all sections and ESFs.',
   'Operations Section Chief': 'You are the Operations Section Chief — responsible for directing tactical operations, coordinating field resources, and managing the operational branches executing the response.',
@@ -249,6 +247,7 @@ const ROLE_GROUPS = {
   'EOC Leadership': ['EOC Director','Operations Section Chief','Planning Section Chief','Logistics Section Chief','Finance & Admin Section Chief','Public Information Officer','Safety Officer','Liaison Officer'],
   'ESF Liaison Officers': ['ESF-1 — Transportation','ESF-2 — Communications','ESF-3 — Public Works & Engineering','ESF-4 — Firefighting','ESF-5 — Information & Planning','ESF-6 — Mass Care','ESF-7 — Logistics','ESF-8 — Public Health & Medical','ESF-9 — Search & Rescue','ESF-10 — Oil & Hazardous Materials','ESF-11 — Agriculture & Natural Resources','ESF-12 — Energy','ESF-13 — Public Safety & Security','ESF-14 — Cross-Sector Business & Infrastructure','ESF-15 — External Affairs'],
 }
+
 const SCENARIOS = {
   hurricane:  { name:'Hurricane Landfall',             icon:'🌀', desc:'A major hurricane is closing on the coast. The 72-hour warning window is tightening. Jurisdiction and geography will shape every evacuation and resource decision.' },
   mci:        { name:'Mass Casualty Incident',          icon:'🚨', desc:'Explosion at a crowded public event. 200+ casualties. Cause unknown. Your resources and hospital capacity depend heavily on where this happened.' },
@@ -296,7 +295,19 @@ const LL_COLORS = {
 const DEFAULT_SETTINGS = { fontSize:11, accentColor:'#1D9E75', alertColor:'#EF9F27' }
 const SETTINGS_KEY = 'em_sim_settings'
 
-// ─── WORLD INIT PROMPT ───────────────────────────────────────────────────────
+// ─── AAR SECTION CONFIG ───────────────────────────────────────────────────────
+const AAR_SECTIONS = [
+  { key:'situationSummary',       label:'Situation Summary',                    icon:'📍' },
+  { key:'decisionLog',            label:'Decision Log Review',                  icon:'📋' },
+  { key:'resourceCoordination',   label:'Resource & Coordination Effectiveness', icon:'🔗' },
+  { key:'communications',         label:'Communications & Information Mgmt',    icon:'📡' },
+  { key:'strengths',              label:'Strengths',                            icon:'✓' },
+  { key:'criticalGaps',           label:'Critical Gaps',                        icon:'⚠' },
+  { key:'doctrineReferences',     label:'Doctrine References',                  icon:'📖' },
+  { key:'recommendations',        label:'Recommendations',                      icon:'→' },
+]
+
+// ─── WORLD INIT PROMPT ────────────────────────────────────────────────────────
 function buildWorldInitPrompt(scenario, jurisdiction) {
   const sc  = SCENARIOS[scenario]
   const jc  = JURISDICTION_CONTEXT[jurisdiction]
@@ -347,7 +358,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 }`
 }
 
-// ─── MAIN SYSTEM PROMPT ──────────────────────────────────────────────────────
+// ─── MAIN SYSTEM PROMPT ───────────────────────────────────────────────────────
 function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playerName, role) {
   const sc = SCENARIOS[scenario]
   const jc = JURISDICTION_CONTEXT[jurisdiction]
@@ -360,10 +371,10 @@ function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playe
   }
 
   const scenarioSpecific = {
-    wildfire: 'This is a wind-driven wildfire with structure-to-structure spread. Key pressure points: air resource allocation, evacuation route management, shelter capacity, public warning systems, and mutual aid coordination. Smoke and fire behavior modeling are critical.',
+    wildfire: 'This is a wind-driven wildfire with structure-to-structure spread. Key pressure points: air resource allocation, evacuation route management, shelter capacity, public warning systems, and mutual aid coordination.',
     winter:   'This is a cascading infrastructure failure driven by extreme cold. Key pressure points: power restoration prioritization, warming shelter activation and capacity, vulnerable population welfare checks, road clearance, fuel supply for hospitals and generators.',
-    rdd:      'This is a radiological dispersal device event. Key pressure points: hot zone establishment, federal agency coordination (FBI as LFA for terrorism, FEMA for consequence management, NRC, EPA FRMAC), decontamination of self-referred patients, public messaging to prevent panic. Reference the Nuclear/Radiological Incident Annex and FEMA P-1017.',
-    train:    'This is a combined MCI and hazmat event. Key pressure points: unified command establishment bridging MCI and hazmat doctrine, railroad company cooperation, simultaneous triage and hazmat containment, LEPC activation, EPA coordination. The railroad company will resist releasing the manifest.',
+    rdd:      'This is a radiological dispersal device event. Key pressure points: hot zone establishment, federal agency coordination (FBI as LFA for terrorism, FEMA for consequence management, NRC, EPA FRMAC), decontamination of self-referred patients, public messaging to prevent panic.',
+    train:    'This is a combined MCI and hazmat event. Key pressure points: unified command establishment bridging MCI and hazmat doctrine, railroad company cooperation, simultaneous triage and hazmat containment, LEPC activation, EPA coordination.',
   }
 
   const locationBlock = worldState
@@ -390,13 +401,16 @@ RULES:
 - Generate 1-2 new field dispatch items after each consequence using local agency names and local geography.
 - Embed NIMS/ICS/ESF/FEMA doctrine in realism — don't lecture.
 - Generate 3-4 realistic fictional news headlines reflecting current incident state and local media outlets.
-- When a dispatch event has a specific physical location, include it as a map pin. Generate 0-2 pins per turn. Coordinates must be accurate for ${worldState?.location || jurisdiction}.
+- When a dispatch event has a specific physical location, include it as a map pin. Generate 0-2 pins per turn.
 ${playerName ? `PLAYER NAME: ${playerName} — on ENDEX, address them by name in the AAR opening.` : ''}
 ROLE: ${role || 'EOC Director'} — ${ROLES[role] || ROLES['EOC Director']}
-Evaluate all decisions from the perspective of this role. Surface complications appropriate to this role's responsibilities and span of control. On ENDEX, calibrate the AAR to this role's specific doctrine, coordination responsibilities, and performance expectations.- On ENDEX: thorough AAR covering: (1) command element continuity, (2) continuity decisions made or that should have been made, (3) resource and coordination effectiveness, (4) communications and information management, (5) strengths, (6) critical gaps, (7) relevant doctrine references, (8) specific recommendations calibrated to this jurisdiction type.
+Evaluate all decisions from the perspective of this role.
+
+ON ENDEX: Return a structured AAR in the "aar" field with exactly these 8 sections. Be specific, direct, and calibrated to the role and jurisdiction. Do not pad. Do not soften. Each section should be 2-5 sentences of substantive assessment.
+
 - Never break character.
 
-RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
+STANDARD TURN RESPONSE FORMAT — no preamble, no markdown:
 {
   "time": "simulated time",
   "consequence": "3-5 sentence consequence narrative",
@@ -421,19 +435,173 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown:
   }
 }
 
-On ENDEX use same format with full AAR in consequence field, empty headlines and pins arrays.`
+ENDEX RESPONSE FORMAT — use this exact format when player types ENDEX:
+{
+  "time": "final simulated time",
+  "consequence": "One sentence: ENDEX — scenario complete.",
+  "situation": "ENDEX",
+  "dispatches": [],
+  "prompt": "",
+  "headlines": [],
+  "pins": [],
+  "lifelines": {
+    "safety":    { "status": "GREEN | YELLOW | RED", "reason": "final status" },
+    "food":      { "status": "GREEN | YELLOW | RED", "reason": "final status" },
+    "health":    { "status": "GREEN | YELLOW | RED", "reason": "final status" },
+    "energy":    { "status": "GREEN | YELLOW | RED", "reason": "final status" },
+    "comms":     { "status": "GREEN | YELLOW | RED", "reason": "final status" },
+    "transport": { "status": "GREEN | YELLOW | RED", "reason": "final status" },
+    "hazmat":    { "status": "GREEN | YELLOW | RED", "reason": "final status" },
+    "water":     { "status": "GREEN | YELLOW | RED", "reason": "final status" }
+  },
+  "aar": {
+    "situationSummary": "What happened, how it evolved, where it ended. Specific to this location and scenario.",
+    "decisionLog": "Assessment of the key decisions made — timing, quality, what was right, what was wrong.",
+    "resourceCoordination": "What was requested, what arrived, what gaps remained, how coordination performed.",
+    "communications": "Accuracy, timeliness, interoperability — what worked and what failed.",
+    "strengths": "Specific things the player did well, grounded in their actual actions this session.",
+    "criticalGaps": "Specific failures, delays, or missed actions — no softening.",
+    "doctrineReferences": "Relevant NIMS/ICS/NRF/ESF references tied directly to what happened in this scenario.",
+    "recommendations": "Specific, actionable improvements calibrated to this role and jurisdiction. Not generic."
+  }
+}`
 }
 
-const SAVE_KEY = 'em_sim_v13'
+const SAVE_KEY = 'em_sim_v14'
 
-  const defaultState = {
+const defaultState = {
   screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'', role:'EOC Director',
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:DEFAULT_LIFELINES, headlines:[],
-  dynamicPins:[], worldState:null,
+  dynamicPins:[], worldState:null, aar:null,
 }
 
 const sitColors = { STABLE:'#1D9E75', DEVELOPING:'#EF9F27', CRITICAL:'#D85A30', DETERIORATING:'#E24B4A', ENDEX:'#888' }
+
+// ─── AAR DISPLAY COMPONENT ────────────────────────────────────────────────────
+function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName, turns, simTime, onReset, fs, ac, al }) {
+  const [activeSection, setActiveSection] = useState(null)
+
+  function downloadAAR() {
+    const scenarioName = SCENARIOS[scenario]?.name || scenario
+    const date = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
+    const time = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' })
+
+    let text = `NEXUS EOC — AFTER-ACTION REVIEW\n`
+    text += `${'='.repeat(60)}\n\n`
+    text += `SCENARIO:     ${scenarioName}\n`
+    text += `JURISDICTION: ${jurisdiction}\n`
+    text += `ROLE:         ${role}\n`
+    text += `DIFFICULTY:   ${difficulty}\n`
+    if (playerName) text += `COMMANDER:    ${playerName}\n`
+    text += `TURNS:        ${turns}\n`
+    text += `SIM TIME:     ${simTime}\n`
+    text += `GENERATED:    ${date} ${time}\n\n`
+    text += `${'='.repeat(60)}\n\n`
+
+    AAR_SECTIONS.forEach(s => {
+      if (aar[s.key]) {
+        text += `${s.label.toUpperCase()}\n`
+        text += `${'-'.repeat(s.label.length)}\n`
+        text += `${aar[s.key]}\n\n`
+      }
+    })
+
+    text += `${'='.repeat(60)}\n`
+    text += `NEXUS EOC — nexuseoc.com\n`
+
+    const blob = new Blob([text], { type:'text/plain' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const scenarioName = SCENARIOS[scenario]?.name || scenario
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', fontFamily:'JetBrains Mono, monospace' }}>
+
+      {/* AAR HEADER */}
+      <div style={{ padding:'12px 16px', borderBottom:'0.5px solid #2a2a2a', background:'#0a0a0a', flexShrink:0 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+          <div>
+            <div style={{ fontSize:9, color:ac, letterSpacing:'0.15em', textTransform:'uppercase', marginBottom:4 }}>
+              After-Action Review — ENDEX
+            </div>
+            <div style={{ fontSize:fs+2, fontWeight:700, color:'#ddd', letterSpacing:'0.04em' }}>
+              {scenarioName}
+            </div>
+            <div style={{ fontSize:fs-1, color:'#555', marginTop:2 }}>
+              {jurisdiction} · {role} · {difficulty} · {turns} turn{turns !== 1 ? 's' : ''} · {simTime}
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <button onClick={downloadAAR}
+              style={{ padding:'5px 12px', fontSize:fs-1, color:ac, border:`0.5px solid ${ac}`, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3, letterSpacing:'0.06em' }}>
+              ↓ Download
+            </button>
+            <button onClick={onReset}
+              style={{ padding:'5px 12px', fontSize:fs-1, color:'#555', border:'0.5px solid #333', background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3 }}>
+              ↩ New Scenario
+            </button>
+          </div>
+        </div>
+
+        {/* Section nav tabs */}
+        <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginTop:8 }}>
+          <button
+            onClick={() => setActiveSection(null)}
+            style={{ padding:'3px 8px', fontSize:9, cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:2, letterSpacing:'0.06em', border:`0.5px solid ${activeSection === null ? ac : '#2a2a2a'}`, background:activeSection === null ? ac+'18' : 'transparent', color:activeSection === null ? ac : '#444' }}>
+            ALL
+          </button>
+          {AAR_SECTIONS.map(s => (
+            <button key={s.key}
+              onClick={() => setActiveSection(activeSection === s.key ? null : s.key)}
+              style={{ padding:'3px 8px', fontSize:9, cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:2, letterSpacing:'0.04em', border:`0.5px solid ${activeSection === s.key ? ac : '#2a2a2a'}`, background:activeSection === s.key ? ac+'18' : 'transparent', color:activeSection === s.key ? ac : '#444' }}>
+              {s.icon} {s.label.split(' ')[0]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* AAR BODY */}
+      <div style={{ flex:1, overflowY:'auto', padding:'16px' }}>
+        {AAR_SECTIONS.filter(s => !activeSection || s.key === activeSection).map((s, idx) => {
+          const content = aar[s.key]
+          if (!content) return null
+
+          // Special rendering for criticalGaps and strengths — split on periods for scannable list
+          const isListSection = s.key === 'strengths' || s.key === 'criticalGaps' || s.key === 'recommendations'
+          const isBorderRed   = s.key === 'criticalGaps'
+          const isBorderGreen = s.key === 'strengths'
+          const borderColor   = isBorderRed ? '#E24B4A' : isBorderGreen ? '#1D9E75' : '#2a2a2a'
+
+          return (
+            <div key={s.key} style={{ marginBottom:activeSection ? 0 : 20, padding:'14px 16px', border:`0.5px solid ${borderColor}`, borderLeft:`3px solid ${borderColor}`, borderRadius:4, background:'#080808' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+                <span style={{ fontSize:14 }}>{s.icon}</span>
+                <span style={{ fontSize:9, fontWeight:700, color: isBorderRed ? '#E24B4A' : isBorderGreen ? '#1D9E75' : '#555', textTransform:'uppercase', letterSpacing:'0.12em' }}>
+                  {s.label}
+                </span>
+                {idx === 0 && !activeSection && (
+                  <span style={{ marginLeft:'auto', fontSize:9, color:'#2a2a2a', letterSpacing:'0.06em' }}>
+                    {`${AAR_SECTIONS.length} sections`}
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize:fs, color:'#888', lineHeight:1.9 }}>
+                {content}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 function useHorizDrag(containerRef, onUpdate) {
   const drag = useRef(null)
@@ -620,6 +788,7 @@ function SettingsPanel({ settings, onChange, onClose }) {
     </div>
   )
 }
+
 function EndexFeedback({ scenario, role, jurisdiction, difficulty, turns, fs, ac, al }) {
   const [rating, setRating]       = useState(0)
   const [aiReal, setAiReal]       = useState('')
@@ -656,8 +825,6 @@ function EndexFeedback({ scenario, role, jurisdiction, difficulty, turns, fs, ac
   return (
     <div style={{ marginTop:16, padding:'14px', border:'0.5px solid #222', borderRadius:6, background:'#0d0d0d' }}>
       <div style={{ fontSize:fs-1, color:'#555', marginBottom:12, textTransform:'uppercase', letterSpacing:'0.08em' }}>Session Feedback — Optional</div>
-
-      {/* Star rating */}
       <div style={{ marginBottom:12 }}>
         <div style={{ fontSize:fs-2, color:'#444', marginBottom:6 }}>Overall experience</div>
         <div style={{ display:'flex', gap:6 }}>
@@ -669,8 +836,6 @@ function EndexFeedback({ scenario, role, jurisdiction, difficulty, turns, fs, ac
           ))}
         </div>
       </div>
-
-      {/* AI realistic */}
       <div style={{ marginBottom:12 }}>
         <div style={{ fontSize:fs-2, color:'#444', marginBottom:6 }}>Was the AI evaluation realistic?</div>
         <div style={{ display:'flex', gap:6 }}>
@@ -679,8 +844,6 @@ function EndexFeedback({ scenario, role, jurisdiction, difficulty, turns, fs, ac
           ))}
         </div>
       </div>
-
-      {/* AAR useful */}
       <div style={{ marginBottom:12 }}>
         <div style={{ fontSize:fs-2, color:'#444', marginBottom:6 }}>Was the after-action review useful?</div>
         <div style={{ display:'flex', gap:6 }}>
@@ -689,15 +852,12 @@ function EndexFeedback({ scenario, role, jurisdiction, difficulty, turns, fs, ac
           ))}
         </div>
       </div>
-
-      {/* Comments */}
       <div style={{ marginBottom:12 }}>
         <div style={{ fontSize:fs-2, color:'#444', marginBottom:6 }}>What could be improved? (optional)</div>
         <textarea value={comments} onChange={e => setComments(e.target.value)}
           placeholder="Any feedback..."
           style={{ width:'100%', height:60, resize:'none', background:'#0a0a0a', border:'0.5px solid #222', color:'#888', fontSize:fs-1, fontFamily:'JetBrains Mono, monospace', padding:'6px 8px', borderRadius:3, outline:'none', boxSizing:'border-box' }}/>
       </div>
-
       <button onClick={submit} disabled={!rating || sending}
         style={{ padding:'6px 16px', fontSize:fs-1, fontFamily:'JetBrains Mono, monospace', color:rating?ac:'#444', border:`0.5px solid ${rating?ac:'#333'}`, background:'transparent', cursor:rating?'pointer':'not-allowed', borderRadius:3, opacity:sending?0.6:1 }}>
         {sending ? 'Sending...' : 'Submit Feedback'}
@@ -705,20 +865,21 @@ function EndexFeedback({ scenario, role, jurisdiction, difficulty, turns, fs, ac
     </div>
   )
 }
+
 export default function App() {
-  const [state, setState]           = useState(null)
-  const [loading, setLoading]       = useState(false)
+  const [state, setState]             = useState(null)
+  const [loading, setLoading]         = useState(false)
   const [initLoading, setInitLoading] = useState(false)
-  const [input, setInput]           = useState('')
+  const [input, setInput]             = useState('')
   const [inputAreaHeight, setInputAreaHeight] = useState(80)
-  const [boundaries, setBoundaries] = useState([14, 32, 80])
-  const [leftBounds, setLeftBounds] = useState([40, 70])
-  const [rightSplit, setRightSplit] = useState(45)
+  const [boundaries, setBoundaries]   = useState([14, 32, 80])
+  const [leftBounds, setLeftBounds]   = useState([40, 70])
+  const [rightSplit, setRightSplit]   = useState(45)
   const [showSettings, setShowSettings] = useState(false)
-  const [activeInfo, setActiveInfo] = useState(null)
-  const [activeESFs, setActiveESFs] = useState({})
+  const [activeInfo, setActiveInfo]   = useState(null)
+  const [activeESFs, setActiveESFs]   = useState({})
   const [showEndDialog, setShowEndDialog] = useState(false)
-  const [settings, setSettings]     = useState(() => {
+  const [settings, setSettings]       = useState(() => {
     try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}') } }
     catch { return DEFAULT_SETTINGS }
   })
@@ -758,8 +919,10 @@ export default function App() {
   }, [state?.terminal])
 
   useEffect(() => {
-    if (state?.screen === 'game') setTimeout(() => inputRef.current?.focus(), 100)
-  }, [state?.screen])
+    if (state?.screen === 'game' && state?.situation !== 'ENDEX') {
+      setTimeout(() => inputRef.current?.focus(), 100)
+    }
+  }, [state?.screen, state?.situation])
 
   const onColDown = useHorizDrag(containerRef, (idx, pct) => {
     setBoundaries(prev => {
@@ -801,7 +964,6 @@ export default function App() {
   const ac = settings.accentColor
   const al = settings.alertColor
 
-  // ─── WORLD INIT CALL ───────────────────────────────────────────────────────
   async function initWorld(scenarioKey, jurisdiction) {
     const res = await fetch('/api/chat', {
       method:'POST', headers:{ 'Content-Type':'application/json' },
@@ -815,47 +977,36 @@ export default function App() {
     return JSON.parse(raw.replace(/```json|```/g,'').trim())
   }
 
-  // ─── START SCENARIO ────────────────────────────────────────────────────────
   async function startScenario(scenarioKey) {
     const sc = SCENARIOS[scenarioKey]
     const jurisdiction = state.jurisdiction
     setActiveESFs({})
     setInitLoading(true)
     if (typeof window !== 'undefined' && window.posthog) {
-  window.posthog.capture('scenario_launched', {
-    scenario: scenarioKey,
-    jurisdiction: state.jurisdiction,
-    difficulty: state.difficulty,
-  })
-}
-    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, role: state.role,
-  ...(state.playerName ? { player: state.playerName } : {}),
-})
+      window.posthog.capture('scenario_launched', { scenario: scenarioKey, jurisdiction: state.jurisdiction, difficulty: state.difficulty })
+    }
+    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, role: state.role, ...(state.playerName ? { player: state.playerName } : {}) })
 
-    // Show the game screen immediately with a loading state
     update({
       screen:'game', scenario:scenarioKey,
       dispatches:[], terminal:[
-        { type:'header',  text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${state.difficulty}` },
-        { type:'system',  text:'Generating scenario world...' },
+        { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${state.difficulty}` },
+        { type:'system', text:'Generating scenario world...' },
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
       notepad:'', lifelines:DEFAULT_LIFELINES, headlines:[], dynamicPins:[],
-      worldState:null,
+      worldState:null, aar:null,
     })
 
     try {
       const world = await initWorld(scenarioKey, jurisdiction)
-
-      // Build initial dispatches and pins from world response
       const initDispatches = (world.dispatches || []).map((text, i) => ({ id:i, text, turn:0 }))
       const initPins = (world.pins || []).map((p, i) => ({ ...p, id: `init-${i}` }))
-
       update({
         worldState: world,
         dispatches: initDispatches,
         terminal: [
-          { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${state.difficulty} — ${(state.role||'EOC Director').toUpperCase()}${state.playerName ? ` — ${state.playerName.toUpperCase()}` : ''}` },
+          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${state.difficulty} — ${(state.role||'EOC Director').toUpperCase()}${state.playerName ? ` — ${state.playerName.toUpperCase()}` : ''}` },
           { type:'system',   text:'Type your decisions as the EM on scene. Be specific. Type ENDEX for AAR.' },
           { type:'divider' },
           { type:'narrator', text:world.openingNarrative + ' What is your first action?' },
@@ -863,7 +1014,6 @@ export default function App() {
         dynamicPins: initPins,
       })
     } catch(e) {
-      // Fallback: use generic opening if world init fails
       update({
         terminal: [
           { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${state.difficulty}` },
@@ -879,21 +1029,22 @@ export default function App() {
     setTimeout(() => inputRef.current?.focus(), 100)
   }
 
-  // ─── SEND ACTION ───────────────────────────────────────────────────────────
   async function sendAction() {
     if (!input.trim() || loading || !state) return
     const action = input.trim()
-const isEndex = action.toUpperCase() === 'ENDEX'
-setInput(''); setLoading(true)
-    
+    const isEndex = action.toUpperCase() === 'ENDEX'
+    setInput(''); setLoading(true)
+
     posthog.capture(isEndex ? 'scenario_ended' : 'action_submitted', {
-  scenario: state.scenario, jurisdiction: state.jurisdiction,
-  difficulty: state.difficulty, turn: state.turn, role: state.role,
-  ...(state.playerName ? { player: state.playerName } : {}),
-})
+      scenario: state.scenario, jurisdiction: state.jurisdiction,
+      difficulty: state.difficulty, turn: state.turn, role: state.role,
+      ...(state.playerName ? { player: state.playerName } : {}),
+    })
+
     const newTerm = [...state.terminal, { type:'player', text:`> ${action}` }]
     update({ terminal:newTerm })
     const msgs = [...state.history, { role:'user', content:action }]
+
     try {
       const res  = await fetch('/api/chat', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
@@ -906,25 +1057,24 @@ setInput(''); setLoading(true)
       const raw  = data.content?.[0]?.text || ''
       let parsed
       try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
-      catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'What is your next action?', lifelines:state.lifelines, headlines:[], pins:[] } }
+      catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'What is your next action?', lifelines:state.lifelines, headlines:[], pins:[], aar:null } }
 
       const nextTurn   = state.turn + 1
       if (typeof window !== 'undefined' && window.posthog) {
-  window.posthog.capture('turn_completed', {
-    scenario: state.scenario,
-    jurisdiction: state.jurisdiction,
-    difficulty: state.difficulty,
-    turn: nextTurn,
-  })
-}
+        window.posthog.capture('turn_completed', { scenario: state.scenario, jurisdiction: state.jurisdiction, difficulty: state.difficulty, turn: nextTurn })
+      }
+
       const newHistory = [...msgs, { role:'assistant', content:JSON.stringify(parsed) }]
-      const addedTerm  = [
+      const resolvedSituation = isEndex || parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') ? 'ENDEX' : (parsed.situation||'DEVELOPING')
+
+      const addedTerm = [
         ...newTerm,
         { type:'time',        text:parsed.time },
         { type:'consequence', text:parsed.consequence },
-        parsed.situation !== 'ENDEX' ? { type:'prompt', text:parsed.prompt } : null,
+        resolvedSituation !== 'ENDEX' ? { type:'prompt', text:parsed.prompt } : null,
         { type:'divider' },
       ].filter(Boolean)
+
       const newDispatches = parsed.dispatches?.length
         ? [...parsed.dispatches.map((text,i) => ({ id:Date.now()+i, text, turn:nextTurn })), ...state.dispatches.slice(0,6)]
         : state.dispatches
@@ -934,18 +1084,21 @@ setInput(''); setLoading(true)
       const newDynamicPins = parsed.pins?.length
         ? [...(state.dynamicPins||[]), ...parsed.pins.map((p,i) => ({ ...p, id:`dyn-${Date.now()}-${i}`, turn:nextTurn }))]
         : (state.dynamicPins||[])
-const resolvedSituation = isEndex || parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') ? 'ENDEX' : (parsed.situation||'DEVELOPING')
-update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
-               simTime:parsed.time||state.simTime, situation:resolvedSituation,
-               turn:nextTurn, lifelines:parsed.lifelines||state.lifelines,
-               headlines:newHeadlines, dynamicPins:newDynamicPins })
 
-      if (parsed.situation === 'ENDEX' && typeof window !== 'undefined' && window.posthog) {
+      update({
+        terminal:addedTerm, history:newHistory, dispatches:newDispatches,
+        simTime:parsed.time||state.simTime, situation:resolvedSituation,
+        turn:nextTurn, lifelines:parsed.lifelines||state.lifelines,
+        headlines:newHeadlines, dynamicPins:newDynamicPins,
+        aar: parsed.aar || state.aar,
+      })
+
+      if (resolvedSituation === 'ENDEX' && typeof window !== 'undefined' && window.posthog) {
         window.posthog.capture('scenario_completed', {
-  scenario: state.scenario, jurisdiction: state.jurisdiction,
-  difficulty: state.difficulty, total_turns: nextTurn, role: state.role,
-  ...(state.playerName ? { player: state.playerName } : {}),
-})
+          scenario: state.scenario, jurisdiction: state.jurisdiction,
+          difficulty: state.difficulty, total_turns: nextTurn, role: state.role,
+          ...(state.playerName ? { player: state.playerName } : {}),
+        })
       }
     } catch(e) {
       update({ terminal:[...newTerm, { type:'system', text:`[ERROR: ${e.message}]` }] })
@@ -966,273 +1119,197 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
   if (!state) return <div style={{ color:'#888', padding:'2rem', fontFamily:'monospace' }}>Loading...</div>
 
   // ─── SETUP SCREEN ──────────────────────────────────────────────────────────
- if (state.screen === 'setup') {
+  if (state.screen === 'setup') {
     const sac = '#1D9E75'
-    const sal = '#EF9F27'
     return (
-    <div style={{ minHeight:'100vh', fontFamily:'JetBrains Mono, monospace', display:'flex', flexDirection:'column', position:'relative' }}>
-
-      {/* FULL PAGE BACKGROUND IMAGE */}
-      <div style={{ position:'fixed', inset:0, zIndex:0,
-        backgroundImage:'url(/bg-map.png)',
-        backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }}/>
-      {/* Dark overlay so content stays readable */}
-      <div style={{ position:'fixed', inset:0, zIndex:1, background:'rgba(4,8,6,0.82)' }}/>
-      {/* Grid overlay */}
-      <div style={{ position:'fixed', inset:0, zIndex:1,
-        backgroundImage:'linear-gradient(rgba(29,158,117,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(29,158,117,0.04) 1px, transparent 1px)',
-        backgroundSize:'40px 40px', pointerEvents:'none' }}/>
-
-      {/* All content sits above overlays */}
-      <div style={{ position:'relative', zIndex:2, display:'flex', flexDirection:'column', minHeight:'100vh' }}>
-
-        {/* HERO */}
-        <div style={{ borderBottom:'0.5px solid rgba(29,158,117,0.15)' }}>
-          {[{top:10,left:10,borderWidth:'1px 0 0 1px'},{top:10,right:10,borderWidth:'1px 1px 0 0'}].map((s,i) => (
-            <div key={i} style={{ position:'absolute', width:16, height:16, borderStyle:'solid', borderColor:ac, opacity:0.5, ...s }}/>
-          ))}
-
-          {/* Top status bar */}
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 24px', borderBottom:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.6)' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:9, color:'#6aaa80', letterSpacing:'0.12em' }}>
-              NEXUS EOC — SIMULATED EMERGENCY OPERATIONS PLATFORM
-            </div>
-            <div style={{ display:'flex', gap:24 }}>
-              {[['SYSTEM STATUS','● OPERATIONAL'],['NETWORK','SECURE'],['DATA FEED','LIVE'],['AI ENGINE','ONLINE']].map(([k,v]) => (
-                <div key={k} style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:1 }}>
-                  <span style={{ fontSize:8, color:'#5a9a70', letterSpacing:'0.1em' }}>{k}</span>
-                  <span style={{ fontSize:9, color:ac, letterSpacing:'0.08em' }}>{v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Hero content */}
-          <div style={{ maxWidth:1200, margin:'0 auto', width:'100%', boxSizing:'border-box', padding:'28px 32px 24px', display:'grid', gridTemplateColumns:'1fr auto', gap:40, alignItems:'start' }}>
-            <div>
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-                <div style={{ width:24, height:'0.5px', background:sac }}/>
-                <span style={{ fontSize:9, color:sac, letterSpacing:'0.2em', textTransform:'uppercase' }}>Simulated Emergency Operations Platform</span>
+      <div style={{ minHeight:'100vh', fontFamily:'JetBrains Mono, monospace', display:'flex', flexDirection:'column', position:'relative' }}>
+        <div style={{ position:'fixed', inset:0, zIndex:0, backgroundImage:'url(/bg-map.png)', backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }}/>
+        <div style={{ position:'fixed', inset:0, zIndex:1, background:'rgba(4,8,6,0.82)' }}/>
+        <div style={{ position:'fixed', inset:0, zIndex:1, backgroundImage:'linear-gradient(rgba(29,158,117,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(29,158,117,0.04) 1px, transparent 1px)', backgroundSize:'40px 40px', pointerEvents:'none' }}/>
+        <div style={{ position:'relative', zIndex:2, display:'flex', flexDirection:'column', minHeight:'100vh' }}>
+          <div style={{ borderBottom:'0.5px solid rgba(29,158,117,0.15)' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 24px', borderBottom:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.6)' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:9, color:'#6aaa80', letterSpacing:'0.12em' }}>
+                NEXUS EOC — SIMULATED EMERGENCY OPERATIONS PLATFORM
               </div>
-              <h1 style={{ fontSize:32, fontWeight:700, lineHeight:1.05, margin:'0 0 6px', color:'#e8f5f0', letterSpacing:'0.04em' }}>
-                NEXUS EOC 
-              </h1>
-              <p style={{ fontSize:13, color:'#5aaa80', letterSpacing:'0.04em', margin:'0 0 8px', fontWeight:400 }}>Simulated Emergency Operations Platform</p>
-              <p style={{ fontSize:11, color:'#6aba88', lineHeight:1.8, margin:'0 0 20px', maxWidth:500 }}>
-                Scenario-based incident command simulations for emergency managers, EOCs, and response teams.
-              </p>
-              <div style={{ display:'flex', gap:32 }}>
-                {[['TRAIN','Realistic scenarios built for your role'],['DECIDE','Sharpen judgment under pressure'],['COMMAND','Practice ICS doctrine'],['REVIEW','AI after-action every scenario']].map(([label,desc]) => (
-                  <div key={label} style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                    <span style={{ fontSize:9, color:sac, letterSpacing:'0.12em', fontWeight:700 }}>{label}</span>
-                    <span style={{ fontSize:9, color:'#5a8a70', lineHeight:1.5 }}>{desc}</span>
+              <div style={{ display:'flex', gap:24 }}>
+                {[['SYSTEM STATUS','● OPERATIONAL'],['NETWORK','SECURE'],['DATA FEED','LIVE'],['AI ENGINE','ONLINE']].map(([k,v]) => (
+                  <div key={k} style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:1 }}>
+                    <span style={{ fontSize:8, color:'#5a9a70', letterSpacing:'0.1em' }}>{k}</span>
+                    <span style={{ fontSize:9, color:sac, letterSpacing:'0.08em' }}>{v}</span>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* System stats panel */}
-            <div style={{ minWidth:180, border:'0.5px solid rgba(29,158,117,0.2)', borderRadius:3, background:'rgba(4,8,6,0.75)', padding:'10px 14px' }}>
-              {[['SCENARIOS','10 LOADED'],['JURISDICTIONS','6 TYPES'],['DIFFICULTY','5 LEVELS'],['AAR','AI-POWERED'],['VERSION','2.0']].map(([k,v]) => (
-                <div key={k} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'0.5px solid rgba(29,158,117,0.08)' }}>
-                  <span style={{ fontSize:8, color:'#5a9a70', letterSpacing:'0.1em' }}>{k}</span>
-                  <span style={{ fontSize:8, color:sac, letterSpacing:'0.08em' }}>{v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* MAIN CONTENT */}
-        <div style={{ flex:1, overflowY:'auto', padding:'20px 32px' }}>
-          <div style={{ maxWidth:1200, margin:'0 auto', width:'100%', boxSizing:'border-box' }}>
-
-            {/* SCENARIO SELECTION */}
-            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-              <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Select Scenario</span>
-              <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
-              {state.scenario && <span style={{ fontSize:9, color:sac, letterSpacing:'0.06em' }}>✓ {SCENARIOS[state.scenario].name}</span>}
-            </div>
-
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:6, marginBottom:20 }}>
-              {Object.entries(SCENARIOS).map(([key, sc]) => {
-                const selected = state.scenario === key
-                return (
-                  <button key={key} onClick={() => update({ scenario:key })}
-                    style={{ textAlign:'left', padding:'14px 12px', border:`0.5px solid ${selected?sac:'rgba(29,158,117,0.18)'}`, borderLeft:`${selected?'3px':'0.5px'} solid ${selected?sac:'rgba(29,158,117,0.18)'}`, background:selected?'rgba(29,158,117,0.12)':'rgba(4,8,6,0.65)', cursor:'pointer', borderRadius:3, outline:'none', position:'relative' }}
-                    onMouseEnter={e => { if(!selected){ e.currentTarget.style.borderColor='rgba(29,158,117,0.4)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}}
-                    onMouseLeave={e => { if(!selected){ e.currentTarget.style.borderColor='rgba(29,158,117,0.18)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}}>
-                    {selected && <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:sac }}/>}
-                    <div style={{ fontSize:24, marginBottom:8, lineHeight:1 }}>{sc.icon}</div>
-                    <div style={{ fontSize:12, fontWeight:700, color:selected?sac:'#6aaa80', marginBottom:5, letterSpacing:'0.06em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
-                    <div style={{ fontSize:11, color:'#ccc', lineHeight:1.7 }}>{sc.desc}</div>
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* CONFIGURATION */}
-            {/* ROLE SELECTOR */}
-            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-              <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Role</span>
-              <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
-            </div>
-            <div style={{ marginBottom:16 }}>
-              <select value={state.role||'EOC Director'} onChange={e => update({ role:e.target.value })}
-                style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
-                {Object.entries(ROLE_GROUPS).map(([group, roles]) => (
-                  <optgroup key={group} label={group} style={{ background:'#0a140c', color:'#4a8a68' }}>
-                    {roles.map(r => <option key={r} value={r} style={{ background:'#0a140c' }}>{r}</option>)}
-                  </optgroup>
-                ))}
-              </select>
-              {state.role && (
-                <div style={{ marginTop:6, fontSize:9, color:'#bbb', lineHeight:1.7, paddingLeft:2 }}>
-                  {ROLES[state.role]}
-                </div>
-              )}
-            </div>
-            {/* PLAYER NAME */}
-            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-              <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Commander</span>
-              <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
-            </div>
-            <div style={{ marginBottom:16 }}>
-              <input
-                type="text"
-                placeholder="Enter your name (optional)"
-                value={state.playerName||''}
-                onChange={e => update({ playerName: e.target.value })}
-                maxLength={40}
-                style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none', boxSizing:'border-box' }}
-              />
-              <div style={{ marginTop:6, fontSize:8, color:'#3a6a48', lineHeight:1.6 }}>
-                Your name is used locally to personalize your session only. We collect anonymous play statistics — no personal data is stored.
-              </div>
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-              <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Configuration</span>
-              <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
-            </div>
-
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:16 }}>
+            <div style={{ maxWidth:1200, margin:'0 auto', width:'100%', boxSizing:'border-box', padding:'28px 32px 24px', display:'grid', gridTemplateColumns:'1fr auto', gap:40, alignItems:'start' }}>
               <div>
-                <p style={{ fontSize:9, color:'#6aaa80', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Jurisdiction Type</p>
-                <select value={state.jurisdiction} onChange={e => update({ jurisdiction:e.target.value })}
-                  style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
-                  {JURISDICTIONS.map(j => <option key={j} style={{ background:'#0a140c' }}>{j}</option>)}
-                </select>
-                {state.jurisdiction && (
-                  <div style={{ marginTop:7, fontSize:9, color:'#bbb', lineHeight:1.7, paddingLeft:2 }}>
-                    {JURISDICTION_CONTEXT[state.jurisdiction].desc}
-                    <div style={{ marginTop:5, color:'#888' }}>
-                      <span style={{ color:sac }}>Constraints: </span>
-                      {JURISDICTION_CONTEXT[state.jurisdiction].constraints}
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+                  <div style={{ width:24, height:'0.5px', background:sac }}/>
+                  <span style={{ fontSize:9, color:sac, letterSpacing:'0.2em', textTransform:'uppercase' }}>Simulated Emergency Operations Platform</span>
+                </div>
+                <h1 style={{ fontSize:32, fontWeight:700, lineHeight:1.05, margin:'0 0 6px', color:'#e8f5f0', letterSpacing:'0.04em' }}>NEXUS EOC</h1>
+                <p style={{ fontSize:13, color:'#5aaa80', letterSpacing:'0.04em', margin:'0 0 8px', fontWeight:400 }}>Simulated Emergency Operations Platform</p>
+                <p style={{ fontSize:11, color:'#6aba88', lineHeight:1.8, margin:'0 0 20px', maxWidth:500 }}>Scenario-based incident command simulations for emergency managers, EOCs, and response teams.</p>
+                <div style={{ display:'flex', gap:32 }}>
+                  {[['TRAIN','Realistic scenarios built for your role'],['DECIDE','Sharpen judgment under pressure'],['COMMAND','Practice ICS doctrine'],['REVIEW','AI after-action every scenario']].map(([label,desc]) => (
+                    <div key={label} style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                      <span style={{ fontSize:9, color:sac, letterSpacing:'0.12em', fontWeight:700 }}>{label}</span>
+                      <span style={{ fontSize:9, color:'#5a8a70', lineHeight:1.5 }}>{desc}</span>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
-              <div>
-                <p style={{ fontSize:9, color:'#6aaa80', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Difficulty</p>
-                <select value={state.difficulty} onChange={e => update({ difficulty:e.target.value })}
+              <div style={{ minWidth:180, border:'0.5px solid rgba(29,158,117,0.2)', borderRadius:3, background:'rgba(4,8,6,0.75)', padding:'10px 14px' }}>
+                {[['SCENARIOS','10 LOADED'],['JURISDICTIONS','6 TYPES'],['DIFFICULTY','5 LEVELS'],['AAR','STRUCTURED'],['VERSION','2.1']].map(([k,v]) => (
+                  <div key={k} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'0.5px solid rgba(29,158,117,0.08)' }}>
+                    <span style={{ fontSize:8, color:'#5a9a70', letterSpacing:'0.1em' }}>{k}</span>
+                    <span style={{ fontSize:8, color:sac, letterSpacing:'0.08em' }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ flex:1, overflowY:'auto', padding:'20px 32px' }}>
+            <div style={{ maxWidth:1200, margin:'0 auto', width:'100%', boxSizing:'border-box' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+                <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Select Scenario</span>
+                <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
+                {state.scenario && <span style={{ fontSize:9, color:sac, letterSpacing:'0.06em' }}>✓ {SCENARIOS[state.scenario].name}</span>}
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:6, marginBottom:20 }}>
+                {Object.entries(SCENARIOS).map(([key, sc]) => {
+                  const selected = state.scenario === key
+                  return (
+                    <button key={key} onClick={() => update({ scenario:key })}
+                      style={{ textAlign:'left', padding:'14px 12px', border:`0.5px solid ${selected?sac:'rgba(29,158,117,0.18)'}`, borderLeft:`${selected?'3px':'0.5px'} solid ${selected?sac:'rgba(29,158,117,0.18)'}`, background:selected?'rgba(29,158,117,0.12)':'rgba(4,8,6,0.65)', cursor:'pointer', borderRadius:3, outline:'none', position:'relative' }}
+                      onMouseEnter={e => { if(!selected){ e.currentTarget.style.borderColor='rgba(29,158,117,0.4)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}}
+                      onMouseLeave={e => { if(!selected){ e.currentTarget.style.borderColor='rgba(29,158,117,0.18)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}}>
+                      {selected && <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:sac }}/>}
+                      <div style={{ fontSize:24, marginBottom:8, lineHeight:1 }}>{sc.icon}</div>
+                      <div style={{ fontSize:12, fontWeight:700, color:selected?sac:'#6aaa80', marginBottom:5, letterSpacing:'0.06em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
+                      <div style={{ fontSize:11, color:'#ccc', lineHeight:1.7 }}>{sc.desc}</div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+                <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Role</span>
+                <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
+              </div>
+              <div style={{ marginBottom:16 }}>
+                <select value={state.role||'EOC Director'} onChange={e => update({ role:e.target.value })}
                   style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
-                  {DIFFICULTIES.map(d => <option key={d} style={{ background:'#0a140c' }}>{d}</option>)}
+                  {Object.entries(ROLE_GROUPS).map(([group, roles]) => (
+                    <optgroup key={group} label={group} style={{ background:'#0a140c', color:'#4a8a68' }}>
+                      {roles.map(r => <option key={r} value={r} style={{ background:'#0a140c' }}>{r}</option>)}
+                    </optgroup>
+                  ))}
                 </select>
-                {state.difficulty && (
-                  <div style={{ marginTop:7, fontSize:9, color:'#bbb', lineHeight:1.7, paddingLeft:2 }}>
-                    {state.difficulty === 'Basic' && 'Generous evaluation. One complication per turn. Good for learning the system.'}
-                    {state.difficulty === 'Moderate' && 'Moderate rigor. Two complications per turn. Realistic resource pressure.'}
-                    {state.difficulty === 'Advanced' && 'Professional rigor. 2-3 complications per turn. Resource constraints are real.'}
-                    {state.difficulty === 'Brutal' && 'Ruthless evaluation. Every vague or delayed decision cascades.'}
-                    {state.difficulty === 'Adaptive' && 'Difficulty scales to your performance. Never lets you get comfortable.'}
-                  </div>
-                )}
+                {state.role && <div style={{ marginTop:6, fontSize:9, color:'#bbb', lineHeight:1.7, paddingLeft:2 }}>{ROLES[state.role]}</div>}
               </div>
-            </div>
-{/* DOCS */}
-            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-              <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Documentation</span>
-              <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
-            </div>
-            <div style={{ display:'flex', gap:8, marginBottom:16 }}>
-              <a href="/NEXUS_EOC_Overview.pdf" target="_blank" rel="noopener noreferrer"
-                style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', border:'0.5px solid rgba(29,158,117,0.25)', borderRadius:3, background:'rgba(4,8,6,0.65)', textDecoration:'none', flex:1 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.5)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.25)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}>
-                <span style={{ fontSize:18 }}>📄</span>
-                <div>
-                  <div style={{ fontSize:10, fontWeight:700, color:'#6aaa80', letterSpacing:'0.06em' }}>PLATFORM OVERVIEW</div>
-                  <div style={{ fontSize:8, color:'#5a9a70', marginTop:2 }}>One-page summary — opens in new tab</div>
-                </div>
-                <span style={{ marginLeft:'auto', fontSize:9, color:'#3a6a48' }}>↗</span>
-              </a>
-              <a href="/NEXUS_EOC_User_Guide.pdf" target="_blank" rel="noopener noreferrer"
-                style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', border:'0.5px solid rgba(29,158,117,0.25)', borderRadius:3, background:'rgba(4,8,6,0.65)', textDecoration:'none', flex:1 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.5)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.25)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}>
-                <span style={{ fontSize:18 }}>📋</span>
-                <div>
-                  <div style={{ fontSize:10, fontWeight:700, color:'#6aaa80', letterSpacing:'0.06em' }}>USER GUIDE</div>
-                  <div style={{ fontSize:8, color:'#5a9a70', marginTop:2 }}>Full interface reference — opens in new tab</div>
-                </div>
-                <span style={{ marginLeft:'auto', fontSize:9, color:'#3a6a48' }}>↗</span>
-              </a>
-            <a href="/NEXUS_EOC_Resource_Guide.xlsx" target="_blank" rel="noopener noreferrer"
-                style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', border:'0.5px solid rgba(29,158,117,0.25)', borderRadius:3, background:'rgba(4,8,6,0.65)', textDecoration:'none', flex:1 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.5)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.25)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}>
-                <span style={{ fontSize:18 }}>📊</span>
-                <div>
-                  <div style={{ fontSize:10, fontWeight:700, color:'#6aaa80', letterSpacing:'0.06em' }}>RESOURCE GUIDE</div>
-                  <div style={{ fontSize:8, color:'#5a9a70', marginTop:2 }}>All reference links by scenario — Excel</div>
-                </div>
-                <span style={{ marginLeft:'auto', fontSize:9, color:'#3a6a48' }}>↓</span>
-              </a>
-            </div>
-            {/* LAUNCH */}
-            <button
-              onClick={() => state.scenario && !initLoading && startScenario(state.scenario)}
-              disabled={!state.scenario || initLoading}
-              style={{ width:'100%', padding:'14px', fontSize:12, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', border:`0.5px solid ${state.scenario?sac:'rgba(29,158,117,0.2)'}`, color:state.scenario?'#040806':'#3a6a48', background:state.scenario?sac:'rgba(4,8,6,0.6)', cursor:(state.scenario&&!initLoading)?'pointer':'not-allowed', fontFamily:'JetBrains Mono, monospace', borderRadius:3, opacity:initLoading?0.6:1 }}>
-              {initLoading ? '⟳  Generating scenario world...' : state.scenario ? `Launch — ${SCENARIOS[state.scenario].name} / ${state.jurisdiction} ↗` : 'Select a scenario to begin'}
-            </button>
 
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+                <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Commander</span>
+                <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
+              </div>
+              <div style={{ marginBottom:16 }}>
+                <input type="text" placeholder="Enter your name (optional)" value={state.playerName||''} onChange={e => update({ playerName: e.target.value })} maxLength={40}
+                  style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none', boxSizing:'border-box' }}/>
+                <div style={{ marginTop:6, fontSize:8, color:'#3a6a48', lineHeight:1.6 }}>Your name is used locally to personalize your session only. We collect anonymous play statistics — no personal data is stored.</div>
+              </div>
+
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+                <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Configuration</span>
+                <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:16 }}>
+                <div>
+                  <p style={{ fontSize:9, color:'#6aaa80', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Jurisdiction Type</p>
+                  <select value={state.jurisdiction} onChange={e => update({ jurisdiction:e.target.value })}
+                    style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
+                    {JURISDICTIONS.map(j => <option key={j} style={{ background:'#0a140c' }}>{j}</option>)}
+                  </select>
+                  {state.jurisdiction && (
+                    <div style={{ marginTop:7, fontSize:9, color:'#bbb', lineHeight:1.7, paddingLeft:2 }}>
+                      {JURISDICTION_CONTEXT[state.jurisdiction].desc}
+                      <div style={{ marginTop:5, color:'#888' }}><span style={{ color:sac }}>Constraints: </span>{JURISDICTION_CONTEXT[state.jurisdiction].constraints}</div>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p style={{ fontSize:9, color:'#6aaa80', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Difficulty</p>
+                  <select value={state.difficulty} onChange={e => update({ difficulty:e.target.value })}
+                    style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
+                    {DIFFICULTIES.map(d => <option key={d} style={{ background:'#0a140c' }}>{d}</option>)}
+                  </select>
+                  {state.difficulty && (
+                    <div style={{ marginTop:7, fontSize:9, color:'#bbb', lineHeight:1.7, paddingLeft:2 }}>
+                      {state.difficulty === 'Basic' && 'Generous evaluation. One complication per turn. Good for learning the system.'}
+                      {state.difficulty === 'Moderate' && 'Moderate rigor. Two complications per turn. Realistic resource pressure.'}
+                      {state.difficulty === 'Advanced' && 'Professional rigor. 2-3 complications per turn. Resource constraints are real.'}
+                      {state.difficulty === 'Brutal' && 'Ruthless evaluation. Every vague or delayed decision cascades.'}
+                      {state.difficulty === 'Adaptive' && 'Difficulty scales to your performance. Never lets you get comfortable.'}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+                <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Documentation</span>
+                <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
+              </div>
+              <div style={{ display:'flex', gap:8, marginBottom:16 }}>
+                {[
+                  { href:'/NEXUS_EOC_Overview.pdf', icon:'📄', label:'PLATFORM OVERVIEW', sub:'One-page summary — opens in new tab', arrow:'↗' },
+                  { href:'/NEXUS_EOC_User_Guide.pdf', icon:'📋', label:'USER GUIDE', sub:'Full interface reference — opens in new tab', arrow:'↗' },
+                  { href:'/NEXUS_EOC_Resource_Guide.xlsx', icon:'📊', label:'RESOURCE GUIDE', sub:'All reference links by scenario — Excel', arrow:'↓' },
+                ].map(d => (
+                  <a key={d.label} href={d.href} target="_blank" rel="noopener noreferrer"
+                    style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', border:'0.5px solid rgba(29,158,117,0.25)', borderRadius:3, background:'rgba(4,8,6,0.65)', textDecoration:'none', flex:1 }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.5)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.25)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}>
+                    <span style={{ fontSize:18 }}>{d.icon}</span>
+                    <div>
+                      <div style={{ fontSize:10, fontWeight:700, color:'#6aaa80', letterSpacing:'0.06em' }}>{d.label}</div>
+                      <div style={{ fontSize:8, color:'#5a9a70', marginTop:2 }}>{d.sub}</div>
+                    </div>
+                    <span style={{ marginLeft:'auto', fontSize:9, color:'#3a6a48' }}>{d.arrow}</span>
+                  </a>
+                ))}
+              </div>
+
+              <button onClick={() => state.scenario && !initLoading && startScenario(state.scenario)} disabled={!state.scenario || initLoading}
+                style={{ width:'100%', padding:'14px', fontSize:12, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', border:`0.5px solid ${state.scenario?sac:'rgba(29,158,117,0.2)'}`, color:state.scenario?'#040806':'#3a6a48', background:state.scenario?sac:'rgba(4,8,6,0.6)', cursor:(state.scenario&&!initLoading)?'pointer':'not-allowed', fontFamily:'JetBrains Mono, monospace', borderRadius:3, opacity:initLoading?0.6:1 }}>
+                {initLoading ? '⟳  Generating scenario world...' : state.scenario ? `Launch — ${SCENARIOS[state.scenario].name} / ${state.jurisdiction} ↗` : 'Select a scenario to begin'}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ borderTop:'0.5px solid rgba(29,158,117,0.15)', background:'rgba(4,8,6,0.92)', padding:'8px 32px', flexShrink:0 }}>
+            <div style={{ maxWidth:1200, margin:'0 auto', width:'100%', display:'flex', gap:0 }}>
+              {[['EOC NETWORK','CONNECTED'],['MODE','TRAINING'],['SCENARIO', state.scenario ? SCENARIOS[state.scenario].name.toUpperCase() : '—'],['JURISDICTION', state.jurisdiction ? state.jurisdiction.toUpperCase() : '—'],['ROLE', state.role ? state.role.toUpperCase() : 'EOC DIRECTOR'],['DIFFICULTY', state.difficulty ? state.difficulty.toUpperCase() : '—'],['STATUS', state.scenario ? 'READY TO LAUNCH' : 'AWAITING SELECTION']].map(([k,v], i, arr) => (
+                <div key={k} style={{ display:'flex', flexDirection:'column', gap:2, paddingRight:24, marginRight:24, borderRight: i < arr.length-1 ? '0.5px solid rgba(29,158,117,0.1)' : 'none' }}>
+                  <span style={{ fontSize:8, color:'#3a6a48', letterSpacing:'0.12em' }}>{k}</span>
+                  <span style={{ fontSize:10, color: k==='STATUS' && state.scenario ? sac : '#5a9a70', letterSpacing:'0.06em' }}>{v}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-
-        {/* BOTTOM STATUS BAR */}
-        <div style={{ borderTop:'0.5px solid rgba(29,158,117,0.15)', background:'rgba(4,8,6,0.92)', padding:'8px 32px', flexShrink:0 }}>
-          <div style={{ maxWidth:1200, margin:'0 auto', width:'100%', display:'flex', gap:0 }}>
-            {[
-              ['EOC NETWORK','CONNECTED'],
-              ['MODE','TRAINING'],
-              ['SCENARIO', state.scenario ? SCENARIOS[state.scenario].name.toUpperCase() : '—'],
-              ['JURISDICTION', state.jurisdiction ? state.jurisdiction.toUpperCase() : '—'],
-              ['ROLE', state.role ? state.role.toUpperCase() : 'EOC DIRECTOR'],
-              ['DIFFICULTY', state.difficulty ? state.difficulty.toUpperCase() : '—'],
-              ['STATUS', state.scenario ? 'READY TO LAUNCH' : 'AWAITING SELECTION'],
-            ].map(([k,v], i, arr) => (
-              <div key={k} style={{ display:'flex', flexDirection:'column', gap:2, paddingRight:24, marginRight:24, borderRight: i < arr.length-1 ? '0.5px solid rgba(29,158,117,0.1)' : 'none' }}>
-                <span style={{ fontSize:8, color:'#3a6a48', letterSpacing:'0.12em' }}>{k}</span>
-                <span style={{ fontSize:10, color: k==='STATUS' && state.scenario ? sac : '#5a9a70', letterSpacing:'0.06em' }}>{v}</span>
-              </div>
-            ))}
-          </div>
+        <div style={{ position:'relative', zIndex:2, textAlign:'center', padding:'10px 32px', borderTop:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.7)' }}>
+          <span style={{ fontSize:8, color:'#2a4a3a', letterSpacing:'0.1em' }}>
+            © {new Date().getFullYear()} NICHOLAS EDWARDS — NEXUS EOC — ALL RIGHTS RESERVED — UNAUTHORIZED REPRODUCTION OR COMMERCIAL USE PROHIBITED
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            <a href="/about.html" style={{ color:'#3a6a48', textDecoration:'none', letterSpacing:'0.1em' }} onMouseEnter={e => e.target.style.color='#1D9E75'} onMouseLeave={e => e.target.style.color='#3a6a48'}>ABOUT</a>
+          </span>
         </div>
+        <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
+      </div>
+    )
+  }
 
-      </div>
-{/* COPYRIGHT FOOTER */}
-      <div style={{ position:'relative', zIndex:2, textAlign:'center', padding:'10px 32px', borderTop:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.7)' }}>
-        <span style={{ fontSize:8, color:'#2a4a3a', letterSpacing:'0.1em' }}>
-  © {new Date().getFullYear()} NICHOLAS EDWARDS — NEXUS EOC — ALL RIGHTS RESERVED — UNAUTHORIZED REPRODUCTION OR COMMERCIAL USE PROHIBITED
-  &nbsp;&nbsp;|&nbsp;&nbsp;
-  <a href="/about.html" style={{ color:'#3a6a48', textDecoration:'none', letterSpacing:'0.1em' }} onMouseEnter={e => e.target.style.color='#1D9E75'} onMouseLeave={e => e.target.style.color='#3a6a48'}>ABOUT</a>
-</span>
-      </div>
-      <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
-    </div>
-  )
-   }
   // ─── GAME SCREEN ───────────────────────────────────────────────────────────
   const divSty    = { width:10, cursor:'col-resize', background:'#161616', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', borderLeft:'0.5px solid #2a2a2a', borderRight:'0.5px solid #2a2a2a' }
   const divInner  = { width:3, height:28, background:'#3a3a3a', borderRadius:2, pointerEvents:'none' }
@@ -1245,15 +1322,13 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
     </div>
   )
 
-  // Map center: use worldState if available, else US center as fallback
   const dynamicPins = state.dynamicPins || []
   const center      = state.worldState?.center || [39.5, -98.35]
   const mapZoom     = state.worldState ? 13 : 4
   const refs        = state.scenario ? SCENARIO_REFS[state.scenario]||[] : []
-
-  // Separate init pins (from world build) vs turn pins (from gameplay)
   const initPins    = dynamicPins.filter(p => p.id?.startsWith('init-'))
   const turnPins    = dynamicPins.filter(p => !p.id?.startsWith('init-'))
+  const isEndex     = state.situation === 'ENDEX'
 
   const termStyles = {
     header:      { color:'#aaa', fontWeight:500, marginBottom:4, fontSize:fs },
@@ -1328,8 +1403,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
               {ESFS.map(esf => {
                 const isActive = !!activeESFs[esf.num]
                 return (
-                  <div key={esf.num}
-                    onClick={() => setActiveESFs(prev => ({ ...prev, [esf.num]: !prev[esf.num] }))}
+                  <div key={esf.num} onClick={() => setActiveESFs(prev => ({ ...prev, [esf.num]: !prev[esf.num] }))}
                     style={{ padding:'5px 8px', borderRadius:5, border:`0.5px solid ${isActive?ac:'#1a1a1a'}`, lineHeight:1.4, cursor:'pointer', background:isActive?ac+'11':'transparent', borderLeft:isActive?`3px solid ${ac}`:'0.5px solid #1a1a1a', transition:'all 0.1s' }}>
                     <div style={{ display:'flex', gap:6, alignItems:'center', marginBottom:2 }}>
                       <span style={{ fontSize:9, color:isActive?ac:al, fontWeight:500, whiteSpace:'nowrap' }}>ESF-{esf.num}</span>
@@ -1377,88 +1451,127 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
 
         <div style={divSty} onMouseDown={e => onColDown(1,e)}><div style={divInner}/></div>
 
-        {/* TERMINAL */}
-        <div style={{ width:`${colW[2]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-          <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', alignItems:'center' }}>
-              {SCENARIOS[state.scenario]?.name}
-              {state.worldState && <span style={{ color:ac, marginLeft:6 }}>— {state.worldState.location}</span>}
-              <InfoBtn panelKey="terminal" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
+        {/* TERMINAL / AAR PANEL */}
+        <div style={{ width:`${colW[2]}%`, display:'flex', flexDirection:'column', border:`0.5px solid ${isEndex && state.aar ? ac+'44' : '#222'}`, borderRadius:8, overflow:'hidden', flexShrink:0, transition:'border-color 0.3s' }}>
+
+          {/* Panel header */}
+          <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
+            <span style={{ fontSize:10, fontWeight:500, color: isEndex && state.aar ? ac : '#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', alignItems:'center' }}>
+              {isEndex && state.aar ? 'After-Action Review' : SCENARIOS[state.scenario]?.name}
+              {!isEndex && state.worldState && <span style={{ color:ac, marginLeft:6 }}>— {state.worldState.location}</span>}
+              {!isEndex && <InfoBtn panelKey="terminal" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />}
             </span>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              <span style={{ fontSize:10, color:'#444' }}>{state.simTime}</span>
-              <span style={{ fontSize:9, padding:'2px 6px', borderRadius:3, fontWeight:500, background:(sitColors[state.situation]||'#888')+'22', color:sitColors[state.situation]||'#888' }}>{state.situation}</span>
-              <div style={{ position:'relative' }}>
-                <button onClick={() => setShowEndDialog(s => !s)}
-                  style={{ fontSize:10, padding:'2px 8px', color:'#555', background:'transparent', border:'0.5px solid #333', cursor:'pointer', fontFamily:'JetBrains Mono, monospace' }}>New</button>
-                {showEndDialog && (
-                  <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, background:'#1a1a1a', border:'0.5px solid #333', borderRadius:6, padding:'10px 12px', zIndex:500, whiteSpace:'nowrap', boxShadow:'0 4px 12px rgba(0,0,0,0.8)' }}>
-                    <div style={{ fontSize:10, color:'#666', marginBottom:8 }}>End scenario?</div>
-                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                      <button onClick={() => { setShowEndDialog(false); setInput('ENDEX'); setTimeout(() => sendAction(), 50) }}
-                        style={{ fontSize:10, padding:'4px 10px', color:al, borderColor:al, textAlign:'left', background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', border:`0.5px solid ${al}` }}>
-                        End with AAR ↗
-                      </button>
-                      <button onClick={() => { setShowEndDialog(false); reset() }}
-                        style={{ fontSize:10, padding:'4px 10px', color:'#555', textAlign:'left', background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', border:'0.5px solid #333' }}>
-                        End without AAR
-                      </button>
+              {!isEndex && <span style={{ fontSize:10, color:'#444' }}>{state.simTime}</span>}
+              {!isEndex && (
+                <span style={{ fontSize:9, padding:'2px 6px', borderRadius:3, fontWeight:500, background:(sitColors[state.situation]||'#888')+'22', color:sitColors[state.situation]||'#888' }}>
+                  {state.situation}
+                </span>
+              )}
+              {isEndex && state.aar && (
+                <span style={{ fontSize:9, padding:'2px 6px', borderRadius:3, fontWeight:500, background:ac+'22', color:ac }}>
+                  ENDEX — {state.turn} TURNS
+                </span>
+              )}
+              {!isEndex && (
+                <div style={{ position:'relative' }}>
+                  <button onClick={() => setShowEndDialog(s => !s)}
+                    style={{ fontSize:10, padding:'2px 8px', color:'#555', background:'transparent', border:'0.5px solid #333', cursor:'pointer', fontFamily:'JetBrains Mono, monospace' }}>New</button>
+                  {showEndDialog && (
+                    <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, background:'#1a1a1a', border:'0.5px solid #333', borderRadius:6, padding:'10px 12px', zIndex:500, whiteSpace:'nowrap', boxShadow:'0 4px 12px rgba(0,0,0,0.8)' }}>
+                      <div style={{ fontSize:10, color:'#666', marginBottom:8 }}>End scenario?</div>
+                      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                        <button onClick={() => { setShowEndDialog(false); setInput('ENDEX'); setTimeout(() => sendAction(), 50) }}
+                          style={{ fontSize:10, padding:'4px 10px', color:al, borderColor:al, textAlign:'left', background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', border:`0.5px solid ${al}` }}>
+                          End with AAR ↗
+                        </button>
+                        <button onClick={() => { setShowEndDialog(false); reset() }}
+                          style={{ fontSize:10, padding:'4px 10px', color:'#555', textAlign:'left', background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', border:'0.5px solid #333' }}>
+                          End without AAR
+                        </button>
+                      </div>
                     </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* AAR display replaces terminal on ENDEX */}
+          {isEndex && state.aar ? (
+            <div style={{ flex:1, minHeight:0, overflow:'hidden', display:'flex', flexDirection:'column' }}>
+              <AARDisplay
+                aar={state.aar}
+                scenario={state.scenario}
+                jurisdiction={state.jurisdiction}
+                difficulty={state.difficulty}
+                role={state.role}
+                playerName={state.playerName}
+                turns={state.turn}
+                simTime={state.simTime}
+                onReset={reset}
+                fs={fs}
+                ac={ac}
+                al={al}
+              />
+              <div style={{ borderTop:'0.5px solid #1a1a1a', padding:'12px 16px', flexShrink:0 }}>
+                <EndexFeedback
+                  scenario={state.scenario} role={state.role} jurisdiction={state.jurisdiction}
+                  difficulty={state.difficulty} turns={state.turn} fs={fs} ac={ac} al={al}
+                />
+              </div>
+            </div>
+          ) : (
+            /* Normal terminal */
+            <>
+              <div ref={termRef} style={{ flex:1, overflowY:'auto', padding:'10px 14px', lineHeight:1.8 }}>
+                {state.terminal.map((line,i) => {
+                  if (!line) return null
+                  if (line.type==='divider') return <hr key={i} style={{ border:'none', borderTop:'0.5px solid #1a1a1a', margin:'8px 0' }}/>
+                  return <div key={i} style={termStyles[line.type]||{ fontSize:fs }}>{line.text}</div>
+                })}
+                {/* Fallback ENDEX if aar not yet populated */}
+                {isEndex && !state.aar && (
+                  <div style={{ marginTop:16, paddingTop:12, borderTop:'0.5px solid #1a1a1a' }}>
+                    <div style={{ fontSize:fs-1, color:'#555', marginBottom:8 }}>Generating AAR...</div>
+                    <button onClick={reset}
+                      style={{ padding:'8px 20px', fontSize:fs, fontWeight:500, color:ac, border:`0.5px solid ${ac}`, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3 }}>
+                      ↩ Return to Mission Select
+                    </button>
+                  </div>
+                )}
+                {(loading || initLoading) && (
+                  <div style={{ color:'#333', fontStyle:'italic', fontSize:fs }}>
+                    {initLoading ? 'Building scenario world...' : 'Evaluating action...'}
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-          <div ref={termRef} style={{ flex:1, overflowY:'auto', padding:'10px 14px', lineHeight:1.8 }}>
-            {state.terminal.map((line,i) => {
-              if (!line) return null
-              if (line.type==='divider') return <hr key={i} style={{ border:'none', borderTop:'0.5px solid #1a1a1a', margin:'8px 0' }}/>
-              return <div key={i} style={termStyles[line.type]||{ fontSize:fs }}>{line.text}</div>
-            })}
-            
-            {state.situation === 'ENDEX' && (
-  <div style={{ marginTop:16, paddingTop:12, borderTop:'0.5px solid #1a1a1a' }}>
-    <button onClick={reset}
-      style={{ padding:'8px 20px', fontSize:fs, fontWeight:500, color:ac, border:`0.5px solid ${ac}`, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3 }}>
-      ↩ Return to Mission Select
-    </button>
-    <EndexFeedback scenario={state.scenario} role={state.role} jurisdiction={state.jurisdiction} difficulty={state.difficulty} turns={state.turn} fs={fs} ac={ac} al={al} />
-  </div>
-)}
-{(loading || initLoading) && <div style={{ color:'#333', fontStyle:'italic', fontSize:fs }}>
-              {initLoading ? 'Building scenario world...' : 'Evaluating action...'}
-            </div>}
-          </div>
-          <div style={{ borderTop:'0.5px solid #222', height:8, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
-            onMouseDown={e => {
-              e.preventDefault()
-              const termEl = termRef.current
-              const startY = e.clientY
-              const startHeight = inputAreaHeight
-              function onMove(ev) {
-                const delta = startY - ev.clientY
-                setInputAreaHeight(Math.max(60, Math.min(400, startHeight + delta)))
-              }
-              function onUp() {
-                window.removeEventListener('mousemove', onMove)
-                window.removeEventListener('mouseup', onUp)
-              }
-              window.addEventListener('mousemove', onMove)
-              window.addEventListener('mouseup', onUp)
-            }}>
-            <div style={{ width:28, height:3, background:'#3a3a3a', borderRadius:2 }}/>
-          </div>
-          <div style={{ padding:'8px 10px', display:'flex', gap:6, height:inputAreaHeight, flexShrink:0 }}>
-            <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
-              placeholder={initLoading ? 'Generating scenario...' : 'Your action...'}
-              disabled={initLoading}
-              style={{ flex:1, resize:'none', lineHeight:1.6, fontSize:fs, background:'#0d0d0d', border:'0.5px solid #222', color:'#ccc', padding:'6px 8px', fontFamily:'JetBrains Mono, monospace', height:'100%', boxSizing:'border-box' }}/>
-            <button onClick={sendAction} disabled={loading||!input.trim()||initLoading}
-              style={{ padding:'6px 14px', fontWeight:500, alignSelf:'stretch', color:ac, borderColor:ac, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', border:`0.5px solid ${ac}`, opacity:(loading||!input.trim()||initLoading)?0.4:1 }}>
-              Execute
-            </button>
-          </div>
-        </div>  
+              <div style={{ borderTop:'0.5px solid #222', height:8, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
+                onMouseDown={e => {
+                  e.preventDefault()
+                  const startY = e.clientY
+                  const startHeight = inputAreaHeight
+                  function onMove(ev) { setInputAreaHeight(Math.max(60, Math.min(400, startHeight + (startY - ev.clientY)))) }
+                  function onUp() { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+                  window.addEventListener('mousemove', onMove)
+                  window.addEventListener('mouseup', onUp)
+                }}>
+                <div style={{ width:28, height:3, background:'#3a3a3a', borderRadius:2 }}/>
+              </div>
+              <div style={{ padding:'8px 10px', display:'flex', gap:6, height:inputAreaHeight, flexShrink:0 }}>
+                <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
+                  placeholder={initLoading ? 'Generating scenario...' : 'Your action...'}
+                  disabled={initLoading}
+                  style={{ flex:1, resize:'none', lineHeight:1.6, fontSize:fs, background:'#0d0d0d', border:'0.5px solid #222', color:'#ccc', padding:'6px 8px', fontFamily:'JetBrains Mono, monospace', height:'100%', boxSizing:'border-box' }}/>
+                <button onClick={sendAction} disabled={loading||!input.trim()||initLoading}
+                  style={{ padding:'6px 14px', fontWeight:500, alignSelf:'stretch', color:ac, borderColor:ac, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', border:`0.5px solid ${ac}`, opacity:(loading||!input.trim()||initLoading)?0.4:1 }}>
+                  Execute
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
         <div style={divSty} onMouseDown={e => onColDown(2,e)}><div style={divInner}/></div>
 
         {/* RIGHT COLUMN */}
@@ -1485,7 +1598,6 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
               <MapContainer center={center} zoom={mapZoom} style={{ height:'100%', width:'100%' }}>
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
                 <MapUpdater center={center}/>
-                {/* Init pins from world build — rendered as static infrastructure */}
                 {initPins.map(pin => (
                   <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT)}>
                     <Popup>
@@ -1497,7 +1609,6 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                     </Popup>
                   </Marker>
                 ))}
-                {/* Turn pins from gameplay */}
                 {turnPins.map(pin => (
                   <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeDynamicIcon(pin.turn)}>
                     <Popup>
@@ -1511,7 +1622,7 @@ update({ terminal:addedTerm, history:newHistory, dispatches:newDispatches,
                 ))}
               </MapContainer>
             </div>
-        </div>
+          </div>
         </div>
       </div>
     </div>
