@@ -1,0 +1,8 @@
+// Extracted configuration data for NEXUS EOC.
+
+export const PIN_COLORS = {
+  EOC:'#1D9E75', HOSPITAL:'#4A90D9', DAM:'#E24B4A', STAGING:'#EF9F27',
+  SHELTER:'#9B59B6', AFFECTED:'#E24B4A', FIRE:'#FF6B35', HAZMAT:'#9B59B6',
+  DEFAULT:'#888', BLOCKED:'#E24B4A'
+}
+
