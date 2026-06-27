@@ -3,6 +3,15 @@ import posthog from 'posthog-js'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { PIN_COLORS } from './data/mapConfig'
+import { JURISDICTION_CONTEXT, JURISDICTIONS } from './data/jurisdictions'
+import { SCENARIO_REFS } from './data/references'
+import { ESFS } from './data/esfs'
+import { PANEL_INFO } from './data/panelInfo'
+import { ROLES, ROLE_GROUPS } from './data/roles'
+import { SCENARIOS, DIFFICULTIES } from './data/scenarios'
+import { LIFELINES, DEFAULT_LIFELINES, LL_COLORS } from './data/lifelines'
+import { AAR_SECTIONS } from './data/aar'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -28,284 +37,21 @@ function makeDynamicIcon(turnNum) {
   return L.divIcon({ html: svg, className: '', iconSize: [28, 40], iconAnchor: [14, 40], popupAnchor: [0, -40] })
 }
 
-const PIN_COLORS = {
-  EOC:'#1D9E75', HOSPITAL:'#4A90D9', DAM:'#E24B4A', STAGING:'#EF9F27',
-  SHELTER:'#9B59B6', AFFECTED:'#E24B4A', FIRE:'#FF6B35', HAZMAT:'#9B59B6',
-  DEFAULT:'#888', BLOCKED:'#E24B4A'
-}
 
-const JURISDICTION_CONTEXT = {
-  'Rural County': {
-    desc: 'A sparsely populated rural county with limited local resources, long response distances, volunteer fire departments, a small county seat, and heavy reliance on mutual aid and state assistance. Population under 30,000.',
-    constraints: 'Minimal hospital capacity (likely one small critical access hospital or none), limited HazMat capability, no urban search and rescue, narrow roads, agricultural land use, possibly no interstate access.',
-    examples: 'Appalachian county in WV or KY, Central Valley CA agricultural county, rural Montana or Wyoming county, Mississippi Delta county.',
-  },
-  'Mid-Size City': {
-    desc: 'A mid-size city of 100,000-400,000 with a professional fire department, dedicated EOC, one or two regional hospitals, and established mutual aid agreements with surrounding counties.',
-    constraints: 'Moderate resource base, some specialized capabilities (HazMat, SAR), urban-rural interface issues at city limits, may lack USAR or DMORT assets locally.',
-    examples: 'Wilmington DE, Shreveport LA, Fayetteville NC, Huntsville AL, Green Bay WI, Duluth MN, Pueblo CO, Macon GA, Rockford IL, Beaumont TX, Erie PA, Peoria IL, Springfield MO, Davenport IA, Lansing MI.',
-  },
-  'Large Urban Metro': {
-    desc: 'A major metropolitan area with full-spectrum emergency services, Level I trauma centers, dedicated OES/OCEM, USAR teams, and complex multi-jurisdictional coordination requirements.',
-    constraints: 'High population density, media scrutiny, political complexity, mutual aid complicated by jurisdictional boundaries, significant access and functional needs population.',
-    examples: 'Houston TX, Phoenix AZ, Philadelphia PA, Atlanta GA, Miami FL, Chicago IL, Seattle WA.',
-  },
-  'Coastal Community': {
-    desc: 'A coastal city or county with significant maritime exposure, seasonal population fluctuations, tourism infrastructure, coastal infrastructure vulnerability, and Coast Guard coordination requirements.',
-    constraints: 'Evacuation route constraints (barrier islands, bridges), marina and port assets, seasonal surge in population, saltwater intrusion risks, ferry-dependent communities.',
-    examples: 'Outer Banks NC, Galveston TX, Myrtle Beach SC, Key West FL, Hampton Roads VA, Atlantic City NJ.',
-  },
-  'Tribal Nation': {
-    desc: 'A federally recognized tribal nation with sovereign jurisdiction, Bureau of Indian Affairs coordination requirements, tribal emergency management program, and unique legal and political dynamics distinct from state/county EM.',
-    constraints: 'Sovereign jurisdiction complicates mutual aid (638 contracts, EMAC applicability uncertain), BIA as federal liaison, Indian Health Service as primary health provider, limited local tax base and resources, geographic isolation common, trust land boundaries matter.',
-    examples: 'Navajo Nation AZ/NM/UT, Crow Nation MT, Standing Rock Sioux ND/SD, Choctaw Nation OK, Lummi Nation WA, Eastern Band Cherokee NC, Fort Apache AZ.',
-  },
-  'Interstate Corridor': {
-    desc: 'A linear multi-jurisdictional zone along a major interstate, rail line, or river corridor where the incident spans multiple counties or states, requiring immediate interstate mutual aid and potentially EMAC activation.',
-    constraints: 'No single unified jurisdiction — incident commander must coordinate across county and possibly state lines from the start, complex unified command, NTSB or EPA may assert federal lead, motorist stranding is a major secondary problem.',
-    examples: 'I-80 corridor through NV/UT, I-10 through LA/MS, Ohio River corridor KY/OH/WV, BNSF transcontinental rail NM/AZ, Mississippi River barge corridor IL/MO.',
-  },
-}
 
-const SCENARIO_REFS = {
-  hurricane: [
-    { label:'FEMA Federal Evacuation Support Annex 2025', url:'https://www.fema.gov/sites/default/files/documents/fema_rd_federal-evacuation-support-annex_042025.pdf' },
-    { label:'NHC Hurricane Preparedness',                 url:'https://www.nhc.noaa.gov/prepare/' },
-    { label:'ESF-13 Public Safety Annex',                 url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_13_Public-Safety-Security.pdf' },
-    { label:'2017 Hurricane Season AAR',                  url:'https://www.fema.gov/sites/default/files/2020-08/fema_hurricane-season-after-action-report_2017.pdf' },
-    { label:'FEMA Hurricane Response',                    url:'https://www.fema.gov/emergency-managers/risk-management/hurricanes' },
-    { label:'FEMA Resilience Hub — Hurricane',            url:'https://resilience-fema.hub.arcgis.com/pages/baaa5b427a2844c6a97f6d569c12307b/' },
-    { label:'FEMA Resilience Hub — Response & Recovery',  url:'https://resilience-fema.hub.arcgis.com/pages/bac0d4148c0c473a9b2d6b79c26c90a3' },
-    { label:'FEMA Geospatial Resource Center',            url:'https://gis-fema.hub.arcgis.com' },
-  ],
-  mci: [
-    { label:'FEMA National Response Framework',           url:'https://www.fema.gov/emergency-managers/national-preparedness/frameworks/response' },
-    { label:'CHEMM START Triage Reference',               url:'https://chemm.hhs.gov/startadult.htm' },
-    { label:'ESF-8 Public Health & Medical Annex',        url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_8_Public-Health-Medical.pdf' },
-    { label:'ICS Field Operations Guide',                 url:'https://www.usfa.fema.gov/downloads/pdf/publications/field_operations_guide.pdf' },
-    { label:'Boston Marathon Bombing AAR 2014',           url:'https://www.policinginstitute.org/wp-content/uploads/2015/05/after-action-report-for-the-response-to-the-2013-boston-marathon-bombings_0.pdf' },
-    { label:'FEMA Resilience Hub — Response & Recovery',  url:'https://resilience-fema.hub.arcgis.com/pages/bac0d4148c0c473a9b2d6b79c26c90a3' },
-    { label:'FEMA Geospatial Resource Center',            url:'https://gis-fema.hub.arcgis.com' },
-  ],
-  hazmat: [
-    { label:'EPA Emergency Response',                     url:'https://www.epa.gov/emergency-response' },
-    { label:'DOT Emergency Response Guidebook',           url:'https://www.phmsa.dot.gov/hazmat/erg/emergency-response-guidebook-erg' },
-    { label:'LEPC Guidance — EPA',                        url:'https://www.epa.gov/epcra/local-emergency-planning-committees' },
-    { label:'ESF-10 Oil & Hazardous Materials',           url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_10_Oil-Hazardous-Materials.pdf' },
-    { label:'NTSB East Palestine Final Report 2024',      url:'https://www.ntsb.gov/investigations/Pages/RRD23MR005.aspx' },
-    { label:'FEMA Resilience Hub — Response & Recovery',  url:'https://resilience-fema.hub.arcgis.com/pages/bac0d4148c0c473a9b2d6b79c26c90a3' },
-    { label:'FEMA Geospatial Resource Center',            url:'https://gis-fema.hub.arcgis.com' },
-  ],
-  cyber: [
-    { label:'CISA Critical Infrastructure',               url:'https://www.cisa.gov/topics/critical-infrastructure-security-and-resilience' },
-    { label:'FEMA Planning Considerations for Cyber Incidents', url:'https://www.fema.gov/sites/default/files/documents/fema_planning-considerations-cyber-incidents_2023.pdf' },
-    { label:'WaterISAC Resources',                        url:'https://www.waterisac.org/' },
-    { label:'NERC CIP Standards',                         url:'https://www.nerc.com/pa/Stand/Pages/CIPStandards.aspx' },
-    { label:'CISA Colonial Pipeline: What We Learned',    url:'https://www.cisa.gov/news-events/news/attack-colonial-pipeline-what-weve-learned-what-weve-done-over-past-two-years' },
-    { label:'FEMA Resilience Hub — Response & Recovery',  url:'https://resilience-fema.hub.arcgis.com/pages/bac0d4148c0c473a9b2d6b79c26c90a3' },
-    { label:'FEMA Geospatial Resource Center',            url:'https://gis-fema.hub.arcgis.com' },
-  ],
-  earthquake: [
-    { label:'FEMA Earthquake Risk Program',               url:'https://www.fema.gov/emergency-managers/risk-management/earthquake' },
-    { label:'USGS Earthquake Hazards Program',            url:'https://www.usgs.gov/programs/earthquake-hazards' },
-    { label:'FEMA Urban Search & Rescue',                 url:'https://www.fema.gov/emergency-managers/practitioners/urban-search-rescue' },
-    { label:'ATC-20 Postearthquake Safety Evaluation',    url:'https://www.atcouncil.org/atc-20' },
-    { label:'Northridge Earthquake FEMA Disaster Page',   url:'https://www.fema.gov/disaster/1008' },
-    { label:'FEMA Resilience Hub — Earthquake',           url:'https://resilience-fema.hub.arcgis.com/pages/4bdbb650ae9a47a8809222d5aace8ddd' },
-    { label:'FEMA Resilience Hub — Response & Recovery',  url:'https://resilience-fema.hub.arcgis.com/pages/bac0d4148c0c473a9b2d6b79c26c90a3' },
-    { label:'FEMA Geospatial Resource Center',            url:'https://gis-fema.hub.arcgis.com' },
-  ],
-  flood: [
-    { label:'FEMA Flood Risk — Know Your Risk',           url:'https://www.fema.gov/flood-maps/know-your-risk' },
-    { label:'NWS Flood Safety',                           url:'https://www.weather.gov/safety/flood' },
-    { label:'USACE Dam Safety Program',                   url:'https://www.usace.army.mil/Missions/Civil-Works/Dam-Safety/' },
-    { label:'Oroville Dam Incident AAR — CalOES 2017',    url:'https://www.caloes.ca.gov/wp-content/uploads/Preparedness/Documents/2017-Oroville-Dam-Incident-AAR-Approved.pdf' },
-    { label:'ESF-3 Public Works & Engineering',           url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_3_Public-Works-Engineering.pdf' },
-    { label:'FEMA Resilience Hub — Flood',                url:'https://resilience-fema.hub.arcgis.com/pages/37e34b5eb90343c5a8fbf0d4fcede961/' },
-    { label:'FEMA Resilience Hub — Response & Recovery',  url:'https://resilience-fema.hub.arcgis.com/pages/bac0d4148c0c473a9b2d6b79c26c90a3' },
-    { label:'FEMA Geospatial Resource Center',            url:'https://gis-fema.hub.arcgis.com' },
-  ],
-  wildfire: [
-    { label:'USFA Wildland-Urban Interface',              url:'https://www.usfa.fema.gov/wui/' },
-    { label:'CAL FIRE Fire Protection Programs',          url:'https://www.fire.ca.gov/what-we-do/fire-protection' },
-    { label:'NIFC Fire Information',                      url:'https://www.nifc.gov/fire-information' },
-    { label:'Palisades/Eaton Fire After-Action',          url:'https://www.lacounty.gov/emergency/' },
-    { label:'ESF-4 Firefighting Annex',                   url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_4_Firefighting.pdf' },
-    { label:'FEMA Resilience Hub — Wildfire',             url:'https://resilience-fema.hub.arcgis.com/pages/33125e9fb68b480283b764fc1538a8a3/' },
-    { label:'FEMA Resilience Hub — Response & Recovery',  url:'https://resilience-fema.hub.arcgis.com/pages/bac0d4148c0c473a9b2d6b79c26c90a3' },
-    { label:'FEMA Geospatial Resource Center',            url:'https://gis-fema.hub.arcgis.com' },
-  ],
-  winter: [
-    { label:'FEMA Resilience Hub — Winter Weather',       url:'https://resilience-fema.hub.arcgis.com/pages/winter-weather-ice-storm-hail' },
-    { label:'NWS Winter Storm Safety',                    url:'https://www.weather.gov/safety/winter' },
-    { label:'ESF-12 Energy Annex',                        url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_12_Energy-Annex.pdf' },
-    { label:'FEMA Power Outage Incident Annex',           url:'https://www.fema.gov/sites/default/files/documents/fema_incident-annex_power-outage.pdf' },
-    { label:'FERC February 2021 Freeze Final Report',     url:'https://www.ferc.gov/news-events/news/final-report-february-2021-freeze-underscores-winterization-recommendations' },
-    { label:'FEMA Resilience Hub — Response & Recovery',  url:'https://resilience-fema.hub.arcgis.com/pages/bac0d4148c0c473a9b2d6b79c26c90a3' },
-    { label:'FEMA Geospatial Resource Center',            url:'https://gis-fema.hub.arcgis.com' },
-  ],
-  rdd: [
-    { label:'FEMA Radiological Emergency Preparedness',   url:'https://www.fema.gov/emergency-managers/practitioners/hazardous-response-capabilities/radiological' },
-    { label:'FEMA RDD Incident Planning Guidance',        url:'https://www.fema.gov/sites/default/files/documents/fema_rd-planning-guidance-for-responding-to-and-recovering-from-radiological-dispersal-device-rdd-incidents.pdf' },
-    { label:'REAC/TS Medical Response to Radiation',      url:'https://orise.orau.gov/reacts/' },
-    { label:'Nuclear/Radiological Incident Annex (NRIA)', url:'https://www.fema.gov/sites/default/files/documents/fema_incident-annex_nuclear-radiological.pdf' },
-    { label:'FEMA Nuclear Detonation Response — First 72 Hrs', url:'https://www.fema.gov/sites/default/files/documents/fema_oet-72-hour-nuclear-detonation-response-guidance.pdf' },
-    { label:'FEMA Resilience Hub — Response & Recovery',  url:'https://resilience-fema.hub.arcgis.com/pages/bac0d4148c0c473a9b2d6b79c26c90a3' },
-    { label:'FEMA Geospatial Resource Center',            url:'https://gis-fema.hub.arcgis.com' },
-  ],
-  train: [
-    { label:'DOT Emergency Response Guidebook',           url:'https://www.phmsa.dot.gov/hazmat/erg/emergency-response-guidebook-erg' },
-    { label:'NTSB East Palestine Final Report 2024',      url:'https://www.ntsb.gov/investigations/Pages/RRD23MR005.aspx' },
-    { label:'CHEMM START Triage Reference',               url:'https://chemm.hhs.gov/startadult.htm' },
-    { label:'ESF-10 Oil & Hazardous Materials',           url:'https://www.fema.gov/sites/default/files/2020-07/fema_ESF_10_Oil-Hazardous-Materials.pdf' },
-    { label:'LEPC Guidance — EPA',                        url:'https://www.epa.gov/epcra/local-emergency-planning-committees' },
-    { label:'FEMA Resilience Hub — Response & Recovery',  url:'https://resilience-fema.hub.arcgis.com/pages/bac0d4148c0c473a9b2d6b79c26c90a3' },
-    { label:'FEMA Geospatial Resource Center',            url:'https://gis-fema.hub.arcgis.com' },
-  ],
-}
 
-const ESFS = [
-  { num:1,  name:'Transportation',                  lead:'DOT',      desc:'Aviation, maritime, surface transport coordination.' },
-  { num:2,  name:'Communications',                  lead:'DHS/CISA', desc:'Restore and sustain communications infrastructure.' },
-  { num:3,  name:'Public Works & Engineering',      lead:'USACE',    desc:'Infrastructure protection, emergency repair, debris clearance.' },
-  { num:4,  name:'Firefighting',                    lead:'USDA/FS',  desc:'Wildland and structural firefighting support.' },
-  { num:5,  name:'Information & Planning',          lead:'FEMA',     desc:'Collect, analyze, and disseminate incident information.' },
-  { num:6,  name:'Mass Care',                       lead:'FEMA',     desc:'Sheltering, feeding, emergency assistance, reunification.' },
-  { num:7,  name:'Logistics',                       lead:'FEMA/GSA', desc:'Resource and supply chain management.' },
-  { num:8,  name:'Public Health & Medical',         lead:'HHS',      desc:'Medical surge, public health, behavioral health.' },
-  { num:9,  name:'Search & Rescue',                 lead:'FEMA',     desc:'Life-saving assistance, urban and swift-water SAR.' },
-  { num:10, name:'Oil & Hazardous Materials',       lead:'EPA/USCG', desc:'Environmental response, hazmat containment and cleanup.' },
-  { num:11, name:'Agriculture & Natural Resources', lead:'USDA',     desc:'Food safety, agriculture, natural and cultural resources.' },
-  { num:12, name:'Energy',                          lead:'DOE',      desc:'Restore energy systems: electric power, natural gas, petroleum.' },
-  { num:13, name:'Public Safety & Security',        lead:'DOJ',      desc:'Law enforcement, facility security, security planning.' },
-  { num:14, name:'Cross-Sector Business & Infrastructure', lead:'DHS', desc:'Private sector coordination and infrastructure restoration.' },
-  { num:15, name:'External Affairs',                lead:'FEMA',     desc:'Public information, intergovernmental, community affairs.' },
-]
 
-const PANEL_INFO = {
-  lifelines: {
-    title: 'Community Lifelines',
-    body: 'The 8 FEMA Community Lifelines represent the most fundamental services a community needs to function. Each lifeline is color-coded: GREEN means fully operational, YELLOW means degraded, RED means compromised or non-functional. Status updates every turn based on your decisions and incident conditions. Hover any lifeline tile to see the AI\'s one-sentence reasoning for its current status.'
-  },
-  media: {
-    title: 'Media Feed',
-    body: 'AI-generated fictional news headlines that reflect the current state of the incident each turn. LIVE badges mark headlines from the current turn. Older headlines fade to gray as the scenario progresses. These reflect what the public and media are seeing — factor them into your public information and JIC decisions.'
-  },
-  refs: {
-    title: 'Reference Links',
-    body: 'Curated real-world doctrine, guidance documents, and after-action reports relevant to the active scenario type. Links open in a new tab. Use these during or after play to cross-reference your decisions against actual federal guidance and historical incident reviews.'
-  },
-  esf: {
-    title: 'ESF Reference',
-    body: 'All 15 Emergency Support Functions from the National Response Framework. Click any ESF card to mark it active — use this to track which ESFs you have activated during your response. Click again to deactivate. Active ESFs are highlighted. This is your tracking layer only — the AI does not see your selections.'
-  },
-  dispatch: {
-    title: 'Field Dispatch',
-    body: 'Incoming field reports from the incident. NEW cards highlighted in green are from the current turn — they reflect consequences of your last action and new developments. Older cards fade to gray but remain visible as a running log. The red badge shows total dispatch count. Some dispatches will generate map pins when they have a physical location.'
-  },
-  terminal: {
-    title: 'Scenario Terminal',
-    body: 'The main command interface. Type your decisions as the senior EM on scene — be specific about resources, priorities, communications, and who owns what. The AI evaluates your action and advances the incident clock. Type ENDEX at any time to end the scenario and receive a full After-Action Review. The situation status indicator in the header reflects overall incident trajectory.'
-  },
-  notepad: {
-    title: "Commander's Notepad",
-    body: 'A free-text scratch pad for tracking priorities, resource gaps, pending decisions, or anything else you need to remember. Content persists across turns and browser sessions — it will be here when you come back. Nothing you write here affects the simulation.'
-  },
-  map: {
-    title: 'Incident Map',
-    body: 'A live operational map of the incident area. Colored pins mark fixed infrastructure: green for EOC, blue for hospitals, orange for staging areas, purple for shelters, red for affected sites. White-bordered pins with turn numbers (T1, T2, etc.) are dynamic event pins dropped by the AI when dispatch events have a physical location. Click any pin for details. The map accumulates event pins across all turns.'
-  },
-}
 
-const ROLES = {
-  'EOC Director': 'You are the EOC Director — the senior emergency manager responsible for overall coordination, resource prioritization, and strategic decision-making across all sections and ESFs.',
-  'Operations Section Chief': 'You are the Operations Section Chief — responsible for directing tactical operations, coordinating field resources, and managing the operational branches executing the response.',
-  'Planning Section Chief': 'You are the Planning Section Chief — responsible for collecting and analyzing incident information, maintaining situational awareness, developing the IAP, and tracking resources.',
-  'Logistics Section Chief': 'You are the Logistics Section Chief — responsible for providing facilities, services, and materials to support incident operations including supply, ground support, and communications.',
-  'Finance & Admin Section Chief': 'You are the Finance & Administration Section Chief — responsible for tracking incident costs, managing procurement, processing claims, and maintaining time records.',
-  'Public Information Officer': 'You are the Public Information Officer — responsible for coordinating public messaging, managing media relations, operating the JIC, and ensuring accurate information reaches the public.',
-  'Safety Officer': 'You are the Safety Officer — responsible for monitoring incident operations for unsafe conditions, advising the IC on safety matters, and implementing the site safety plan.',
-  'Liaison Officer': 'You are the Liaison Officer — responsible for coordinating with assisting and cooperating agency representatives, managing agency rep assignments, and facilitating interagency coordination.',
-  'ESF-1 — Transportation': 'You are the ESF-1 Transportation Liaison Officer — responsible for coordinating aviation, maritime, and surface transportation assets, managing evacuation routes, and coordinating with DOT.',
-  'ESF-2 — Communications': 'You are the ESF-2 Communications Liaison Officer — responsible for restoring and sustaining communications infrastructure, managing interoperability, coordinating with carriers and CISA, and activating backup systems.',
-  'ESF-3 — Public Works & Engineering': 'You are the ESF-3 Public Works & Engineering Liaison Officer — responsible for infrastructure assessment, emergency repair, debris clearance, and coordinating with USACE.',
-  'ESF-4 — Firefighting': 'You are the ESF-4 Firefighting Liaison Officer — responsible for coordinating wildland and structural firefighting resources, managing mutual aid requests, and interfacing with USDA Forest Service.',
-  'ESF-5 — Information & Planning': 'You are the ESF-5 Information & Planning Liaison Officer — responsible for collecting, analyzing, and disseminating incident information and supporting the Planning Section.',
-  'ESF-6 — Mass Care': 'You are the ESF-6 Mass Care Liaison Officer — responsible for coordinating sheltering, feeding, emergency assistance, and reunification operations with FEMA and voluntary organizations.',
-  'ESF-7 — Logistics': 'You are the ESF-7 Logistics Liaison Officer — responsible for coordinating resource and supply chain management, staging areas, and federal logistics support.',
-  'ESF-8 — Public Health & Medical': 'You are the ESF-8 Public Health & Medical Liaison Officer — responsible for coordinating medical surge, public health response, behavioral health, and fatality management with HHS.',
-  'ESF-9 — Search & Rescue': 'You are the ESF-9 Search & Rescue Liaison Officer — responsible for coordinating urban, swift-water, and wilderness SAR operations and managing FEMA USAR task force deployment.',
-  'ESF-10 — Oil & Hazardous Materials': 'You are the ESF-10 Oil & Hazardous Materials Liaison Officer — responsible for coordinating environmental response, hazmat containment, cleanup operations, and EPA/USCG coordination.',
-  'ESF-11 — Agriculture & Natural Resources': 'You are the ESF-11 Agriculture & Natural Resources Liaison Officer — responsible for food safety, agriculture protection, and natural and cultural resource coordination with USDA.',
-  'ESF-12 — Energy': 'You are the ESF-12 Energy Liaison Officer — responsible for coordinating restoration of electric power, natural gas, and petroleum systems and managing utility company coordination.',
-  'ESF-13 — Public Safety & Security': 'You are the ESF-13 Public Safety & Security Liaison Officer — responsible for law enforcement coordination, facility security, access control, and evacuation enforcement.',
-  'ESF-14 — Cross-Sector Business & Infrastructure': 'You are the ESF-14 Cross-Sector Business & Infrastructure Liaison Officer — responsible for private sector coordination, critical infrastructure restoration, and business continuity support.',
-  'ESF-15 — External Affairs': 'You are the ESF-15 External Affairs Liaison Officer — responsible for public information, intergovernmental affairs, community relations, and congressional coordination.',
-}
 
-const ROLE_GROUPS = {
-  'EOC Leadership': ['EOC Director','Operations Section Chief','Planning Section Chief','Logistics Section Chief','Finance & Admin Section Chief','Public Information Officer','Safety Officer','Liaison Officer'],
-  'ESF Liaison Officers': ['ESF-1 — Transportation','ESF-2 — Communications','ESF-3 — Public Works & Engineering','ESF-4 — Firefighting','ESF-5 — Information & Planning','ESF-6 — Mass Care','ESF-7 — Logistics','ESF-8 — Public Health & Medical','ESF-9 — Search & Rescue','ESF-10 — Oil & Hazardous Materials','ESF-11 — Agriculture & Natural Resources','ESF-12 — Energy','ESF-13 — Public Safety & Security','ESF-14 — Cross-Sector Business & Infrastructure','ESF-15 — External Affairs'],
-}
 
-const SCENARIOS = {
-  hurricane:  { name:'Hurricane Landfall',             icon:'🌀', desc:'A major hurricane is closing on the coast. The 72-hour warning window is tightening. Jurisdiction and geography will shape every evacuation and resource decision.' },
-  mci:        { name:'Mass Casualty Incident',          icon:'🚨', desc:'Explosion at a crowded public event. 200+ casualties. Cause unknown. Your resources and hospital capacity depend heavily on where this happened.' },
-  hazmat:     { name:'Hazardous Materials Release',     icon:'☣️', desc:'Railcar derailment with chlorine release. Shelter-in-place decision imminent. The operating environment changes everything about your response options.' },
-  cyber:      { name:'Cyber-Infrastructure Cascade',    icon:'💻', desc:'Ransomware hits water and power utilities simultaneously. Public services degrading. Coordination complexity scales with your jurisdiction type.' },
-  earthquake: { name:'Major Earthquake',                icon:'🏚️', desc:'M7.1 strike-slip event. Comms degraded. Damage picture unknown. Your jurisdiction determines what resources you have and how long they take to arrive.' },
-  flood:      { name:'Flash Flood / Dam Failure',       icon:'🌊', desc:'Upstream dam showing structural compromise. Downstream communities in the inundation zone. Rural or coastal settings create very different rescue problems.' },
-  wildfire:   { name:'Urban Wildfire',                  icon:'🔥', desc:'Wind-driven wildfire with structure-to-structure spread. Mass evacuation underway. Jurisdiction type determines air resource access, road networks, and shelter options.' },
-  winter:     { name:'Winter Storm Cascade',            icon:'❄️', desc:'Historic winter storm. Power grid failing. Vulnerable populations at risk. A tribal nation or rural county has almost nothing in common with a metro EOC response.' },
-  rdd:        { name:'Radiological Dispersal Device',   icon:'☢️', desc:'Dirty bomb detonated in a public area. Contamination zone unknown. Federal coordination required — but the lead agencies and resources look very different depending on where this happened.' },
-  train:      { name:'Train Derailment — MCI / HazMat', icon:'🚂', desc:'Freight train derailment. Multiple casualties. Hazmat release confirmed. Rail corridors cross rural counties, tribal lands, and urban cores — your jurisdiction defines your authority and your gaps.' },
-}
 
-const JURISDICTIONS = ['Rural County','Mid-Size City','Large Urban Metro','Coastal Community','Tribal Nation','Interstate Corridor']
-const DIFFICULTIES  = ['Basic','Moderate','Advanced','Brutal','Adaptive']
 
-const LIFELINES = [
-  { key:'safety',    label:'Safety & Security',       icon:'/icons/safety.png' },
-  { key:'food',      label:'Food, Hydration, Shelter', icon:'/icons/food.png' },
-  { key:'health',    label:'Health & Medical',         icon:'/icons/health.png' },
-  { key:'energy',    label:'Energy',                   icon:'/icons/energy.png' },
-  { key:'comms',     label:'Communications',           icon:'/icons/comms.png' },
-  { key:'transport', label:'Transportation',           icon:'/icons/transport.png' },
-  { key:'hazmat',    label:'Hazardous Material',       icon:'/icons/hazmat.png' },
-  { key:'water',     label:'Water Systems',            icon:'/icons/water.png' },
-]
 
-const DEFAULT_LIFELINES = {
-  safety:    { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
-  food:      { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
-  health:    { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
-  energy:    { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
-  comms:     { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
-  transport: { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
-  hazmat:    { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
-  water:     { status:'YELLOW', reason:'Situation developing. Assessment pending.' },
-}
 
-const LL_COLORS = {
-  GREEN:  { bg:'#0a2a1a', border:'#1D9E75', text:'#1D9E75' },
-  YELLOW: { bg:'#2a2000', border:'#EF9F27', text:'#EF9F27' },
-  RED:    { bg:'#2a0a0a', border:'#E24B4A', text:'#E24B4A' },
-}
 
 const DEFAULT_SETTINGS = { fontSize:11, accentColor:'#1D9E75', alertColor:'#EF9F27' }
 const SETTINGS_KEY = 'em_sim_settings'
-
-// ─── AAR SECTION CONFIG ───────────────────────────────────────────────────────
-const AAR_SECTIONS = [
-  { key:'situationSummary',       label:'Situation Summary',                    icon:'📍' },
-  { key:'decisionLog',            label:'Decision Log Review',                  icon:'📋' },
-  { key:'resourceCoordination',   label:'Resource & Coordination Effectiveness', icon:'🔗' },
-  { key:'communications',         label:'Communications & Information Mgmt',    icon:'📡' },
-  { key:'strengths',              label:'Strengths',                            icon:'✓' },
-  { key:'criticalGaps',           label:'Critical Gaps',                        icon:'⚠' },
-  { key:'doctrineReferences',     label:'Doctrine References',                  icon:'📖' },
-  { key:'recommendations',        label:'Recommendations',                      icon:'→' },
-]
+const ONBOARDING_KEY = 'nexus_onboarding_seen'
 
 // ─── WORLD INIT PROMPT ────────────────────────────────────────────────────────
 function buildWorldInitPrompt(scenario, jurisdiction) {
@@ -879,6 +625,112 @@ function EndexFeedback({ scenario, role, jurisdiction, difficulty, turns, fs, ac
   )
 }
 
+
+function OnboardingModal({ onClose, ac = '#1D9E75' }) {
+  return (
+    <div style={{
+      position:'fixed',
+      inset:0,
+      zIndex:5000,
+      background:'rgba(0,0,0,0.78)',
+      display:'flex',
+      alignItems:'center',
+      justifyContent:'center',
+      padding:20,
+      fontFamily:'JetBrains Mono, monospace'
+    }}>
+      <div style={{
+        width:'min(720px, 96vw)',
+        background:'#0b0f0d',
+        border:`1px solid ${ac}`,
+        borderRadius:14,
+        boxShadow:'0 24px 80px rgba(0,0,0,0.9)',
+        overflow:'hidden'
+      }}>
+        <div style={{
+          padding:'18px 22px',
+          borderBottom:'1px solid #1f2a24',
+          background:'linear-gradient(90deg, rgba(29,158,117,0.18), rgba(0,0,0,0))'
+        }}>
+          <div style={{ fontSize:10, color:ac, letterSpacing:'0.18em', textTransform:'uppercase', marginBottom:6 }}>
+            First-Time Operator Brief
+          </div>
+          <div style={{ fontSize:22, color:'#e6e6e6', fontWeight:700 }}>
+            Welcome to NEXUS EOC
+          </div>
+          <div style={{ fontSize:12, color:'#888', marginTop:6, lineHeight:1.6 }}>
+            A scenario-based emergency operations training platform for decision-making under pressure.
+          </div>
+        </div>
+
+        <div style={{ padding:22, color:'#aaa', fontSize:13, lineHeight:1.75 }}>
+          <div style={{ marginBottom:16 }}>
+            <strong style={{ color:'#ddd' }}>1. Choose your mission.</strong><br />
+            Select an incident type, jurisdiction, difficulty level, and EOC role.
+          </div>
+
+          <div style={{ marginBottom:16 }}>
+            <strong style={{ color:'#ddd' }}>2. Read the situation.</strong><br />
+            NEXUS generates a unique location, local agencies, field dispatches, map pins, and Community Lifeline status.
+          </div>
+
+          <div style={{ marginBottom:16 }}>
+            <strong style={{ color:'#ddd' }}>3. Make decisions like you are in the EOC.</strong><br />
+            Type clear actions: who you are notifying, what resources you are requesting, what priorities you are setting, and what information you need.
+          </div>
+
+          <div style={{ marginBottom:16 }}>
+            <strong style={{ color:'#ddd' }}>4. End with ENDEX.</strong><br />
+            Type <span style={{ color:ac, fontWeight:700 }}>ENDEX</span> at any time to complete the exercise and generate an after-action review.
+          </div>
+
+          <div style={{
+            marginTop:18,
+            padding:12,
+            border:'1px solid #26352e',
+            borderRadius:8,
+            background:'#07100c',
+            color:'#777',
+            fontSize:12
+          }}>
+            Tip: vague actions create vague outcomes. Specific decisions create better training value.
+          </div>
+        </div>
+
+        <div style={{
+          padding:'14px 22px',
+          borderTop:'1px solid #1f2a24',
+          display:'flex',
+          justifyContent:'space-between',
+          alignItems:'center',
+          gap:12
+        }}>
+          <div style={{ fontSize:11, color:'#555' }}>
+            This briefing only appears the first time you open the app in this browser.
+          </div>
+
+          <button
+            onClick={onClose}
+            style={{
+              padding:'9px 18px',
+              background:ac,
+              color:'#04100b',
+              border:'none',
+              borderRadius:6,
+              fontWeight:700,
+              cursor:'pointer',
+              fontFamily:'JetBrains Mono, monospace',
+              letterSpacing:'0.04em'
+            }}
+          >
+            Begin Setup
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   const [state, setState]             = useState(null)
   const [loading, setLoading]         = useState(false)
@@ -897,6 +749,11 @@ export default function App() {
     catch { return DEFAULT_SETTINGS }
   })
 
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    try { return localStorage.getItem(ONBOARDING_KEY) !== 'true' }
+    catch { return true }
+  })
+
   const containerRef = useRef(null)
   const leftColRef   = useRef(null)
   const rightColRef  = useRef(null)
@@ -906,6 +763,11 @@ export default function App() {
   function updateSettings(s) {
     setSettings(s)
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)) } catch {}
+  }
+
+  function closeOnboarding() {
+    try { localStorage.setItem(ONBOARDING_KEY, 'true') } catch {}
+    setShowOnboarding(false)
   }
 
   const save = useCallback((next) => {
@@ -1136,6 +998,9 @@ export default function App() {
     const sac = '#1D9E75'
     return (
       <div style={{ minHeight:'100vh', fontFamily:'JetBrains Mono, monospace', display:'flex', flexDirection:'column', position:'relative' }}>
+        {showOnboarding && (
+          <OnboardingModal onClose={closeOnboarding} ac={settings.accentColor} />
+        )}
         <div style={{ position:'fixed', inset:0, zIndex:0, backgroundImage:'url(/bg-map.png)', backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }}/>
         <div style={{ position:'fixed', inset:0, zIndex:1, background:'rgba(4,8,6,0.82)' }}/>
         <div style={{ position:'fixed', inset:0, zIndex:1, backgroundImage:'linear-gradient(rgba(29,158,117,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(29,158,117,0.04) 1px, transparent 1px)', backgroundSize:'40px 40px', pointerEvents:'none' }}/>
