@@ -219,13 +219,124 @@ const defaultState = {
   screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'', role:'EOC Director',
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:DEFAULT_LIFELINES, headlines:[],
-  dynamicPins:[], worldState:null, aar:null,
+  dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[],
 }
+
 
 const sitColors = { STABLE:'#1D9E75', DEVELOPING:'#EF9F27', CRITICAL:'#D85A30', DETERIORATING:'#E24B4A', ENDEX:'#888' }
 
+function lifelineSummary(lifelines = {}) {
+  return LIFELINES.map(ll => {
+    const data = lifelines[ll.key] || {}
+    return `${ll.label.padEnd(28, '.')} ${data.status || 'UNKNOWN'}${data.reason ? ` — ${data.reason}` : ''}`
+  }).join('\n')
+}
+
+function formatExerciseTranscript({ scenario, jurisdiction, difficulty, role, playerName, worldState, transcript = [], finalLifelines, finalSimTime, finalSituation, aar }) {
+  const scenarioName = SCENARIOS[scenario]?.name || scenario || 'Unspecified Scenario'
+  const generatedDate = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
+  const generatedTime = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' })
+
+  let text = `NEXUS EOC — EXERCISE TRANSCRIPT\n`
+  text += `${'='.repeat(72)}\n\n`
+  text += `SCENARIO:        ${scenarioName}\n`
+  text += `JURISDICTION:    ${jurisdiction || 'Unspecified'}\n`
+  text += `ROLE:            ${role || 'EOC Director'}\n`
+  text += `DIFFICULTY:      ${difficulty || 'Unspecified'}\n`
+  if (playerName) text += `COMMANDER:       ${playerName}\n`
+  if (worldState?.location) text += `LOCATION:        ${worldState.location}\n`
+  if (worldState?.center) text += `MAP CENTER:      ${worldState.center[0]}, ${worldState.center[1]}\n`
+  text += `FINAL TIME:      ${finalSimTime || 'N/A'}\n`
+  text += `FINAL STATUS:    ${finalSituation || 'N/A'}\n`
+  text += `TURNS:           ${transcript.filter(t => t.type === 'turn').length}\n`
+  text += `GENERATED:       ${generatedDate} ${generatedTime}\n\n`
+  text += `${'='.repeat(72)}\n\n`
+
+  if (!transcript.length) {
+    text += `No transcript records were captured for this session.\n\n`
+  }
+
+  transcript.forEach(entry => {
+    if (entry.type === 'opening') {
+      text += `OPENING BASELINE\n`
+      text += `${'-'.repeat(72)}\n`
+      if (entry.time) text += `SIM TIME: ${entry.time}\n`
+      if (entry.location) text += `LOCATION: ${entry.location}\n`
+      text += `\nNARRATIVE\n${entry.narrative || '(none)'}\n\n`
+      if (entry.dispatches?.length) {
+        text += `INITIAL DISPATCHES\n`
+        entry.dispatches.forEach((d, i) => text += `${i+1}. ${typeof d === 'string' ? d : d.text}\n`)
+        text += `\n`
+      }
+      if (entry.pins?.length) {
+        text += `INITIAL MAP PINS\n`
+        entry.pins.forEach((pin, i) => text += `${i+1}. ${pin.label || 'Unnamed'} (${pin.type || 'UNKNOWN'}) — ${pin.note || ''}\n`)
+        text += `\n`
+      }
+      text += `${'='.repeat(72)}\n\n`
+      return
+    }
+
+    if (entry.type === 'turn') {
+      text += `TURN ${entry.turn}\n`
+      text += `${'-'.repeat(72)}\n`
+      text += `SIM TIME:  ${entry.simTime || 'N/A'}\n`
+      text += `STATUS:    ${entry.situation || 'N/A'}\n\n`
+      text += `DIRECTOR INPUT\n${entry.playerInput || '(none)'}\n\n`
+      text += `NEXUS RESPONSE\n${entry.aiResponse || '(none)'}\n\n`
+      if (entry.prompt) text += `NEXT PROMPT\n${entry.prompt}\n\n`
+      if (entry.dispatches?.length) {
+        text += `NEW DISPATCHES\n`
+        entry.dispatches.forEach((d, i) => text += `${i+1}. ${typeof d === 'string' ? d : d.text}\n`)
+        text += `\n`
+      }
+      if (entry.headlines?.length) {
+        text += `MEDIA HEADLINES\n`
+        entry.headlines.forEach((h, i) => text += `${i+1}. ${h.source || 'Media'}: ${h.text || h}\n`)
+        text += `\n`
+      }
+      if (entry.pins?.length) {
+        text += `NEW MAP PINS\n`
+        entry.pins.forEach((pin, i) => text += `${i+1}. ${pin.label || 'Unnamed'} (${pin.type || 'UNKNOWN'}) — ${pin.note || ''}\n`)
+        text += `\n`
+      }
+      text += `COMMUNITY LIFELINES\n${lifelineSummary(entry.lifelines)}\n\n`
+      text += `${'='.repeat(72)}\n\n`
+    }
+  })
+
+  text += `FINAL COMMUNITY LIFELINES\n`
+  text += `${'-'.repeat(72)}\n`
+  text += `${lifelineSummary(finalLifelines)}\n\n`
+
+  if (aar) {
+    text += `AFTER-ACTION REVIEW SUMMARY\n`
+    text += `${'-'.repeat(72)}\n`
+    AAR_SECTIONS.forEach(s => {
+      if (aar[s.key]) {
+        text += `\n${s.label.toUpperCase()}\n${aar[s.key]}\n`
+      }
+    })
+    text += `\n`
+  }
+
+  text += `${'='.repeat(72)}\n`
+  text += `NEXUS EOC — nexuseoc.com\n`
+  return text
+}
+
+function downloadTextFile(filename, text) {
+  const blob = new Blob([text], { type:'text/plain' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 // ─── AAR DISPLAY COMPONENT ────────────────────────────────────────────────────
-function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName, turns, simTime, onReset, fs, ac, al }) {
+function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, fs, ac, al }) {
   const [activeSection, setActiveSection] = useState(null)
   const [showFeedback, setShowFeedback] = useState(false)
 
@@ -257,13 +368,18 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
     text += `${'='.repeat(60)}\n`
     text += `NEXUS EOC — nexuseoc.com\n`
 
-    const blob = new Blob([text], { type:'text/plain' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = `NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadTextFile(`NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.txt`, text)
+  }
+
+  function downloadTranscript() {
+    const scenarioName = SCENARIOS[scenario]?.name || scenario
+    const date = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
+    const text = formatExerciseTranscript({
+      scenario, jurisdiction, difficulty, role, playerName,
+      worldState, transcript, finalLifelines: lifelines,
+      finalSimTime: simTime, finalSituation: situation, aar,
+    })
+    downloadTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.txt`, text)
   }
 
   const scenarioName = SCENARIOS[scenario]?.name || scenario
@@ -288,7 +404,11 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
             <button onClick={downloadAAR}
               style={{ padding:'5px 12px', fontSize:fs-1, color:ac, border:`0.5px solid ${ac}`, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3, letterSpacing:'0.06em' }}>
-              ↓ Download
+              ↓ Download AAR
+            </button>
+            <button onClick={downloadTranscript}
+              style={{ padding:'5px 12px', fontSize:fs-1, color:ac, border:`0.5px solid ${ac}`, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3, letterSpacing:'0.06em' }}>
+              📄 Transcript
             </button>
             <button onClick={() => setShowFeedback(s => !s)}
               style={{ padding:'5px 12px', fontSize:fs-1, color:showFeedback ? al : '#555', border:`0.5px solid ${showFeedback ? al : '#333'}`, background:showFeedback ? al+'11' : 'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3 }}>
@@ -870,7 +990,7 @@ export default function App() {
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
       notepad:'', lifelines:DEFAULT_LIFELINES, headlines:[], dynamicPins:[],
-      worldState:null, aar:null,
+      worldState:null, aar:null, exerciseTranscript:[],
     })
 
     try {
@@ -887,6 +1007,15 @@ export default function App() {
           { type:'narrator', text:world.openingNarrative + ' What is your first action?' },
         ],
         dynamicPins: initPins,
+        exerciseTranscript: [{
+          type:'opening',
+          time:'H+0:00',
+          location: world.location,
+          narrative: world.openingNarrative + ' What is your first action?',
+          dispatches: initDispatches,
+          pins: initPins,
+          lifelines: DEFAULT_LIFELINES,
+        }],
       })
     } catch(e) {
       update({
@@ -897,6 +1026,15 @@ export default function App() {
           { type:'narrator', text:sc.desc + ' Your EOC is activating. What is your first action?' },
         ],
         dispatches: [{ id:0, text:`${sc.name} confirmed. EOC activation underway. Resources status unknown.`, turn:0 }],
+        exerciseTranscript: [{
+          type:'opening',
+          time:'H+0:00',
+          location: jurisdiction,
+          narrative: sc.desc + ' Your EOC is activating. What is your first action?',
+          dispatches: [{ id:0, text:`${sc.name} confirmed. EOC activation underway. Resources status unknown.`, turn:0 }],
+          pins: [],
+          lifelines: DEFAULT_LIFELINES,
+        }],
       })
     }
 
@@ -960,12 +1098,27 @@ export default function App() {
         ? [...(state.dynamicPins||[]), ...parsed.pins.map((p,i) => ({ ...p, id:`dyn-${Date.now()}-${i}`, turn:nextTurn }))]
         : (state.dynamicPins||[])
 
+      const transcriptEntry = {
+        type:'turn',
+        turn: nextTurn,
+        simTime: parsed.time || state.simTime,
+        situation: resolvedSituation,
+        playerInput: action,
+        aiResponse: parsed.consequence || '',
+        prompt: resolvedSituation !== 'ENDEX' ? (parsed.prompt || '') : '',
+        dispatches: parsed.dispatches || [],
+        headlines: parsed.headlines || [],
+        pins: parsed.pins || [],
+        lifelines: parsed.lifelines || state.lifelines,
+      }
+
       update({
         terminal:addedTerm, history:newHistory, dispatches:newDispatches,
         simTime:parsed.time||state.simTime, situation:resolvedSituation,
         turn:nextTurn, lifelines:parsed.lifelines||state.lifelines,
         headlines:newHeadlines, dynamicPins:newDynamicPins,
         aar: parsed.aar || state.aar,
+        exerciseTranscript: [...(state.exerciseTranscript || []), transcriptEntry],
       })
 
       if (resolvedSituation === 'ENDEX' && typeof window !== 'undefined' && window.posthog) {
@@ -989,6 +1142,26 @@ export default function App() {
   function reset() {
     try { localStorage.removeItem(SAVE_KEY) } catch {}
     setState(defaultState); setInput(''); setActiveESFs({})
+  }
+
+  function downloadCurrentTranscript() {
+    if (!state) return
+    const scenarioName = SCENARIOS[state.scenario]?.name || state.scenario || 'Scenario'
+    const date = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
+    const text = formatExerciseTranscript({
+      scenario: state.scenario,
+      jurisdiction: state.jurisdiction,
+      difficulty: state.difficulty,
+      role: state.role,
+      playerName: state.playerName,
+      worldState: state.worldState,
+      transcript: state.exerciseTranscript || [],
+      finalLifelines: state.lifelines,
+      finalSimTime: state.simTime,
+      finalSituation: state.situation,
+      aar: state.aar,
+    })
+    downloadTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.txt`, text)
   }
 
   if (!state) return <div style={{ color:'#888', padding:'2rem', fontFamily:'monospace' }}>Loading...</div>
@@ -1351,6 +1524,12 @@ export default function App() {
                   ENDEX — {state.turn} TURNS
                 </span>
               )}
+              {!isEndex && (state.exerciseTranscript || []).length > 0 && (
+                <button onClick={downloadCurrentTranscript}
+                  style={{ fontSize:10, padding:'2px 8px', color:'#555', background:'transparent', border:'0.5px solid #333', cursor:'pointer', fontFamily:'JetBrains Mono, monospace' }}>
+                  Transcript
+                </button>
+              )}
               {!isEndex && (
                 <div style={{ position:'relative' }}>
                   <button onClick={() => setShowEndDialog(s => !s)}
@@ -1387,6 +1566,10 @@ export default function App() {
                 playerName={state.playerName}
                 turns={state.turn}
                 simTime={state.simTime}
+                worldState={state.worldState}
+                transcript={state.exerciseTranscript || []}
+                lifelines={state.lifelines}
+                situation={state.situation}
                 onReset={reset}
                 fs={fs}
                 ac={ac}
