@@ -294,6 +294,7 @@ const LL_COLORS = {
 
 const DEFAULT_SETTINGS = { fontSize:11, accentColor:'#1D9E75', alertColor:'#EF9F27' }
 const SETTINGS_KEY = 'em_sim_settings'
+const ONBOARDING_KEY = 'nexus_onboarding_seen'
 
 // ─── AAR SECTION CONFIG ───────────────────────────────────────────────────────
 const AAR_SECTIONS = [
@@ -879,6 +880,112 @@ function EndexFeedback({ scenario, role, jurisdiction, difficulty, turns, fs, ac
   )
 }
 
+
+function OnboardingModal({ onClose, ac = '#1D9E75' }) {
+  return (
+    <div style={{
+      position:'fixed',
+      inset:0,
+      zIndex:5000,
+      background:'rgba(0,0,0,0.78)',
+      display:'flex',
+      alignItems:'center',
+      justifyContent:'center',
+      padding:20,
+      fontFamily:'JetBrains Mono, monospace'
+    }}>
+      <div style={{
+        width:'min(720px, 96vw)',
+        background:'#0b0f0d',
+        border:`1px solid ${ac}`,
+        borderRadius:14,
+        boxShadow:'0 24px 80px rgba(0,0,0,0.9)',
+        overflow:'hidden'
+      }}>
+        <div style={{
+          padding:'18px 22px',
+          borderBottom:'1px solid #1f2a24',
+          background:'linear-gradient(90deg, rgba(29,158,117,0.18), rgba(0,0,0,0))'
+        }}>
+          <div style={{ fontSize:10, color:ac, letterSpacing:'0.18em', textTransform:'uppercase', marginBottom:6 }}>
+            First-Time Operator Brief
+          </div>
+          <div style={{ fontSize:22, color:'#e6e6e6', fontWeight:700 }}>
+            Welcome to NEXUS EOC
+          </div>
+          <div style={{ fontSize:12, color:'#888', marginTop:6, lineHeight:1.6 }}>
+            A scenario-based emergency operations training platform for decision-making under pressure.
+          </div>
+        </div>
+
+        <div style={{ padding:22, color:'#aaa', fontSize:13, lineHeight:1.75 }}>
+          <div style={{ marginBottom:16 }}>
+            <strong style={{ color:'#ddd' }}>1. Choose your mission.</strong><br />
+            Select an incident type, jurisdiction, difficulty level, and EOC role.
+          </div>
+
+          <div style={{ marginBottom:16 }}>
+            <strong style={{ color:'#ddd' }}>2. Read the situation.</strong><br />
+            NEXUS generates a unique location, local agencies, field dispatches, map pins, and Community Lifeline status.
+          </div>
+
+          <div style={{ marginBottom:16 }}>
+            <strong style={{ color:'#ddd' }}>3. Make decisions like you are in the EOC.</strong><br />
+            Type clear actions: who you are notifying, what resources you are requesting, what priorities you are setting, and what information you need.
+          </div>
+
+          <div style={{ marginBottom:16 }}>
+            <strong style={{ color:'#ddd' }}>4. End with ENDEX.</strong><br />
+            Type <span style={{ color:ac, fontWeight:700 }}>ENDEX</span> at any time to complete the exercise and generate an after-action review.
+          </div>
+
+          <div style={{
+            marginTop:18,
+            padding:12,
+            border:'1px solid #26352e',
+            borderRadius:8,
+            background:'#07100c',
+            color:'#777',
+            fontSize:12
+          }}>
+            Tip: vague actions create vague outcomes. Specific decisions create better training value.
+          </div>
+        </div>
+
+        <div style={{
+          padding:'14px 22px',
+          borderTop:'1px solid #1f2a24',
+          display:'flex',
+          justifyContent:'space-between',
+          alignItems:'center',
+          gap:12
+        }}>
+          <div style={{ fontSize:11, color:'#555' }}>
+            This briefing only appears the first time you open the app in this browser.
+          </div>
+
+          <button
+            onClick={onClose}
+            style={{
+              padding:'9px 18px',
+              background:ac,
+              color:'#04100b',
+              border:'none',
+              borderRadius:6,
+              fontWeight:700,
+              cursor:'pointer',
+              fontFamily:'JetBrains Mono, monospace',
+              letterSpacing:'0.04em'
+            }}
+          >
+            Begin Setup
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   const [state, setState]             = useState(null)
   const [loading, setLoading]         = useState(false)
@@ -897,6 +1004,11 @@ export default function App() {
     catch { return DEFAULT_SETTINGS }
   })
 
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    try { return localStorage.getItem(ONBOARDING_KEY) !== 'true' }
+    catch { return true }
+  })
+
   const containerRef = useRef(null)
   const leftColRef   = useRef(null)
   const rightColRef  = useRef(null)
@@ -906,6 +1018,11 @@ export default function App() {
   function updateSettings(s) {
     setSettings(s)
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)) } catch {}
+  }
+
+  function closeOnboarding() {
+    try { localStorage.setItem(ONBOARDING_KEY, 'true') } catch {}
+    setShowOnboarding(false)
   }
 
   const save = useCallback((next) => {
@@ -1136,6 +1253,9 @@ export default function App() {
     const sac = '#1D9E75'
     return (
       <div style={{ minHeight:'100vh', fontFamily:'JetBrains Mono, monospace', display:'flex', flexDirection:'column', position:'relative' }}>
+        {showOnboarding && (
+          <OnboardingModal onClose={closeOnboarding} ac={settings.accentColor} />
+        )}
         <div style={{ position:'fixed', inset:0, zIndex:0, backgroundImage:'url(/bg-map.png)', backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }}/>
         <div style={{ position:'fixed', inset:0, zIndex:1, background:'rgba(4,8,6,0.82)' }}/>
         <div style={{ position:'fixed', inset:0, zIndex:1, backgroundImage:'linear-gradient(rgba(29,158,117,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(29,158,117,0.04) 1px, transparent 1px)', backgroundSize:'40px 40px', pointerEvents:'none' }}/>
