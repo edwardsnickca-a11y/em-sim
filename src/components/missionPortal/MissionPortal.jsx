@@ -1,5 +1,4 @@
 import heroImage from '../../assets/missionPortal/hero-command-center.jpg'
-import rightRailImage from '../../assets/missionPortal/right-rail-command.jpg'
 import hurricaneImage from '../../assets/missionPortal/hurricane.jpg'
 import floodImage from '../../assets/missionPortal/flood.jpg'
 import industrialFireImage from '../../assets/missionPortal/industrial-fire.jpg'
@@ -8,9 +7,7 @@ import cyberImage from '../../assets/missionPortal/cyber.jpg'
 
 const DS = {
   bg:'#020B13',
-  bg2:'#061522',
-  panel:'rgba(4, 17, 29, 0.82)',
-  panel2:'rgba(7, 25, 41, 0.78)',
+  panel:'rgba(4, 17, 29, 0.78)',
   border:'rgba(87, 146, 198, 0.28)',
   borderStrong:'rgba(65, 141, 255, 0.62)',
   blue:'#2E83FF',
@@ -84,11 +81,11 @@ function Icon({ type, size=28, color=DS.blue2 }) {
 function Header({ onStartExercise }) {
   return (
     <header style={{
-      height:74,
+      height:76,
       display:'flex',
       alignItems:'center',
       justifyContent:'space-between',
-      padding:'0 32px',
+      padding:'0 clamp(22px, 2.2vw, 42px)',
       borderBottom:`1px solid ${DS.border}`,
       background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))',
       boxSizing:'border-box',
@@ -96,9 +93,9 @@ function Header({ onStartExercise }) {
     }}>
       <div style={{ display:'flex', alignItems:'center', gap:18 }}>
         <Icon type="shield" size={46} color={DS.blue2} />
-        <div style={{ fontSize:34, fontWeight:900, color:DS.text, letterSpacing:'0.08em' }}>NEXUS EOC</div>
+        <div style={{ fontSize:'clamp(25px, 1.85vw, 36px)', fontWeight:900, color:DS.text, letterSpacing:'0.08em', whiteSpace:'nowrap' }}>NEXUS EOC</div>
         <div style={{ width:1, height:38, background:DS.border, margin:'0 2px' }} />
-        <div style={{ color:DS.text, fontSize:15, lineHeight:1.25 }}>
+        <div style={{ color:DS.text, fontSize:'clamp(12px, .78vw, 16px)', lineHeight:1.25 }}>
           Simulated Emergency<br />Operations Platform
         </div>
       </div>
@@ -127,7 +124,7 @@ function Hero({ onStartExercise }) {
   return (
     <section style={{
       position:'relative',
-      minHeight:313,
+      minHeight:'clamp(250px, 28vh, 350px)',
       borderBottom:`1px solid ${DS.border}`,
       overflow:'hidden',
       background:'#030E18',
@@ -138,22 +135,22 @@ function Hero({ onStartExercise }) {
         width:'100%',
         height:'100%',
         objectFit:'cover',
-        opacity:0.78,
+        opacity:0.82,
       }} />
-      <div style={{ position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(2,9,16,0.98) 0%, rgba(2,9,16,0.88) 27%, rgba(2,9,16,0.28) 62%, rgba(2,9,16,0.42) 100%)' }} />
-      <div style={{ position:'relative', zIndex:2, width:'58%', maxWidth:720, padding:'34px 8px 24px 8px', boxSizing:'border-box' }}>
-        <h1 style={{ margin:0, color:DS.text, fontSize:'clamp(54px, 4.1vw, 72px)', lineHeight:0.98, fontWeight:950, letterSpacing:'0.055em' }}>
+      <div style={{ position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(2,9,16,0.98) 0%, rgba(2,9,16,0.86) 28%, rgba(2,9,16,0.25) 66%, rgba(2,9,16,0.42) 100%)' }} />
+      <div style={{ position:'relative', zIndex:2, width:'min(720px, 52vw)', padding:'clamp(24px, 3.2vh, 38px) 0 24px clamp(22px, 2.1vw, 38px)', boxSizing:'border-box' }}>
+        <h1 style={{ margin:0, color:DS.text, fontSize:'clamp(44px, 4.2vw, 78px)', lineHeight:0.98, fontWeight:950, letterSpacing:'0.055em' }}>
           MISSION PORTAL
         </h1>
-        <div style={{ color:DS.blue2, fontSize:'clamp(30px, 2.3vw, 40px)', fontWeight:900, marginTop:9 }}>
+        <div style={{ color:DS.blue2, fontSize:'clamp(26px, 2.2vw, 42px)', fontWeight:900, marginTop:9 }}>
           Train. Decide. Lead.
         </div>
-        <p style={{ color:DS.text, fontSize:'clamp(16px, 1.05vw, 19px)', lineHeight:1.52, margin:'18px 0 27px', maxWidth:560 }}>
+        <p style={{ color:DS.text, fontSize:'clamp(15px, 1vw, 19px)', lineHeight:1.52, margin:'18px 0 27px', maxWidth:570 }}>
           AI-powered emergency operations training for EOCs, emergency managers, and response partners.
         </p>
-        <div style={{ display:'flex', gap:26 }}>
+        <div style={{ display:'flex', gap:26, flexWrap:'wrap' }}>
           <button onClick={onStartExercise} style={{
-            minWidth:222,
+            minWidth:220,
             height:55,
             padding:'0 26px',
             borderRadius:6,
@@ -205,7 +202,7 @@ function CapabilityBand() {
   return (
     <section style={{
       display:'grid',
-      gridTemplateColumns:'repeat(4, minmax(0, 1fr))',
+      gridTemplateColumns:'repeat(auto-fit, minmax(260px, 1fr))',
       gap:0,
       borderBottom:`1px solid ${DS.border}`,
       background:'rgba(2,11,19,0.55)',
@@ -213,15 +210,15 @@ function CapabilityBand() {
       {cards.map(([icon,title,body,color], idx) => (
         <div key={title} style={{
           display:'grid',
-          gridTemplateColumns:'74px 1fr',
+          gridTemplateColumns:'72px 1fr',
           gap:14,
           alignItems:'center',
-          padding:'16px 20px',
+          padding:'clamp(12px, 1.2vw, 18px) clamp(16px, 1.4vw, 24px)',
           borderRight:idx < cards.length - 1 ? `1px solid ${DS.border}` : 'none',
-          minHeight:104,
+          minHeight:96,
         }}>
-          <div style={{ width:72, height:72, borderRadius:'50%', border:`1.5px solid ${color}`, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(2,11,19,0.35)' }}>
-            <Icon type={icon} size={42} color={color} />
+          <div style={{ width:68, height:68, borderRadius:'50%', border:`1.5px solid ${color}`, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(2,11,19,0.35)' }}>
+            <Icon type={icon} size={40} color={color} />
           </div>
           <div>
             <div style={{ color, fontSize:12, fontWeight:950, letterSpacing:'0.10em', marginBottom:7 }}>{title}</div>
@@ -242,16 +239,13 @@ function ScenarioCard({ card, onStartExercise }) {
       background:'rgba(3,14,24,0.84)',
       minWidth:0,
     }}>
-      <div style={{ height:104, position:'relative', overflow:'hidden', background:'#061522' }}>
+      <div style={{ aspectRatio:'16 / 7', position:'relative', overflow:'hidden', background:'#061522' }}>
         <img src={card.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-        <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.16))' }} />
-        <div style={{ position:'absolute', top:10, left:10, width:34, height:34, borderRadius:4, border:`1px solid ${card.color}`, background:'rgba(3,13,22,0.85)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{ width:16, height:16, borderRadius:3, background:card.color, opacity:0.85 }} />
-        </div>
+        <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.12))' }} />
       </div>
       <div style={{ padding:'12px 12px 11px' }}>
-        <div style={{ color:DS.text, fontSize:15, fontWeight:900, marginBottom:6 }}>{card.title}</div>
-        <div style={{ color:DS.text, fontSize:13, lineHeight:1.35, minHeight:36 }}>{card.desc}</div>
+        <div style={{ color:DS.text, fontSize:'clamp(14px, .85vw, 17px)', fontWeight:900, marginBottom:6 }}>{card.title}</div>
+        <div style={{ color:DS.text, fontSize:'clamp(12px, .72vw, 14px)', lineHeight:1.35, minHeight:34 }}>{card.desc}</div>
         <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:10 }}>
           {card.tags.map(t => (
             <span key={t} style={{ color:card.color, background:`${card.color}22`, border:`1px solid ${card.color}44`, fontSize:11, padding:'3px 7px', borderRadius:3 }}>
@@ -261,7 +255,7 @@ function ScenarioCard({ card, onStartExercise }) {
         </div>
         <button onClick={onStartExercise} style={{
           width:'100%',
-          height:30,
+          height:32,
           marginTop:10,
           border:`1px solid ${DS.blue2}`,
           borderRadius:3,
@@ -285,7 +279,7 @@ function FeaturedScenarios({ onStartExercise }) {
       borderRadius:4,
       background:'rgba(3,13,23,0.50)',
       padding:'12px 14px 14px',
-      marginTop:12,
+      margin:'12px clamp(12px, 1.6vw, 28px) 0',
     }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
         <div style={{ color:DS.text, fontSize:18, fontWeight:900, letterSpacing:'0.04em', borderLeft:`2px solid ${DS.blue2}`, paddingLeft:8 }}>
@@ -295,13 +289,14 @@ function FeaturedScenarios({ onStartExercise }) {
           View All Scenarios <Icon type="arrow" size={19} color={DS.blue2} />
         </div>
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(5, minmax(0, 1fr))', gap:12 }}>
+      <div style={{
+        display:'grid',
+        gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))',
+        gap:'clamp(10px, 1vw, 16px)',
+      }}>
         {scenarioCards.map(card => (
           <ScenarioCard key={card.title} card={card} onStartExercise={onStartExercise} />
         ))}
-      </div>
-      <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:11, marginTop:8, color:DS.dim }}>
-        <span>‹</span><span style={{ width:15, height:5, background:DS.blue2, borderRadius:5 }} /><span style={{ width:7, height:7, background:DS.dim, borderRadius:'50%', opacity:0.7 }} /><span style={{ width:7, height:7, background:DS.dim, borderRadius:'50%', opacity:0.7 }} /><span style={{ width:7, height:7, background:DS.dim, borderRadius:'50%', opacity:0.7 }} /><span>›</span>
       </div>
     </section>
   )
@@ -321,18 +316,22 @@ function HowItWorks() {
       borderRadius:4,
       background:'rgba(3,13,23,0.48)',
       padding:'12px 18px 12px',
-      marginTop:12,
+      margin:'12px clamp(12px, 1.6vw, 28px) 0',
     }}>
       <div style={{ color:DS.text, fontSize:18, fontWeight:900, letterSpacing:'0.04em', borderLeft:`2px solid ${DS.blue2}`, paddingLeft:8, marginBottom:16 }}>
         HOW NEXUS EOC WORKS
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(5, minmax(0, 1fr))', gap:18, alignItems:'start' }}>
+      <div style={{
+        display:'grid',
+        gridTemplateColumns:'repeat(auto-fit, minmax(230px, 1fr))',
+        gap:'clamp(14px, 1.5vw, 28px)',
+        alignItems:'start',
+      }}>
         {steps.map(([icon,title,body], idx) => (
-          <div key={title} style={{ display:'grid', gridTemplateColumns:'82px 1fr', gap:14, position:'relative' }}>
-            {idx < steps.length - 1 && <div style={{ position:'absolute', left:'calc(100% - 4px)', top:36, color:DS.dim, fontSize:34 }}>›</div>}
-            <div style={{ position:'relative', width:66, height:66, borderRadius:'50%', border:`1px solid ${DS.border}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <Icon type={icon} size={36} color="#DDE8F5" />
-              <div style={{ position:'absolute', top:-7, left:-7, width:24, height:24, borderRadius:'50%', border:`1px solid ${DS.blue2}`, color:DS.blue2, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, background:'#03101C' }}>{idx+1}</div>
+          <div key={title} style={{ display:'grid', gridTemplateColumns:'70px 1fr', gap:12, position:'relative' }}>
+            <div style={{ position:'relative', width:62, height:62, borderRadius:'50%', border:`1px solid ${DS.border}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Icon type={icon} size={34} color="#DDE8F5" />
+              <div style={{ position:'absolute', top:-7, left:-7, width:23, height:23, borderRadius:'50%', border:`1px solid ${DS.blue2}`, color:DS.blue2, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, background:'#03101C' }}>{idx+1}</div>
             </div>
             <div>
               <div style={{ color:'#CBE4FF', fontWeight:900, fontSize:14, marginBottom:7 }}>{title}</div>
@@ -348,91 +347,41 @@ function HowItWorks() {
   )
 }
 
-function RightRail() {
-  return (
-    <aside style={{
-      width:360,
-      minWidth:320,
-      borderLeft:`1px solid ${DS.border}`,
-      background:'linear-gradient(180deg, rgba(3,13,22,0.92), rgba(3,13,22,0.58))',
-      padding:'24px 20px 12px',
-      boxSizing:'border-box',
-    }}>
-      <div style={{ border:`1px solid ${DS.border}`, background:'rgba(4,16,28,0.40)', padding:'20px 22px', minHeight:'calc(100vh - 122px)' }}>
-        <div style={{ color:DS.text, fontSize:19, fontWeight:900, letterSpacing:'0.04em', marginBottom:12 }}>
-          EXERCISE OUTPUTS
-        </div>
-        <div style={{ width:34, height:2, background:DS.blue2, marginBottom:22 }} />
-
-        <div style={{ display:'grid', gridTemplateColumns:'58px 1fr', gap:18, marginBottom:34 }}>
-          <div style={{ width:54, height:54, borderRadius:7, border:`1px solid ${DS.blue2}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <Icon type="file" size={34} color={DS.blue2} />
-          </div>
-          <div>
-            <div style={{ color:DS.text, fontSize:17, fontWeight:900, marginBottom:8 }}>After-Action Review PDF</div>
-            <div style={{ color:DS.text, fontSize:14, lineHeight:1.55 }}>Strengths, gaps, recommendations, and doctrine/reference notes.</div>
-          </div>
-        </div>
-
-        <div style={{ display:'grid', gridTemplateColumns:'58px 1fr', gap:18, marginBottom:34 }}>
-          <div style={{ width:54, height:54, borderRadius:7, border:`1px solid ${DS.green}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <Icon type="file" size={34} color={DS.green} />
-          </div>
-          <div>
-            <div style={{ color:DS.text, fontSize:17, fontWeight:900, marginBottom:8 }}>Exercise Transcript PDF</div>
-            <div style={{ color:DS.text, fontSize:14, lineHeight:1.55 }}>Full record of injects, user responses, map updates, media, lifeline states, and scenario progression.</div>
-          </div>
-        </div>
-
-        <div style={{ height:1, background:'rgba(255,255,255,0.20)', margin:'26px 0 28px' }} />
-
-        <img src={rightRailImage} alt="" style={{ width:'100%', height:172, objectFit:'cover', opacity:0.82, display:'block', marginBottom:34 }} />
-
-        <div style={{ color:DS.blue2, fontSize:21, fontWeight:900, marginBottom:8 }}>Professional training.</div>
-        <div style={{ color:DS.text, fontSize:16, lineHeight:1.45 }}>Stronger decisions. Safer communities.</div>
-      </div>
-    </aside>
-  )
-}
-
 export default function MissionPortal({ onStartExercise }) {
   const start = onStartExercise || (() => {})
   return (
     <div style={{
       width:'100vw',
       minHeight:'100vh',
-      background:`radial-gradient(circle at 28% 18%, rgba(46,131,255,0.12), transparent 34%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`,
+      background:`radial-gradient(circle at 22% 18%, rgba(46,131,255,0.12), transparent 34%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`,
       color:DS.text,
       fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
       overflow:'hidden',
     }}>
       <Header onStartExercise={start} />
-      <div style={{
-        height:'calc(100vh - 74px)',
-        display:'grid',
-        gridTemplateColumns:'minmax(0, 1fr) 360px',
-        maxWidth:'none',
+      <main style={{
+        height:'calc(100vh - 76px)',
+        overflowY:'auto',
+        overflowX:'hidden',
+        paddingBottom:12,
       }}>
-        <main style={{ padding:'0 28px 12px 28px', overflowY:'auto', minWidth:0 }}>
-          <Hero onStartExercise={start} />
-          <CapabilityBand />
-          <FeaturedScenarios onStartExercise={start} />
-          <HowItWorks />
-          <footer style={{
-            height:34,
-            display:'flex',
-            alignItems:'center',
-            justifyContent:'center',
-            gap:210,
-            color:DS.muted,
-            fontSize:13,
-          }}>
-            <span>© 2025 NEXUS EOC. All rights reserved.</span>
-            <span style={{ color:DS.blue2 }}>About NEXUS EOC</span>
-          </footer>
-        </main>
-        <RightRail />
-      </div>
+        <Hero onStartExercise={start} />
+        <CapabilityBand />
+        <FeaturedScenarios onStartExercise={start} />
+        <HowItWorks />
+        <footer style={{
+          height:34,
+          display:'flex',
+          alignItems:'center',
+          justifyContent:'center',
+          gap:'clamp(60px, 12vw, 220px)',
+          color:DS.muted,
+          fontSize:13,
+        }}>
+          <span>© 2025 NEXUS EOC. All rights reserved.</span>
+          <span style={{ color:DS.blue2 }}>About NEXUS EOC</span>
+        </footer>
+      </main>
     </div>
   )
 }
