@@ -32,11 +32,11 @@ const DS = {
 }
 
 const difficultyText = {
-  Basic:'Introductory pace with generous evaluation and fewer cascading problems.',
-  Moderate:'Balanced operational pressure with realistic resource and coordination friction.',
-  Advanced:'Professional rigor. Multiple complications, tighter timelines, and real resource constraints.',
-  Brutal:'Ruthless evaluation. Vague, late, or incomplete decisions cascade quickly.',
-  Adaptive:'The AI adjusts to demonstrated competence and keeps pressure realistic.',
+  Introductory:'Slower pace, more forgiving evaluation, and clearer exercise pressure for first-time users.',
+  Standard:'Normal realistic exercise pressure with practical coordination and resource-management challenges.',
+  Advanced:'Harder scenario conditions with more complications, tighter timelines, and less complete information.',
+  Expert:'High-pressure exercise environment with severe consequences for weak or delayed decisions.',
+  Adaptive:'The AI adjusts difficulty based on the participant’s performance.',
 }
 
 const SCENARIO_VISUALS = {
