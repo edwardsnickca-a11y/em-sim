@@ -83,7 +83,7 @@ function Icon({ name, size=24, color='currentColor' }) {
     sliders:<><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="8" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="11" cy="17" r="2"/></>,
     branch:<><path d="M12 20V10"/><path d="M12 10 7 5"/><path d="M12 10l5-5"/><path d="M7 5v5M17 5v5"/></>,
     checklist:<><path d="M8 6h11M8 12h11M8 18h11"/><path d="m4 6 .8.8L6.5 5M4 12l.8.8 1.7-1.8M4 18l.8.8 1.7-1.8"/></>,
-    bell:<><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/><circle cx="18.5" cy="5.5" r="2.5" fill={DS.teal} stroke={DS.teal}/>,
+    bell:<><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/><circle cx="18.5" cy="5.5" r="2.5" fill={DS.teal} stroke={DS.teal}/></>,
   }
   return <svg {...common}>{icons[name] || icons.help}</svg>
 }
