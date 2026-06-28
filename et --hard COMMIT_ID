@@ -1,0 +1,92 @@
+[33m5d17122[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m, [m[1;31morigin/dev[m[33m)[m fix: repair mission portal JSX build error
+[33m92253e0[m style: align mission portal with approved design
+[33md34de92[m feat: add approved start exercise screen
+[33m5603207[m feat: add mission portal
+[33m9f3ad11[m feat: add exercise transcript export
+[33m09ed797[m Refactor AAR onboarding and settings components
+[33mcb87eeb[m feedback as header button in AAR, removed from footer
+[33m491c66a[m structured AAR display with 8-section layout and download
+[33m6b0cb66[m feat: post-ENDEX feedback form
+[33m500c185[m feat: add about page link to footer
+[33m0fffd03[m feat: add about page
+[33mdc7e011[m feat: add about page
+[33m6778735[m feat: add about page
+[33m5a1c9fb[m feat: add about page
+[33m026ea62[m feat: add about page
+[33m5fb18e4[m feat: add about page
+[33md8dc570[m feat: add role and optional player name to PostHog events
+[33m2d5c1bb[m fix: lock remaining setup screen colors to teal
+[33mf7a70c5[m fix: setup screen closing brace and stray line
+[33m2aff15f[m fix: setup screen closing brace and stray line
+[33m848a705[m fix: lock setup screen colors to default teal
+[33m3991d6d[m feat: updated overview and user guide PDFs
+[33m4515866[m fix: remove duplicate resolvedSituation declaration
+[33m7d4835b[m fix: remove duplicate isEndex declaration
+[33ma65c4ef[m fix: capture ENDEX from player action before input cleared
+[33m199aae7[m fix: broaden ENDEX detection to catch AAR responses
+[33m75f5869[m feat: role selector with ESF LNOs and EOC positions
+[33m6184efd[m feat: add Response & Recovery and GIS Center links to all scenarios
+[33m2305bf3[m fix: increase setup screen text size and contrast
+[33ma4883fe[m fix: increase setup screen text size and contrast
+[33mfcfd323[m fix: improve mid-size city geographic diversity in world generation
+[33m98ae6b8[m fix: detect ENDEX from parsed response not cleared input
+[33mca4d768[m fix: force ENDEX situation when player types ENDEX
+[33m5d1900b[m feat: AAR home button, EM Director title, personalized notepad
+[33mb03af3d[m feat: player name input with local personalization
+[33m8b4ac04[m fix: add posthog-js to dependencies
+[33m7a76b6e[m feat: add PostHog analytics events
+[33m6373382[m feat: add resource guide to docs section
+[33m90fbd6c[m fix: update and add reference links across 5 scenarios
+[33mcf371c4[m trigger dev deployment
+[33m5644af3[m feat: add PDF docs to public folder
+[33mf11db55[m fix: correct PDF filenames with _3 suffix
+[33m1f5c0a1[m feat: add PDF docs to public folder
+[33m3730b02[m feat: add docs section to setup screen
+[33m8a2f317[m rebrand: EM Crisis Simulator to NEXUS EOC
+[33m2fb9f08[m feat: add copyright footer
+[33mf26d50f[m fix: replace 4 dead RDD reference links
+[33m40f9d87[m fix: replace 4 dead RDD reference links
+[33m0759f97[m feat: bg-map image background, unified font sizes, jurisdiction desc below dropdown
+[33maaea17c[m feat: map/radar hero, floating jurisdiction panel, improved typography
+[33m7fbce20[m fix: setup screen contrast and max-width centering
+[33m384104b[m feat: full ops-center setup screen with dynamic status bar
+[33mba0a9a1[m fix: constraints color, add difficulty descriptions
+[33m2bea9ba[m fix: constraints color, add difficulty descriptions
+[33m9152c4c[m fix: constraints color, add difficulty descriptions
+[33mf6a0f2b[m feat: redesign setup screen
+[33m1d72a6a[m fix: close terminal column div
+[33mc126877[m feat: draggable input area height
+[33m7e57af1[m feat: draggable input area height
+[33m3d25100[m fix: update broken wildfire reference links
+[33m7cd7799[m fix: force init- prefix on world pin IDs for correct color rendering
+[33m3e6c529[m option A: dynamic jurisdiction-driven world generation
+[33m48782e3[m end scenario dialog with AAR and no-AAR options
+[33m1c81e17[m four new scenarios: wildfire, winter storm, RDD, train derailment
+[33me4a74bd[m ESF player-driven activation toggles
+[33md516fea[m fix 8 broken reference links
+[33m9176eee[m fix reference link URLs
+[33m4d1cc8c[m fix info callout text wrapping
+[33mf40bfeb[m info callout buttons on all panel headers
+[33m0d2597f[m increase max tokens to fix truncated JSON response
+[33mfa35143[m dynamic map pins from dispatch events
+[33m633ff4d[m scenario-agnostic AAR criteria
+[33m441b347[m full width layout
+[33m35ec521[m add water systems lifeline and FEMA PNG icons
+[33m59b2747[m add water systems lifeline and FEMA PNG icons
+[33m91ae482[m add FEMA lifeline icons
+[33m707ee86[m fix syntax error in settings panel
+[33m65cdaef[m settings panel with font size and color controls
+[33mc15ebaf[m ESF reference panel in left column
+[33m5af5634[m rebuilt drag logic with absolute positioning
+[33m5690957[m fix column resize drag logic
+[33m6882cee[m news feed and reference links panel
+[33m36ee142[m fix react-leaflet version compatibility
+[33m4943731[m incident map with scenario pins and notepad split
+[33mae57c30[m fix tooltip overflow on right side lifelines
+[33m19c554a[m wider lifeline tooltip
+[33mcd9caf7[m tooltip below lifeline tiles
+[33m63c8590[m lifeline tooltips on hover
+[33m438317c[m community lifeline status bar
+[33mb202d7b[m wider drag handles
+[33m6e2832a[m highlight all new dispatch cards per turn
+[33mc17e256[m initial commit
