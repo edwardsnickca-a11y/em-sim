@@ -12,6 +12,7 @@ import { ROLES, ROLE_GROUPS } from './data/roles'
 import { SCENARIOS, DIFFICULTIES } from './data/scenarios'
 import { LIFELINES, DEFAULT_LIFELINES, LL_COLORS } from './data/lifelines'
 import { AAR_SECTIONS } from './data/aar'
+import MissionPortal from './components/missionPortal/MissionPortal'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -216,7 +217,7 @@ ENDEX RESPONSE FORMAT — use this exact format when player types ENDEX:
 const SAVE_KEY = 'em_sim_v14'
 
 const defaultState = {
-  screen:'setup', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'', role:'EOC Director',
+  screen:'portal', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'', role:'EOC Director',
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:DEFAULT_LIFELINES, headlines:[],
   dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[],
@@ -1165,6 +1166,17 @@ export default function App() {
   }
 
   if (!state) return <div style={{ color:'#888', padding:'2rem', fontFamily:'monospace' }}>Loading...</div>
+
+  if (state.screen === 'portal') {
+    return (
+      <MissionPortal
+        state={state}
+        onStartExercise={() => update({ screen:'setup' })}
+        showGuidedTour={showOnboarding}
+        onCloseGuidedTour={closeOnboarding}
+      />
+    )
+  }
 
   // ─── SETUP SCREEN ──────────────────────────────────────────────────────────
   if (state.screen === 'setup') {
