@@ -13,6 +13,7 @@ import { SCENARIOS, DIFFICULTIES } from './data/scenarios'
 import { LIFELINES, DEFAULT_LIFELINES, LL_COLORS } from './data/lifelines'
 import { AAR_SECTIONS } from './data/aar'
 import MissionPortal from './components/missionPortal/MissionPortal'
+import StartExercise from './components/startExercise/StartExercise'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -1178,198 +1179,16 @@ export default function App() {
     )
   }
 
-  // ─── SETUP SCREEN ──────────────────────────────────────────────────────────
+  // ─── START EXERCISE SCREEN ───────────────────────────────────────────
   if (state.screen === 'setup') {
-    const sac = '#1D9E75'
     return (
-      <div style={{ minHeight:'100vh', fontFamily:'JetBrains Mono, monospace', display:'flex', flexDirection:'column', position:'relative' }}>
-        {showOnboarding && (
-          <OnboardingModal onClose={closeOnboarding} ac={settings.accentColor} />
-        )}
-        <div style={{ position:'fixed', inset:0, zIndex:0, backgroundImage:'url(/bg-map.png)', backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }}/>
-        <div style={{ position:'fixed', inset:0, zIndex:1, background:'rgba(4,8,6,0.82)' }}/>
-        <div style={{ position:'fixed', inset:0, zIndex:1, backgroundImage:'linear-gradient(rgba(29,158,117,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(29,158,117,0.04) 1px, transparent 1px)', backgroundSize:'40px 40px', pointerEvents:'none' }}/>
-        <div style={{ position:'relative', zIndex:2, display:'flex', flexDirection:'column', minHeight:'100vh' }}>
-          <div style={{ borderBottom:'0.5px solid rgba(29,158,117,0.15)' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 24px', borderBottom:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.6)' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:9, color:'#6aaa80', letterSpacing:'0.12em' }}>
-                NEXUS EOC — SIMULATED EMERGENCY OPERATIONS PLATFORM
-              </div>
-              <div style={{ display:'flex', gap:24 }}>
-                {[['SYSTEM STATUS','● OPERATIONAL'],['NETWORK','SECURE'],['DATA FEED','LIVE'],['AI ENGINE','ONLINE']].map(([k,v]) => (
-                  <div key={k} style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:1 }}>
-                    <span style={{ fontSize:8, color:'#5a9a70', letterSpacing:'0.1em' }}>{k}</span>
-                    <span style={{ fontSize:9, color:sac, letterSpacing:'0.08em' }}>{v}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ maxWidth:1200, margin:'0 auto', width:'100%', boxSizing:'border-box', padding:'28px 32px 24px', display:'grid', gridTemplateColumns:'1fr auto', gap:40, alignItems:'start' }}>
-              <div>
-                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-                  <div style={{ width:24, height:'0.5px', background:sac }}/>
-                  <span style={{ fontSize:9, color:sac, letterSpacing:'0.2em', textTransform:'uppercase' }}>Simulated Emergency Operations Platform</span>
-                </div>
-                <h1 style={{ fontSize:32, fontWeight:700, lineHeight:1.05, margin:'0 0 6px', color:'#e8f5f0', letterSpacing:'0.04em' }}>NEXUS EOC</h1>
-                <p style={{ fontSize:13, color:'#5aaa80', letterSpacing:'0.04em', margin:'0 0 8px', fontWeight:400 }}>Simulated Emergency Operations Platform</p>
-                <p style={{ fontSize:11, color:'#6aba88', lineHeight:1.8, margin:'0 0 20px', maxWidth:500 }}>Scenario-based incident command simulations for emergency managers, EOCs, and response teams.</p>
-                <div style={{ display:'flex', gap:32 }}>
-                  {[['TRAIN','Realistic scenarios built for your role'],['DECIDE','Sharpen judgment under pressure'],['COMMAND','Practice ICS doctrine'],['REVIEW','AI after-action every scenario']].map(([label,desc]) => (
-                    <div key={label} style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                      <span style={{ fontSize:9, color:sac, letterSpacing:'0.12em', fontWeight:700 }}>{label}</span>
-                      <span style={{ fontSize:9, color:'#5a8a70', lineHeight:1.5 }}>{desc}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div style={{ minWidth:180, border:'0.5px solid rgba(29,158,117,0.2)', borderRadius:3, background:'rgba(4,8,6,0.75)', padding:'10px 14px' }}>
-                {[['SCENARIOS','10 LOADED'],['JURISDICTIONS','6 TYPES'],['DIFFICULTY','5 LEVELS'],['AAR','STRUCTURED'],['VERSION','2.1']].map(([k,v]) => (
-                  <div key={k} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'0.5px solid rgba(29,158,117,0.08)' }}>
-                    <span style={{ fontSize:8, color:'#5a9a70', letterSpacing:'0.1em' }}>{k}</span>
-                    <span style={{ fontSize:8, color:sac, letterSpacing:'0.08em' }}>{v}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ flex:1, overflowY:'auto', padding:'20px 32px' }}>
-            <div style={{ maxWidth:1200, margin:'0 auto', width:'100%', boxSizing:'border-box' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-                <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Select Scenario</span>
-                <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
-                {state.scenario && <span style={{ fontSize:9, color:sac, letterSpacing:'0.06em' }}>✓ {SCENARIOS[state.scenario].name}</span>}
-              </div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:6, marginBottom:20 }}>
-                {Object.entries(SCENARIOS).map(([key, sc]) => {
-                  const selected = state.scenario === key
-                  return (
-                    <button key={key} onClick={() => update({ scenario:key })}
-                      style={{ textAlign:'left', padding:'14px 12px', border:`0.5px solid ${selected?sac:'rgba(29,158,117,0.18)'}`, borderLeft:`${selected?'3px':'0.5px'} solid ${selected?sac:'rgba(29,158,117,0.18)'}`, background:selected?'rgba(29,158,117,0.12)':'rgba(4,8,6,0.65)', cursor:'pointer', borderRadius:3, outline:'none', position:'relative' }}
-                      onMouseEnter={e => { if(!selected){ e.currentTarget.style.borderColor='rgba(29,158,117,0.4)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}}
-                      onMouseLeave={e => { if(!selected){ e.currentTarget.style.borderColor='rgba(29,158,117,0.18)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}}>
-                      {selected && <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:sac }}/>}
-                      <div style={{ fontSize:24, marginBottom:8, lineHeight:1 }}>{sc.icon}</div>
-                      <div style={{ fontSize:12, fontWeight:700, color:selected?sac:'#6aaa80', marginBottom:5, letterSpacing:'0.06em', lineHeight:1.3 }}>{sc.name.toUpperCase()}</div>
-                      <div style={{ fontSize:11, color:'#ccc', lineHeight:1.7 }}>{sc.desc}</div>
-                    </button>
-                  )
-                })}
-              </div>
-
-              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-                <span style={{ fontSize:9, color:'#4a8a68', textTransform:'uppercase', letterSpacing:'0.12em' }}>Role</span>
-                <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
-              </div>
-              <div style={{ marginBottom:16 }}>
-                <select value={state.role||'EOC Director'} onChange={e => update({ role:e.target.value })}
-                  style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
-                  {Object.entries(ROLE_GROUPS).map(([group, roles]) => (
-                    <optgroup key={group} label={group} style={{ background:'#0a140c', color:'#4a8a68' }}>
-                      {roles.map(r => <option key={r} value={r} style={{ background:'#0a140c' }}>{r}</option>)}
-                    </optgroup>
-                  ))}
-                </select>
-                {state.role && <div style={{ marginTop:6, fontSize:9, color:'#bbb', lineHeight:1.7, paddingLeft:2 }}>{ROLES[state.role]}</div>}
-              </div>
-
-              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-                <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Commander</span>
-                <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
-              </div>
-              <div style={{ marginBottom:16 }}>
-                <input type="text" placeholder="Enter your name (optional)" value={state.playerName||''} onChange={e => update({ playerName: e.target.value })} maxLength={40}
-                  style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none', boxSizing:'border-box' }}/>
-                <div style={{ marginTop:6, fontSize:8, color:'#3a6a48', lineHeight:1.6 }}>Your name is used locally to personalize your session only. We collect anonymous play statistics — no personal data is stored.</div>
-              </div>
-
-              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-                <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Configuration</span>
-                <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
-              </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:16 }}>
-                <div>
-                  <p style={{ fontSize:9, color:'#6aaa80', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Jurisdiction Type</p>
-                  <select value={state.jurisdiction} onChange={e => update({ jurisdiction:e.target.value })}
-                    style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
-                    {JURISDICTIONS.map(j => <option key={j} style={{ background:'#0a140c' }}>{j}</option>)}
-                  </select>
-                  {state.jurisdiction && (
-                    <div style={{ marginTop:7, fontSize:9, color:'#bbb', lineHeight:1.7, paddingLeft:2 }}>
-                      {JURISDICTION_CONTEXT[state.jurisdiction].desc}
-                      <div style={{ marginTop:5, color:'#888' }}><span style={{ color:sac }}>Constraints: </span>{JURISDICTION_CONTEXT[state.jurisdiction].constraints}</div>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p style={{ fontSize:9, color:'#6aaa80', margin:'0 0 6px', textTransform:'uppercase', letterSpacing:'0.12em' }}>Difficulty</p>
-                  <select value={state.difficulty} onChange={e => update({ difficulty:e.target.value })}
-                    style={{ width:'100%', padding:'9px 10px', background:'rgba(4,8,6,0.85)', border:'0.5px solid rgba(29,158,117,0.3)', color:'#8adaaa', fontSize:11, fontFamily:'JetBrains Mono, monospace', borderRadius:3, outline:'none' }}>
-                    {DIFFICULTIES.map(d => <option key={d} style={{ background:'#0a140c' }}>{d}</option>)}
-                  </select>
-                  {state.difficulty && (
-                    <div style={{ marginTop:7, fontSize:9, color:'#bbb', lineHeight:1.7, paddingLeft:2 }}>
-                      {state.difficulty === 'Basic' && 'Generous evaluation. One complication per turn. Good for learning the system.'}
-                      {state.difficulty === 'Moderate' && 'Moderate rigor. Two complications per turn. Realistic resource pressure.'}
-                      {state.difficulty === 'Advanced' && 'Professional rigor. 2-3 complications per turn. Resource constraints are real.'}
-                      {state.difficulty === 'Brutal' && 'Ruthless evaluation. Every vague or delayed decision cascades.'}
-                      {state.difficulty === 'Adaptive' && 'Difficulty scales to your performance. Never lets you get comfortable.'}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-                <span style={{ fontSize:9, color:'#6aaa80', textTransform:'uppercase', letterSpacing:'0.12em' }}>Documentation</span>
-                <div style={{ flex:1, height:'0.5px', background:'rgba(29,158,117,0.15)' }}/>
-              </div>
-              <div style={{ display:'flex', gap:8, marginBottom:16 }}>
-                {[
-                  { href:'/NEXUS_EOC_Overview.pdf', icon:'📄', label:'PLATFORM OVERVIEW', sub:'One-page summary — opens in new tab', arrow:'↗' },
-                  { href:'/NEXUS_EOC_User_Guide.pdf', icon:'📋', label:'USER GUIDE', sub:'Full interface reference — opens in new tab', arrow:'↗' },
-                  { href:'/NEXUS_EOC_Resource_Guide.xlsx', icon:'📊', label:'RESOURCE GUIDE', sub:'All reference links by scenario — Excel', arrow:'↓' },
-                ].map(d => (
-                  <a key={d.label} href={d.href} target="_blank" rel="noopener noreferrer"
-                    style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 14px', border:'0.5px solid rgba(29,158,117,0.25)', borderRadius:3, background:'rgba(4,8,6,0.65)', textDecoration:'none', flex:1 }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.5)'; e.currentTarget.style.background='rgba(29,158,117,0.07)' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(29,158,117,0.25)'; e.currentTarget.style.background='rgba(4,8,6,0.65)' }}>
-                    <span style={{ fontSize:18 }}>{d.icon}</span>
-                    <div>
-                      <div style={{ fontSize:10, fontWeight:700, color:'#6aaa80', letterSpacing:'0.06em' }}>{d.label}</div>
-                      <div style={{ fontSize:8, color:'#5a9a70', marginTop:2 }}>{d.sub}</div>
-                    </div>
-                    <span style={{ marginLeft:'auto', fontSize:9, color:'#3a6a48' }}>{d.arrow}</span>
-                  </a>
-                ))}
-              </div>
-
-              <button onClick={() => state.scenario && !initLoading && startScenario(state.scenario)} disabled={!state.scenario || initLoading}
-                style={{ width:'100%', padding:'14px', fontSize:12, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', border:`0.5px solid ${state.scenario?sac:'rgba(29,158,117,0.2)'}`, color:state.scenario?'#040806':'#3a6a48', background:state.scenario?sac:'rgba(4,8,6,0.6)', cursor:(state.scenario&&!initLoading)?'pointer':'not-allowed', fontFamily:'JetBrains Mono, monospace', borderRadius:3, opacity:initLoading?0.6:1 }}>
-                {initLoading ? '⟳  Generating scenario world...' : state.scenario ? `Launch — ${SCENARIOS[state.scenario].name} / ${state.jurisdiction} ↗` : 'Select a scenario to begin'}
-              </button>
-            </div>
-          </div>
-
-          <div style={{ borderTop:'0.5px solid rgba(29,158,117,0.15)', background:'rgba(4,8,6,0.92)', padding:'8px 32px', flexShrink:0 }}>
-            <div style={{ maxWidth:1200, margin:'0 auto', width:'100%', display:'flex', gap:0 }}>
-              {[['EOC NETWORK','CONNECTED'],['MODE','TRAINING'],['SCENARIO', state.scenario ? SCENARIOS[state.scenario].name.toUpperCase() : '—'],['JURISDICTION', state.jurisdiction ? state.jurisdiction.toUpperCase() : '—'],['ROLE', state.role ? state.role.toUpperCase() : 'EOC DIRECTOR'],['DIFFICULTY', state.difficulty ? state.difficulty.toUpperCase() : '—'],['STATUS', state.scenario ? 'READY TO LAUNCH' : 'AWAITING SELECTION']].map(([k,v], i, arr) => (
-                <div key={k} style={{ display:'flex', flexDirection:'column', gap:2, paddingRight:24, marginRight:24, borderRight: i < arr.length-1 ? '0.5px solid rgba(29,158,117,0.1)' : 'none' }}>
-                  <span style={{ fontSize:8, color:'#3a6a48', letterSpacing:'0.12em' }}>{k}</span>
-                  <span style={{ fontSize:10, color: k==='STATUS' && state.scenario ? sac : '#5a9a70', letterSpacing:'0.06em' }}>{v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div style={{ position:'relative', zIndex:2, textAlign:'center', padding:'10px 32px', borderTop:'0.5px solid rgba(29,158,117,0.1)', background:'rgba(4,8,6,0.7)' }}>
-          <span style={{ fontSize:8, color:'#2a4a3a', letterSpacing:'0.1em' }}>
-            © {new Date().getFullYear()} NICHOLAS EDWARDS — NEXUS EOC — ALL RIGHTS RESERVED — UNAUTHORIZED REPRODUCTION OR COMMERCIAL USE PROHIBITED
-            &nbsp;&nbsp;|&nbsp;&nbsp;
-            <a href="/about.html" style={{ color:'#3a6a48', textDecoration:'none', letterSpacing:'0.1em' }} onMouseEnter={e => e.target.style.color='#1D9E75'} onMouseLeave={e => e.target.style.color='#3a6a48'}>ABOUT</a>
-          </span>
-        </div>
-        <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
-      </div>
+      <StartExercise
+        state={state}
+        update={update}
+        startScenario={startScenario}
+        initLoading={initLoading}
+        onMissionPortal={() => update({ screen:'portal' })}
+      />
     )
   }
 
