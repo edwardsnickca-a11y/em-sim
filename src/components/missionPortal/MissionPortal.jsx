@@ -1,15 +1,14 @@
-import { SCENARIOS } from '../../data/scenarios'
 import heroImage from '../../assets/missionPortal/hero-command-center.jpg'
-import hurricaneImage from '../../assets/missionPortal/scenarios/hurricane.svg'
-import mciImage from '../../assets/missionPortal/scenarios/mci.svg'
-import hazmatImage from '../../assets/missionPortal/scenarios/hazmat.svg'
-import cyberImage from '../../assets/missionPortal/scenarios/cyber.svg'
-import earthquakeImage from '../../assets/missionPortal/scenarios/earthquake.svg'
-import floodImage from '../../assets/missionPortal/scenarios/flood.svg'
-import wildfireImage from '../../assets/missionPortal/scenarios/wildfire.svg'
-import winterImage from '../../assets/missionPortal/scenarios/winter.svg'
-import rddImage from '../../assets/missionPortal/scenarios/rdd.svg'
-import trainImage from '../../assets/missionPortal/scenarios/train.svg'
+import hurricaneImage from '../../assets/missionPortal/scenario-hurricane.jpg'
+import mciImage from '../../assets/missionPortal/scenario-mci.jpg'
+import hazmatImage from '../../assets/missionPortal/scenario-hazmat.jpg'
+import cyberImage from '../../assets/missionPortal/scenario-cyber.jpg'
+import earthquakeImage from '../../assets/missionPortal/scenario-earthquake.jpg'
+import floodImage from '../../assets/missionPortal/scenario-flood.jpg'
+import wildfireImage from '../../assets/missionPortal/scenario-wildfire.jpg'
+import winterImage from '../../assets/missionPortal/scenario-winter.jpg'
+import rddImage from '../../assets/missionPortal/scenario-rdd.jpg'
+import trainImage from '../../assets/missionPortal/scenario-train.jpg'
 
 const DS = {
   bg:'#020B13',
@@ -28,20 +27,18 @@ const DS = {
   dim:'#7C91A6',
 }
 
-const scenarioImages = {
-  hurricane:hurricaneImage,
-  mci:mciImage,
-  hazmat:hazmatImage,
-  cyber:cyberImage,
-  earthquake:earthquakeImage,
-  flood:floodImage,
-  wildfire:wildfireImage,
-  winter:winterImage,
-  rdd:rddImage,
-  train:trainImage,
-}
-
-const scenarioOrder = ['hurricane','mci','hazmat','cyber','earthquake','flood','wildfire','winter','rdd','train']
+const scenarioCards = [
+  { title:'Hurricane Landfall', desc:'Coastal hurricane impacts with evacuation, sheltering, infrastructure, and resource-prioritization pressures.', img:hurricaneImage },
+  { title:'Mass Casualty Incident', desc:'High-casualty incident requiring rapid coordination across EMS, hospitals, law enforcement, and public information.', img:mciImage },
+  { title:'Hazardous Materials Release', desc:'HazMat incident with protective actions, public warning, environmental monitoring, and multiagency coordination.', img:hazmatImage },
+  { title:'Cyber-Infrastructure Cascade', desc:'Cyber disruption affecting water, power, communications, public services, and continuity of operations.', img:cyberImage },
+  { title:'Major Earthquake', desc:'Seismic event with damage assessment gaps, degraded communications, medical surge, and resource staging challenges.', img:earthquakeImage },
+  { title:'Flash Flood / Dam Failure', desc:'Rapid flooding with downstream warning, evacuations, sheltering, access constraints, and infrastructure risk.', img:floodImage },
+  { title:'Urban Wildfire', desc:'Wind-driven fire with evacuation routes, shelter options, air resource coordination, and structure exposure risk.', img:wildfireImage },
+  { title:'Winter Storm Cascade', desc:'Extreme winter impacts with power outages, road clearance, warming shelters, fuel, and vulnerable populations.', img:winterImage },
+  { title:'Radiological Dispersal Device', desc:'RDD event requiring consequence management, public messaging, federal coordination, and contamination controls.', img:rddImage },
+  { title:'Train Derailment — MCI / HazMat', desc:'Rail incident combining casualties, hazardous materials, evacuation decisions, and railroad coordination.', img:trainImage },
+]
 
 function Icon({ type, size=28, color=DS.blue2 }) {
   const p = { width:size, height:size, viewBox:'0 0 24 24', fill:'none', stroke:color, strokeWidth:1.7, strokeLinecap:'round', strokeLinejoin:'round' }
@@ -61,7 +58,7 @@ function Icon({ type, size=28, color=DS.blue2 }) {
   return <svg {...p}>{icons[type] || icons.file}</svg>
 }
 
-function Header({ onStartExercise, onGuidedTour }) {
+function Header({ onStartExercise }) {
   return (
     <header style={{
       height:76,
@@ -82,22 +79,22 @@ function Header({ onStartExercise, onGuidedTour }) {
             Simulated Emergency<br />Operations Platform
           </div>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-          <button onClick={onGuidedTour} title="TODO: wire to existing guided tour modal" style={{
+        <div style={{ display:'flex', gap:12 }}>
+          <button title="TODO: wire to existing guided tour modal" style={{
             height:42,
-            padding:'0 17px',
+            padding:'0 18px',
             display:'flex',
             alignItems:'center',
-            gap:10,
+            gap:9,
             borderRadius:4,
             border:`1px solid ${DS.borderStrong}`,
-            background:'rgba(3,13,23,0.70)',
+            background:'rgba(3,13,23,0.72)',
             color:'#fff',
             fontWeight:800,
             fontSize:15,
             cursor:'default',
           }}>
-            <Icon type="play" size={20} color={DS.blue2} /> Guided Tour
+            <Icon type="play" size={19} color={DS.blue2} /> Guided Tour
           </button>
           <button onClick={onStartExercise} style={{
             height:42,
@@ -126,15 +123,22 @@ function Hero() {
   return (
     <section style={{
       position:'relative',
-      minHeight:'clamp(240px, 29vh, 330px)',
+      minHeight:'clamp(250px, 30vh, 335px)',
       border:`1px solid ${DS.border}`,
       overflow:'hidden',
       background:'#030E18',
       borderRadius:4,
     }}>
-      <img src={heroImage} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.86 }} />
+      <img src={heroImage} alt="" style={{
+        position:'absolute',
+        inset:0,
+        width:'100%',
+        height:'100%',
+        objectFit:'cover',
+        opacity:0.86,
+      }} />
       <div style={{ position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(2,9,16,0.98) 0%, rgba(2,9,16,0.84) 30%, rgba(2,9,16,0.22) 68%, rgba(2,9,16,0.34) 100%)' }} />
-      <div style={{ position:'relative', zIndex:2, width:'min(720px, 58%)', padding:'clamp(28px, 3.8vh, 46px) 0 30px clamp(24px, 2.3vw, 42px)', boxSizing:'border-box' }}>
+      <div style={{ position:'relative', zIndex:2, width:'min(720px, 58%)', padding:'clamp(28px, 4vh, 46px) 0 30px clamp(24px, 2.3vw, 42px)', boxSizing:'border-box' }}>
         <h1 style={{ margin:0, color:DS.text, fontSize:'clamp(50px, 4vw, 74px)', lineHeight:0.98, fontWeight:950, letterSpacing:'0.055em' }}>
           MISSION PORTAL
         </h1>
@@ -157,15 +161,31 @@ function CapabilityBand() {
     ['file','AAR & TRANSCRIPT OUTPUTS','Download professional after-action reviews and transcripts in PDF format.', DS.purple],
   ]
   return (
-    <section style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(300px, 1fr))', gap:0, border:`1px solid ${DS.border}`, borderRadius:4, background:'rgba(2,11,19,0.65)', overflow:'hidden' }}>
+    <section style={{
+      display:'grid',
+      gridTemplateColumns:'repeat(4, minmax(0, 1fr))',
+      gap:0,
+      border:`1px solid ${DS.border}`,
+      borderRadius:4,
+      background:'rgba(2,11,19,0.65)',
+      overflow:'hidden',
+    }}>
       {cards.map(([icon,title,body,color], idx) => (
-        <div key={title} style={{ display:'grid', gridTemplateColumns:'70px 1fr', gap:14, alignItems:'center', padding:'clamp(13px, 1.1vw, 18px)', borderRight:idx < cards.length - 1 ? `1px solid ${DS.border}` : 'none', minHeight:96 }}>
-          <div style={{ width:66, height:66, borderRadius:'50%', border:`1.5px solid ${color}`, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(2,11,19,0.35)' }}>
-            <Icon type={icon} size={38} color={color} />
+        <div key={title} style={{
+          display:'grid',
+          gridTemplateColumns:'64px 1fr',
+          gap:12,
+          alignItems:'center',
+          padding:'clamp(12px, 1vw, 16px)',
+          borderRight:idx < cards.length - 1 ? `1px solid ${DS.border}` : 'none',
+          minHeight:92,
+        }}>
+          <div style={{ width:60, height:60, borderRadius:'50%', border:`1.5px solid ${color}`, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(2,11,19,0.35)' }}>
+            <Icon type={icon} size={35} color={color} />
           </div>
           <div>
-            <div style={{ color, fontSize:12, fontWeight:950, letterSpacing:'0.10em', marginBottom:7 }}>{title}</div>
-            <div style={{ color:DS.muted, fontSize:13, lineHeight:1.45 }}>{body}</div>
+            <div style={{ color, fontSize:12, fontWeight:950, letterSpacing:'0.10em', marginBottom:6 }}>{title}</div>
+            <div style={{ color:DS.muted, fontSize:13, lineHeight:1.42 }}>{body}</div>
           </div>
         </div>
       ))}
@@ -173,17 +193,23 @@ function CapabilityBand() {
   )
 }
 
-function ScenarioCard({ scenarioKey }) {
-  const scenario = SCENARIOS?.[scenarioKey] || {}
+function ScenarioCard({ card }) {
   return (
-    <div style={{ border:`1px solid ${DS.border}`, borderRadius:4, overflow:'hidden', background:'rgba(3,14,24,0.84)', minWidth:0 }}>
-      <div style={{ aspectRatio:'16 / 6.8', position:'relative', overflow:'hidden', background:'#061522' }}>
-        <img src={scenarioImages[scenarioKey]} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-        <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.12))' }} />
+    <div style={{
+      border:`1px solid ${DS.border}`,
+      borderRadius:4,
+      overflow:'hidden',
+      background:'rgba(3,14,24,0.84)',
+      minWidth:0,
+      display:'flex',
+      flexDirection:'column',
+    }}>
+      <div style={{ aspectRatio:'16 / 6.4', overflow:'hidden', background:'#061522' }}>
+        <img src={card.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
       </div>
-      <div style={{ padding:'12px 12px 13px' }}>
-        <div style={{ color:DS.text, fontSize:'clamp(14px, .85vw, 17px)', fontWeight:900, marginBottom:6 }}>{scenario.name || scenarioKey}</div>
-        <div style={{ color:DS.text, fontSize:'clamp(12px, .72vw, 14px)', lineHeight:1.38, minHeight:54 }}>{scenario.desc || ''}</div>
+      <div style={{ padding:'12px 13px 14px', flex:1 }}>
+        <div style={{ color:DS.text, fontSize:'clamp(15px, .9vw, 18px)', fontWeight:900, marginBottom:8, lineHeight:1.12 }}>{card.title}</div>
+        <div style={{ color:DS.text, fontSize:'clamp(12px, .72vw, 14px)', lineHeight:1.42 }}>{card.desc}</div>
       </div>
     </div>
   )
@@ -191,12 +217,25 @@ function ScenarioCard({ scenarioKey }) {
 
 function FeaturedScenarios() {
   return (
-    <section style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:'rgba(3,13,23,0.50)', padding:'12px 14px 14px' }}>
-      <div style={{ color:DS.text, fontSize:18, fontWeight:900, letterSpacing:'0.04em', borderLeft:`2px solid ${DS.blue2}`, paddingLeft:8, marginBottom:12 }}>
-        FEATURED SCENARIOS
+    <section style={{
+      border:`1px solid ${DS.border}`,
+      borderRadius:4,
+      background:'rgba(3,13,23,0.50)',
+      padding:'12px 14px 14px',
+    }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+        <div style={{ color:DS.text, fontSize:18, fontWeight:900, letterSpacing:'0.04em', borderLeft:`2px solid ${DS.blue2}`, paddingLeft:8 }}>
+          FEATURED SCENARIOS
+        </div>
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(260px, 1fr))', gap:'clamp(10px, 1vw, 16px)' }}>
-        {scenarioOrder.map(key => <ScenarioCard key={key} scenarioKey={key} />)}
+      <div style={{
+        display:'grid',
+        gridTemplateColumns:'repeat(auto-fit, minmax(245px, 1fr))',
+        gap:'clamp(10px, .85vw, 14px)',
+      }}>
+        {scenarioCards.map(card => (
+          <ScenarioCard key={card.title} card={card} />
+        ))}
       </div>
     </section>
   )
@@ -211,34 +250,42 @@ function HowItWorks() {
     ['file','5. Review Outputs','Download the transcript and After-Action Review PDF.'],
   ]
   return (
-    <section style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:'rgba(3,13,23,0.48)', padding:'12px 18px 12px' }}>
-      <div style={{ color:DS.text, fontSize:18, fontWeight:900, letterSpacing:'0.04em', borderLeft:`2px solid ${DS.blue2}`, paddingLeft:8, marginBottom:16 }}>
+    <section style={{
+      border:`1px solid ${DS.border}`,
+      borderRadius:4,
+      background:'rgba(3,13,23,0.48)',
+      padding:'12px 18px 12px',
+    }}>
+      <div style={{ color:DS.text, fontSize:18, fontWeight:900, letterSpacing:'0.04em', borderLeft:`2px solid ${DS.blue2}`, paddingLeft:8, marginBottom:14 }}>
         HOW NEXUS EOC WORKS
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(230px, 1fr))', gap:'clamp(14px, 1.5vw, 28px)', alignItems:'start' }}>
+      <div style={{
+        display:'grid',
+        gridTemplateColumns:'repeat(auto-fit, minmax(230px, 1fr))',
+        gap:'clamp(12px, 1.2vw, 22px)',
+        alignItems:'start',
+      }}>
         {steps.map(([icon,title,body], idx) => (
-          <div key={title} style={{ display:'grid', gridTemplateColumns:'70px 1fr', gap:12, position:'relative' }}>
-            <div style={{ position:'relative', width:62, height:62, borderRadius:'50%', border:`1px solid ${DS.border}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <Icon type={icon} size={34} color="#DDE8F5" />
-              <div style={{ position:'absolute', top:-7, left:-7, width:23, height:23, borderRadius:'50%', border:`1px solid ${DS.blue2}`, color:DS.blue2, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, background:'#03101C' }}>{idx+1}</div>
+          <div key={title} style={{ display:'grid', gridTemplateColumns:'62px 1fr', gap:11, position:'relative' }}>
+            <div style={{ position:'relative', width:56, height:56, borderRadius:'50%', border:`1px solid ${DS.border}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Icon type={icon} size={30} color="#DDE8F5" />
+              <div style={{ position:'absolute', top:-7, left:-7, width:22, height:22, borderRadius:'50%', border:`1px solid ${DS.blue2}`, color:DS.blue2, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, background:'#03101C' }}>{idx+1}</div>
             </div>
             <div>
-              <div style={{ color:'#CBE4FF', fontWeight:900, fontSize:14, marginBottom:7 }}>{title}</div>
-              <div style={{ color:DS.text, fontSize:13, lineHeight:1.42 }}>{body}</div>
+              <div style={{ color:'#CBE4FF', fontWeight:900, fontSize:13, marginBottom:6 }}>{title}</div>
+              <div style={{ color:DS.text, fontSize:12.5, lineHeight:1.38 }}>{body}</div>
             </div>
           </div>
         ))}
       </div>
-      <div style={{ textAlign:'center', color:DS.blue2, fontSize:14, marginTop:14 }}>
+      <div style={{ textAlign:'center', color:DS.blue2, fontSize:14, marginTop:13 }}>
         ★ &nbsp; More detailed responses produce stronger injects, feedback, and after-action insights.
       </div>
     </section>
   )
 }
 
-export default function MissionPortal({ onStartExercise, onGuidedTour }) {
-  const start = onStartExercise || (() => {})
-  const tour = onGuidedTour || (() => {})
+export default function MissionPortal({ onStartExercise }) {
   return (
     <div style={{
       width:'100vw',
@@ -248,14 +295,34 @@ export default function MissionPortal({ onStartExercise, onGuidedTour }) {
       fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
       overflow:'hidden',
     }}>
-      <Header onStartExercise={start} onGuidedTour={tour} />
-      <main style={{ height:'calc(100vh - 76px)', overflowY:'auto', overflowX:'hidden', padding:'18px clamp(16px, 2vw, 34px) 12px' }}>
-        <div style={{ width:'min(100%, 1680px)', margin:'0 auto', display:'grid', gap:12 }}>
+      <Header onStartExercise={onStartExercise || (() => {})} />
+      <main style={{
+        height:'calc(100vh - 76px)',
+        overflowY:'auto',
+        overflowX:'hidden',
+        padding:'clamp(12px, 1.2vw, 20px)',
+        boxSizing:'border-box',
+      }}>
+        <div style={{
+          width:'min(100%, 1680px)',
+          margin:'0 auto',
+          display:'flex',
+          flexDirection:'column',
+          gap:12,
+        }}>
           <Hero />
           <CapabilityBand />
           <FeaturedScenarios />
           <HowItWorks />
-          <footer style={{ height:34, display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(60px, 12vw, 220px)', color:DS.muted, fontSize:13 }}>
+          <footer style={{
+            height:34,
+            display:'flex',
+            alignItems:'center',
+            justifyContent:'center',
+            gap:'clamp(60px, 12vw, 220px)',
+            color:DS.muted,
+            fontSize:13,
+          }}>
             <span>© 2026 NEXUS EOC. All rights reserved.</span>
             <span style={{ color:DS.blue2 }}>About NEXUS EOC</span>
           </footer>
