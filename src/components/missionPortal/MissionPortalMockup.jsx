@@ -395,7 +395,7 @@ function RightRail() {
   )
 }
 
-export default function MissionPortal({ onStartExercise }) {
+export default function MissionPortalMockup({ onStartExercise }) {
   const start = onStartExercise || (() => {})
   return (
     <div style={{
