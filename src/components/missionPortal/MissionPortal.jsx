@@ -1,30 +1,26 @@
 import heroImage from '../../assets/missionPortal/hero-command-center.jpg'
-import hurricaneImage from '../../assets/missionPortal/scenarios/hurricane-landfall.jpg'
-import mciImage from '../../assets/missionPortal/scenarios/mass-casualty-incident.jpg'
-import hazmatImage from '../../assets/missionPortal/scenarios/hazardous-materials-release.jpg'
-import cyberImage from '../../assets/missionPortal/scenarios/cyber-infrastructure-cascade.jpg'
-import earthquakeImage from '../../assets/missionPortal/scenarios/major-earthquake.jpg'
-import floodImage from '../../assets/missionPortal/scenarios/flash-flood-dam-failure.jpg'
-import wildfireImage from '../../assets/missionPortal/scenarios/urban-wildfire.jpg'
-import winterImage from '../../assets/missionPortal/scenarios/winter-storm-cascade.jpg'
-import rddImage from '../../assets/missionPortal/scenarios/radiological-dispersal-device.jpg'
-import trainImage from '../../assets/missionPortal/scenarios/train-derailment-mci-hazmat.jpg'
+import hurricaneImage from '../../assets/missionPortal/hurricane-landfall.jpg'
+import mciImage from '../../assets/missionPortal/mass-casualty-incident.jpg'
+import hazmatImage from '../../assets/missionPortal/hazardous-materials-release.jpg'
+import cyberImage from '../../assets/missionPortal/cyber-infrastructure-cascade.jpg'
+import earthquakeImage from '../../assets/missionPortal/major-earthquake.jpg'
+import floodImage from '../../assets/missionPortal/flash-flood-dam-failure.jpg'
+import wildfireImage from '../../assets/missionPortal/urban-wildfire.jpg'
+import winterImage from '../../assets/missionPortal/winter-storm-cascade.jpg'
+import rddImage from '../../assets/missionPortal/radiological-dispersal-device.jpg'
+import trainImage from '../../assets/missionPortal/train-derailment-mci-hazmat.jpg'
 
 const DS = {
   bg:'#020B13',
-  panel:'rgba(4, 17, 29, 0.78)',
   border:'rgba(87, 146, 198, 0.30)',
   borderStrong:'rgba(65, 141, 255, 0.62)',
   blue:'#2E83FF',
   blue2:'#45A3FF',
-  cyan:'#19D3E6',
   green:'#2DE26E',
   orange:'#F59B22',
   purple:'#B15CFF',
-  red:'#EA3F44',
   text:'#F4F8FE',
   muted:'#B9C8D8',
-  dim:'#7C91A6',
 }
 
 const scenarioCards = [
@@ -60,57 +56,19 @@ function Icon({ type, size=28, color=DS.blue2 }) {
 
 function Header({ onStartExercise }) {
   return (
-    <header style={{
-      height:76,
-      display:'flex',
-      alignItems:'center',
-      justifyContent:'center',
-      borderBottom:`1px solid ${DS.border}`,
-      background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))',
-      boxSizing:'border-box',
-      flexShrink:0,
-    }}>
+    <header style={{ height:76, display:'flex', alignItems:'center', justifyContent:'center', borderBottom:`1px solid ${DS.border}`, background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))', boxSizing:'border-box', flexShrink:0 }}>
       <div style={{ width:'min(100%, 1680px)', padding:'0 clamp(18px, 2vw, 34px)', display:'flex', alignItems:'center', justifyContent:'space-between', boxSizing:'border-box' }}>
         <div style={{ display:'flex', alignItems:'center', gap:18 }}>
           <Icon type="shield" size={46} color={DS.blue2} />
           <div style={{ fontSize:'clamp(26px, 1.7vw, 34px)', fontWeight:900, color:DS.text, letterSpacing:'0.08em', whiteSpace:'nowrap' }}>NEXUS EOC</div>
           <div style={{ width:1, height:38, background:DS.border, margin:'0 2px' }} />
-          <div style={{ color:DS.text, fontSize:'clamp(12px, .74vw, 15px)', lineHeight:1.25 }}>
-            Simulated Emergency<br />Operations Platform
-          </div>
+          <div style={{ color:DS.text, fontSize:'clamp(12px, .74vw, 15px)', lineHeight:1.25 }}>Simulated Emergency<br />Operations Platform</div>
         </div>
         <div style={{ display:'flex', gap:12 }}>
-          <button title="TODO: wire to existing guided tour modal" style={{
-            height:42,
-            padding:'0 18px',
-            display:'flex',
-            alignItems:'center',
-            gap:9,
-            borderRadius:4,
-            border:`1px solid ${DS.borderStrong}`,
-            background:'rgba(3,13,23,0.72)',
-            color:'#fff',
-            fontWeight:800,
-            fontSize:15,
-            cursor:'default',
-          }}>
+          <button title="TODO: wire to existing guided tour modal" style={{ height:42, padding:'0 18px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'default' }}>
             <Icon type="play" size={19} color={DS.blue2} /> Guided Tour
           </button>
-          <button onClick={onStartExercise} style={{
-            height:42,
-            padding:'0 20px',
-            display:'flex',
-            alignItems:'center',
-            gap:10,
-            borderRadius:4,
-            border:`1px solid ${DS.borderStrong}`,
-            background:'linear-gradient(180deg, #1455B8, #0E3F91)',
-            color:'#fff',
-            fontWeight:800,
-            fontSize:15,
-            cursor:'pointer',
-            boxShadow:'0 0 22px rgba(46,131,255,0.16)',
-          }}>
+          <button onClick={onStartExercise} style={{ height:42, padding:'0 20px', display:'flex', alignItems:'center', gap:10, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'linear-gradient(180deg, #1455B8, #0E3F91)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer', boxShadow:'0 0 22px rgba(46,131,255,0.16)' }}>
             Start Exercise <Icon type="arrow" size={19} color="#fff" />
           </button>
         </div>
@@ -121,30 +79,12 @@ function Header({ onStartExercise }) {
 
 function Hero() {
   return (
-    <section style={{
-      position:'relative',
-      minHeight:'clamp(285px, 34vh, 390px)',
-      border:`1px solid ${DS.border}`,
-      overflow:'hidden',
-      background:'#030E18',
-      borderRadius:4,
-    }}>
-      <img src={heroImage} alt="" style={{
-        position:'absolute',
-        inset:0,
-        width:'100%',
-        height:'100%',
-        objectFit:'cover',
-        opacity:0.86,
-      }} />
+    <section style={{ position:'relative', minHeight:'clamp(285px, 34vh, 390px)', border:`1px solid ${DS.border}`, overflow:'hidden', background:'#030E18', borderRadius:4 }}>
+      <img src={heroImage} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.86 }} />
       <div style={{ position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(2,9,16,0.98) 0%, rgba(2,9,16,0.84) 30%, rgba(2,9,16,0.22) 68%, rgba(2,9,16,0.34) 100%)' }} />
       <div style={{ position:'relative', zIndex:2, width:'min(720px, 58%)', padding:'clamp(42px, 5.2vh, 64px) 0 30px clamp(24px, 2.3vw, 42px)', boxSizing:'border-box' }}>
-        <h1 style={{ margin:0, color:DS.text, fontSize:'clamp(50px, 4vw, 74px)', lineHeight:1.08, fontWeight:950, letterSpacing:'0.055em' }}>
-          MISSION PORTAL
-        </h1>
-        <div style={{ color:DS.blue2, fontSize:'clamp(28px, 2.15vw, 40px)', fontWeight:900, marginTop:9 }}>
-          Train. Decide. Lead.
-        </div>
+        <h1 style={{ margin:0, color:DS.text, fontSize:'clamp(50px, 4vw, 74px)', lineHeight:1.08, fontWeight:950, letterSpacing:'0.055em' }}>MISSION PORTAL</h1>
+        <div style={{ color:DS.blue2, fontSize:'clamp(28px, 2.15vw, 40px)', fontWeight:900, marginTop:9 }}>Train. Decide. Lead.</div>
         <p style={{ color:DS.text, fontSize:'clamp(15px, .95vw, 18px)', lineHeight:1.52, margin:'18px 0 0', maxWidth:560 }}>
           AI-powered emergency operations training for EOCs, emergency managers, and response partners.
         </p>
@@ -161,25 +101,9 @@ function CapabilityBand() {
     ['file','AAR & TRANSCRIPT OUTPUTS','Download professional after-action reviews and transcripts in PDF format.', DS.purple],
   ]
   return (
-    <section style={{
-      display:'grid',
-      gridTemplateColumns:'repeat(4, minmax(0, 1fr))',
-      gap:0,
-      border:`1px solid ${DS.border}`,
-      borderRadius:4,
-      background:'rgba(2,11,19,0.65)',
-      overflow:'hidden',
-    }}>
+    <section style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(0, 1fr))', gap:0, border:`1px solid ${DS.border}`, borderRadius:4, background:'rgba(2,11,19,0.65)', overflow:'hidden' }}>
       {cards.map(([icon,title,body,color], idx) => (
-        <div key={title} style={{
-          display:'grid',
-          gridTemplateColumns:'64px 1fr',
-          gap:12,
-          alignItems:'center',
-          padding:'clamp(12px, 1vw, 16px)',
-          borderRight:idx < cards.length - 1 ? `1px solid ${DS.border}` : 'none',
-          minHeight:92,
-        }}>
+        <div key={title} style={{ display:'grid', gridTemplateColumns:'64px 1fr', gap:12, alignItems:'center', padding:'clamp(12px, 1vw, 16px)', borderRight:idx < cards.length - 1 ? `1px solid ${DS.border}` : 'none', minHeight:92 }}>
           <div style={{ width:60, height:60, borderRadius:'50%', border:`1.5px solid ${color}`, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(2,11,19,0.35)' }}>
             <Icon type={icon} size={35} color={color} />
           </div>
@@ -195,16 +119,8 @@ function CapabilityBand() {
 
 function ScenarioCard({ card }) {
   return (
-    <div style={{
-      border:`1px solid ${DS.border}`,
-      borderRadius:4,
-      overflow:'hidden',
-      background:'rgba(3,14,24,0.84)',
-      minWidth:0,
-      display:'flex',
-      flexDirection:'column',
-    }}>
-      <div style={{ aspectRatio:'16 / 7.2', overflow:'hidden', background:'#061522' }}>
+    <div style={{ border:`1px solid ${DS.border}`, borderRadius:4, overflow:'hidden', background:'rgba(3,14,24,0.84)', minWidth:0, display:'flex', flexDirection:'column' }}>
+      <div style={{ aspectRatio:'16 / 8', overflow:'hidden', background:'#061522' }}>
         <img src={card.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
       </div>
       <div style={{ padding:'11px 12px 13px', flex:1 }}>
@@ -217,24 +133,12 @@ function ScenarioCard({ card }) {
 
 function FeaturedScenarios() {
   return (
-    <section style={{
-      border:`1px solid ${DS.border}`,
-      borderRadius:4,
-      background:'rgba(3,13,23,0.50)',
-      padding:'12px 14px 14px',
-    }}>
+    <section style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:'rgba(3,13,23,0.50)', padding:'12px 14px 14px' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-        <div style={{ color:DS.text, fontSize:18, fontWeight:900, letterSpacing:'0.04em', borderLeft:`2px solid ${DS.blue2}`, paddingLeft:8 }}>
-          FEATURED SCENARIOS
-        </div>
+        <div style={{ color:DS.text, fontSize:18, fontWeight:900, letterSpacing:'0.04em', borderLeft:`2px solid ${DS.blue2}`, paddingLeft:8 }}>FEATURED SCENARIOS</div>
       </div>
-      <div className="nexus-scenario-grid" style={{
-        display:'grid',
-        gap:'clamp(10px, .85vw, 14px)',
-      }}>
-        {scenarioCards.map(card => (
-          <ScenarioCard key={card.title} card={card} />
-        ))}
+      <div className="nexus-scenario-grid" style={{ display:'grid', gap:'clamp(10px, .85vw, 14px)' }}>
+        {scenarioCards.map(card => <ScenarioCard key={card.title} card={card} />)}
       </div>
     </section>
   )
@@ -249,21 +153,9 @@ function HowItWorks() {
     ['file','5. Review Outputs','Download the transcript and After-Action Review PDF.'],
   ]
   return (
-    <section style={{
-      border:`1px solid ${DS.border}`,
-      borderRadius:4,
-      background:'rgba(3,13,23,0.48)',
-      padding:'12px 18px 12px',
-    }}>
-      <div style={{ color:DS.text, fontSize:18, fontWeight:900, letterSpacing:'0.04em', borderLeft:`2px solid ${DS.blue2}`, paddingLeft:8, marginBottom:14 }}>
-        HOW NEXUS EOC WORKS
-      </div>
-      <div style={{
-        display:'grid',
-        gridTemplateColumns:'repeat(auto-fit, minmax(230px, 1fr))',
-        gap:'clamp(12px, 1.2vw, 22px)',
-        alignItems:'start',
-      }}>
+    <section style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:'rgba(3,13,23,0.48)', padding:'12px 18px 12px' }}>
+      <div style={{ color:DS.text, fontSize:18, fontWeight:900, letterSpacing:'0.04em', borderLeft:`2px solid ${DS.blue2}`, paddingLeft:8, marginBottom:14 }}>HOW NEXUS EOC WORKS</div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(230px, 1fr))', gap:'clamp(12px, 1.2vw, 22px)', alignItems:'start' }}>
         {steps.map(([icon,title,body], idx) => (
           <div key={title} style={{ display:'grid', gridTemplateColumns:'62px 1fr', gap:11, position:'relative' }}>
             <div style={{ position:'relative', width:56, height:56, borderRadius:'50%', border:`1px solid ${DS.border}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -286,57 +178,20 @@ function HowItWorks() {
 
 export default function MissionPortal({ onStartExercise }) {
   return (
-    <div style={{
-      width:'100vw',
-      minHeight:'100vh',
-      background:`radial-gradient(circle at 22% 18%, rgba(46,131,255,0.12), transparent 34%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`,
-      color:DS.text,
-      fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-      overflow:'hidden',
-    }}>
+    <div style={{ width:'100vw', minHeight:'100vh', background:`radial-gradient(circle at 22% 18%, rgba(46,131,255,0.12), transparent 34%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`, color:DS.text, fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif', overflow:'hidden' }}>
       <style>{`
-        .nexus-scenario-grid {
-          grid-template-columns: repeat(5, minmax(0, 1fr));
-        }
-        @media (max-width: 1280px) {
-          .nexus-scenario-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-          }
-        }
-        @media (max-width: 980px) {
-          .nexus-scenario-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
+        .nexus-scenario-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        @media (max-width: 1280px) { .nexus-scenario-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        @media (max-width: 980px) { .nexus-scenario-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
       `}</style>
       <Header onStartExercise={onStartExercise || (() => {})} />
-      <main style={{
-        height:'calc(100vh - 76px)',
-        overflowY:'auto',
-        overflowX:'hidden',
-        padding:'clamp(12px, 1.2vw, 20px)',
-        boxSizing:'border-box',
-      }}>
-        <div style={{
-          width:'min(100%, 1680px)',
-          margin:'0 auto',
-          display:'flex',
-          flexDirection:'column',
-          gap:12,
-        }}>
+      <main style={{ height:'calc(100vh - 76px)', overflowY:'auto', overflowX:'hidden', padding:'clamp(12px, 1.2vw, 20px)', boxSizing:'border-box' }}>
+        <div style={{ width:'min(100%, 1680px)', margin:'0 auto', display:'flex', flexDirection:'column', gap:12 }}>
           <Hero />
           <CapabilityBand />
           <FeaturedScenarios />
           <HowItWorks />
-          <footer style={{
-            height:34,
-            display:'flex',
-            alignItems:'center',
-            justifyContent:'center',
-            gap:'clamp(60px, 12vw, 220px)',
-            color:DS.muted,
-            fontSize:13,
-          }}>
+          <footer style={{ height:34, display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(60px, 12vw, 220px)', color:DS.muted, fontSize:13 }}>
             <span>© 2026 NEXUS EOC. All rights reserved.</span>
             <span style={{ color:DS.blue2 }}>About NEXUS EOC</span>
           </footer>
