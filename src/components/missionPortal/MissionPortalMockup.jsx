@@ -1,14 +1,14 @@
 import heroImage from '../../assets/missionPortal/hero-command-center.jpg'
-import hurricaneImage from '../../assets/missionPortal/scenario-hurricane.jpg'
-import mciImage from '../../assets/missionPortal/scenario-mci.jpg'
-import hazmatImage from '../../assets/missionPortal/scenario-hazmat.jpg'
-import cyberImage from '../../assets/missionPortal/scenario-cyber.jpg'
-import earthquakeImage from '../../assets/missionPortal/scenario-earthquake.jpg'
-import floodImage from '../../assets/missionPortal/scenario-flood.jpg'
-import wildfireImage from '../../assets/missionPortal/scenario-wildfire.jpg'
-import winterImage from '../../assets/missionPortal/scenario-winter.jpg'
-import rddImage from '../../assets/missionPortal/scenario-rdd.jpg'
-import trainImage from '../../assets/missionPortal/scenario-train.jpg'
+import hurricaneImage from '../../assets/missionPortal/scenarios/hurricane-landfall.jpg'
+import mciImage from '../../assets/missionPortal/scenarios/mass-casualty-incident.jpg'
+import hazmatImage from '../../assets/missionPortal/scenarios/hazardous-materials-release.jpg'
+import cyberImage from '../../assets/missionPortal/scenarios/cyber-infrastructure-cascade.jpg'
+import earthquakeImage from '../../assets/missionPortal/scenarios/major-earthquake.jpg'
+import floodImage from '../../assets/missionPortal/scenarios/flash-flood-dam-failure.jpg'
+import wildfireImage from '../../assets/missionPortal/scenarios/urban-wildfire.jpg'
+import winterImage from '../../assets/missionPortal/scenarios/winter-storm-cascade.jpg'
+import rddImage from '../../assets/missionPortal/scenarios/radiological-dispersal-device.jpg'
+import trainImage from '../../assets/missionPortal/scenarios/train-derailment-mci-hazmat.jpg'
 
 const DS = {
   bg:'#020B13',
@@ -123,7 +123,7 @@ function Hero() {
   return (
     <section style={{
       position:'relative',
-      minHeight:'clamp(250px, 30vh, 335px)',
+      minHeight:'clamp(285px, 34vh, 390px)',
       border:`1px solid ${DS.border}`,
       overflow:'hidden',
       background:'#030E18',
@@ -138,8 +138,8 @@ function Hero() {
         opacity:0.86,
       }} />
       <div style={{ position:'absolute', inset:0, background:'linear-gradient(90deg, rgba(2,9,16,0.98) 0%, rgba(2,9,16,0.84) 30%, rgba(2,9,16,0.22) 68%, rgba(2,9,16,0.34) 100%)' }} />
-      <div style={{ position:'relative', zIndex:2, width:'min(720px, 58%)', padding:'clamp(28px, 4vh, 46px) 0 30px clamp(24px, 2.3vw, 42px)', boxSizing:'border-box' }}>
-        <h1 style={{ margin:0, color:DS.text, fontSize:'clamp(50px, 4vw, 74px)', lineHeight:0.98, fontWeight:950, letterSpacing:'0.055em' }}>
+      <div style={{ position:'relative', zIndex:2, width:'min(720px, 58%)', padding:'clamp(42px, 5.2vh, 64px) 0 30px clamp(24px, 2.3vw, 42px)', boxSizing:'border-box' }}>
+        <h1 style={{ margin:0, color:DS.text, fontSize:'clamp(50px, 4vw, 74px)', lineHeight:1.08, fontWeight:950, letterSpacing:'0.055em' }}>
           MISSION PORTAL
         </h1>
         <div style={{ color:DS.blue2, fontSize:'clamp(28px, 2.15vw, 40px)', fontWeight:900, marginTop:9 }}>
@@ -204,12 +204,12 @@ function ScenarioCard({ card }) {
       display:'flex',
       flexDirection:'column',
     }}>
-      <div style={{ aspectRatio:'16 / 6.4', overflow:'hidden', background:'#061522' }}>
+      <div style={{ aspectRatio:'16 / 7.2', overflow:'hidden', background:'#061522' }}>
         <img src={card.img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
       </div>
-      <div style={{ padding:'12px 13px 14px', flex:1 }}>
-        <div style={{ color:DS.text, fontSize:'clamp(15px, .9vw, 18px)', fontWeight:900, marginBottom:8, lineHeight:1.12 }}>{card.title}</div>
-        <div style={{ color:DS.text, fontSize:'clamp(12px, .72vw, 14px)', lineHeight:1.42 }}>{card.desc}</div>
+      <div style={{ padding:'11px 12px 13px', flex:1 }}>
+        <div style={{ color:DS.text, fontSize:'clamp(14px, .82vw, 17px)', fontWeight:900, marginBottom:8, lineHeight:1.12 }}>{card.title}</div>
+        <div style={{ color:DS.text, fontSize:'clamp(11.5px, .68vw, 13.5px)', lineHeight:1.36 }}>{card.desc}</div>
       </div>
     </div>
   )
@@ -228,9 +228,8 @@ function FeaturedScenarios() {
           FEATURED SCENARIOS
         </div>
       </div>
-      <div style={{
+      <div className="nexus-scenario-grid" style={{
         display:'grid',
-        gridTemplateColumns:'repeat(auto-fit, minmax(245px, 1fr))',
         gap:'clamp(10px, .85vw, 14px)',
       }}>
         {scenarioCards.map(card => (
@@ -295,6 +294,21 @@ export default function MissionPortalMockup({ onStartExercise }) {
       fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
       overflow:'hidden',
     }}>
+      <style>{`
+        .nexus-scenario-grid {
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+        @media (max-width: 1280px) {
+          .nexus-scenario-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+          }
+        }
+        @media (max-width: 980px) {
+          .nexus-scenario-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+      `}</style>
       <Header onStartExercise={onStartExercise || (() => {})} />
       <main style={{
         height:'calc(100vh - 76px)',
