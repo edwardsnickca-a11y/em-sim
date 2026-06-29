@@ -445,26 +445,26 @@ function downloadPdfTextFile(filename, text) {
 // ─── AAR DISPLAY COMPONENT ────────────────────────────────────────────────────
 function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, onRestart, onMissionPortal, fs, ac, al }) {
   const scenarioName = SCENARIOS[scenario]?.name || scenario || 'Scenario'
-  const safeDate = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
+  const generatedDate = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
   const startTime = transcript?.[0]?.time || 'H+0:00'
   const endTime = simTime || 'ENDEX'
   const duration = `${turns || 0} turn${turns === 1 ? '' : 's'}`
   const clean = value => value || 'Not captured in this exercise record.'
 
   function downloadAAR() {
-    let text = `NEXUS EOC — AFTER-ACTION REVIEW\n`
-    text += `${'='.repeat(72)}\n\n`
-    text += `SCENARIO:        ${scenarioName}\n`
-    text += `JURISDICTION:    ${jurisdiction || 'Unspecified'}\n`
-    text += `ROLE:            ${role || 'EOC Director'}\n`
-    text += `DIFFICULTY:      ${difficulty || 'Unspecified'}\n`
-    if (playerName) text += `COMMANDER:       ${playerName}\n`
-    if (worldState?.location) text += `LOCATION:        ${worldState.location}\n`
-    text += `SESSION START:   ${startTime}\n`
-    text += `SESSION END:     ${endTime}\n`
-    text += `DURATION:        ${duration}\n`
-    text += `GENERATED:       ${safeDate}\n\n`
-    text += `${'='.repeat(72)}\n\n`
+    let report = `NEXUS EOC — AFTER-ACTION REVIEW\n`
+    report += `${'='.repeat(72)}\n\n`
+    report += `SCENARIO:        ${scenarioName}\n`
+    report += `JURISDICTION:    ${jurisdiction || 'Unspecified'}\n`
+    report += `ROLE:            ${role || 'EOC Director'}\n`
+    report += `DIFFICULTY:      ${difficulty || 'Unspecified'}\n`
+    if (playerName) report += `COMMANDER:       ${playerName}\n`
+    if (worldState?.location) report += `LOCATION:        ${worldState.location}\n`
+    report += `SESSION START:   ${startTime}\n`
+    report += `SESSION END:     ${endTime}\n`
+    report += `DURATION:        ${duration}\n`
+    report += `GENERATED:       ${generatedDate}\n\n`
+    report += `${'='.repeat(72)}\n\n`
 
     const order = [
       ['SITUATION SUMMARY', aar?.situationSummary],
@@ -478,31 +478,37 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
     ]
 
     order.forEach(([label, content]) => {
-      text += `${label}\n`
-      text += `${'-'.repeat(label.length)}\n`
-      text += `${clean(content)}\n\n`
+      report += `${label}\n`
+      report += `${'-'.repeat(label.length)}\n`
+      report += `${clean(content)}\n\n`
     })
 
-    text += `${'='.repeat(72)}\n`
-    text += `NEXUS EOC — nexuseoc.com\n`
-    downloadPdfTextFile(`NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${safeDate.replace(/\s+/g,'_')}.pdf`, text)
+    report += `${'='.repeat(72)}\n`
+    report += `NEXUS EOC — nexuseoc.com\n`
+
+    if (typeof downloadPdfTextFile === 'function') {
+      downloadPdfTextFile(`NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.pdf`, report)
+    } else {
+      downloadTextFile(`NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.txt`, report)
+    }
   }
 
   function downloadTranscript() {
-    const text = formatExerciseTranscript({
+    const report = formatExerciseTranscript({
       scenario, jurisdiction, difficulty, role, playerName,
       worldState, transcript, finalLifelines: lifelines,
       finalSimTime: simTime, finalSituation: situation, aar,
     })
-    downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${safeDate.replace(/\s+/g,'_')}.pdf`, text)
+    if (typeof downloadPdfTextFile === 'function') {
+      downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.pdf`, report)
+    } else {
+      downloadTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.txt`, report)
+    }
   }
 
   const UI = {
     bg:'#020B13',
-    panel:'rgba(4, 17, 29, 0.84)',
-    panel2:'rgba(6, 23, 38, 0.92)',
     border:'rgba(87, 146, 198, 0.30)',
-    borderSoft:'rgba(87, 146, 198, 0.18)',
     text:'#F4F8FE',
     muted:'#B9C8D8',
     dim:'#6F8195',
@@ -515,7 +521,7 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
   }
 
   const metaBox = (label, value, sub) => (
-    <div style={{ borderLeft:`1px solid ${UI.border}`, padding:'0 22px', minHeight:58, display:'flex', flexDirection:'column', justifyContent:'center' }}>
+    <div style={{ borderLeft:`1px solid ${UI.border}`, padding:'0 20px', minHeight:56, display:'flex', flexDirection:'column', justifyContent:'center' }}>
       <div style={{ color:UI.dim, fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:5 }}>{label}</div>
       <div style={{ color:UI.text, fontSize:15, fontWeight:850, lineHeight:1.2 }}>{value}</div>
       {sub && <div style={{ color:UI.muted, fontSize:12, marginTop:4 }}>{sub}</div>}
@@ -524,14 +530,14 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
 
   const actionButton = (label, sub, color, onClick, icon) => (
     <button onClick={onClick} style={{
-      minWidth:170,
+      minWidth:164,
       minHeight:58,
       display:'grid',
-      gridTemplateColumns:'26px 1fr',
+      gridTemplateColumns:'24px 1fr',
       gap:10,
       alignItems:'center',
       textAlign:'left',
-      padding:'10px 14px',
+      padding:'10px 13px',
       background:`linear-gradient(180deg, ${color}18, rgba(4,17,29,0.76))`,
       border:`1px solid ${color}80`,
       borderRadius:6,
@@ -540,15 +546,15 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
       boxShadow:`0 14px 34px ${color}12`,
       fontFamily:'Inter, Segoe UI, sans-serif'
     }}>
-      <span style={{ color, fontSize:22, lineHeight:1 }}>{icon}</span>
+      <span style={{ color, fontSize:21, lineHeight:1 }}>{icon}</span>
       <span>
-        <span style={{ display:'block', color, fontWeight:900, fontSize:13, letterSpacing:'0.01em' }}>{label}</span>
+        <span style={{ display:'block', color, fontWeight:900, fontSize:13 }}>{label}</span>
         <span style={{ display:'block', color:UI.muted, fontSize:11, marginTop:3 }}>{sub}</span>
       </span>
     </button>
   )
 
-  const sectionCard = ({ title, icon, accent, content, tone }) => (
+  const sectionCard = ({ title, icon, accent, content }) => (
     <section style={{
       border:`1px solid ${accent}55`,
       borderLeft:`3px solid ${accent}`,
@@ -591,7 +597,7 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
               </div>
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(150px, 1fr))', gap:0 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(140px, 1fr))', gap:0 }}>
               {metaBox('Scenario', scenarioName, worldState?.location)}
               {metaBox('Position / Function', role || 'EOC Director')}
               {metaBox('Jurisdiction', jurisdiction || 'Unspecified')}
@@ -642,150 +648,6 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
             </div>
           </section>
         </main>
-      </div>
-    </div>
-  )
-}) {
-  const [activeSection, setActiveSection] = useState(null)
-  const [showFeedback, setShowFeedback] = useState(false)
-
-  function downloadAAR() {
-    const scenarioName = SCENARIOS[scenario]?.name || scenario
-    const date = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
-    const time = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' })
-
-    let text = `NEXUS EOC — AFTER-ACTION REVIEW\n`
-    text += `${'='.repeat(60)}\n\n`
-    text += `SCENARIO:     ${scenarioName}\n`
-    text += `JURISDICTION: ${jurisdiction}\n`
-    text += `ROLE:         ${role}\n`
-    text += `DIFFICULTY:   ${difficulty}\n`
-    if (playerName) text += `COMMANDER:    ${playerName}\n`
-    text += `TURNS:        ${turns}\n`
-    text += `SIM TIME:     ${simTime}\n`
-    text += `GENERATED:    ${date} ${time}\n\n`
-    text += `${'='.repeat(60)}\n\n`
-
-    AAR_SECTIONS.forEach(s => {
-      if (aar[s.key]) {
-        text += `${s.label.toUpperCase()}\n`
-        text += `${'-'.repeat(s.label.length)}\n`
-        text += `${aar[s.key]}\n\n`
-      }
-    })
-
-    text += `${'='.repeat(60)}\n`
-    text += `NEXUS EOC — nexuseoc.com\n`
-
-    downloadTextFile(`NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.txt`, text)
-  }
-
-  function downloadTranscript() {
-    const scenarioName = SCENARIOS[scenario]?.name || scenario
-    const date = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
-    const text = formatExerciseTranscript({
-      scenario, jurisdiction, difficulty, role, playerName,
-      worldState, transcript, finalLifelines: lifelines,
-      finalSimTime: simTime, finalSituation: situation, aar,
-    })
-    downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.pdf`, text)
-  }
-
-  const scenarioName = SCENARIOS[scenario]?.name || scenario
-
-  return (
-    <div style={{ display:'flex', flexDirection:'column', height:'100%', fontFamily:'JetBrains Mono, monospace' }}>
-
-      {/* AAR HEADER */}
-      <div style={{ padding:'12px 16px', borderBottom:'0.5px solid #2a2a2a', background:'#0a0a0a', flexShrink:0 }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
-          <div>
-            <div style={{ fontSize:9, color:ac, letterSpacing:'0.15em', textTransform:'uppercase', marginBottom:4 }}>
-              After-Action Review — ENDEX
-            </div>
-            <div style={{ fontSize:fs+2, fontWeight:700, color:'#ddd', letterSpacing:'0.04em' }}>
-              {scenarioName}
-            </div>
-            <div style={{ fontSize:fs-1, color:'#555', marginTop:2 }}>
-              {jurisdiction} · {role} · {difficulty} · {turns} turn{turns !== 1 ? 's' : ''} · {simTime}
-            </div>
-          </div>
-          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-            <button onClick={downloadAAR}
-              style={{ padding:'5px 12px', fontSize:fs-1, color:ac, border:`0.5px solid ${ac}`, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3, letterSpacing:'0.06em' }}>
-              ↓ Download AAR
-            </button>
-            <button onClick={downloadTranscript}
-              style={{ padding:'5px 12px', fontSize:fs-1, color:ac, border:`0.5px solid ${ac}`, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3, letterSpacing:'0.06em' }}>
-              📄 Transcript
-            </button>
-            <button onClick={() => setShowFeedback(s => !s)}
-              style={{ padding:'5px 12px', fontSize:fs-1, color:showFeedback ? al : '#555', border:`0.5px solid ${showFeedback ? al : '#333'}`, background:showFeedback ? al+'11' : 'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3 }}>
-              ★ Feedback
-            </button>
-            <button onClick={onReset}
-              style={{ padding:'5px 12px', fontSize:fs-1, color:'#555', border:'0.5px solid #333', background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3 }}>
-              ↩ New Scenario
-            </button>
-          </div>
-        </div>
-
-        {/* Section nav tabs */}
-        <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginTop:8 }}>
-          <button
-            onClick={() => setActiveSection(null)}
-            style={{ padding:'3px 8px', fontSize:9, cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:2, letterSpacing:'0.06em', border:`0.5px solid ${activeSection === null ? ac : '#2a2a2a'}`, background:activeSection === null ? ac+'18' : 'transparent', color:activeSection === null ? ac : '#444' }}>
-            ALL
-          </button>
-          {AAR_SECTIONS.map(s => (
-            <button key={s.key}
-              onClick={() => setActiveSection(activeSection === s.key ? null : s.key)}
-              style={{ padding:'3px 8px', fontSize:9, cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:2, letterSpacing:'0.04em', border:`0.5px solid ${activeSection === s.key ? ac : '#2a2a2a'}`, background:activeSection === s.key ? ac+'18' : 'transparent', color:activeSection === s.key ? ac : '#444' }}>
-              {s.icon} {s.label.split(' ')[0]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* AAR BODY */}
-      <div style={{ flex:1, overflowY:'auto', padding:'16px' }}>
-        {showFeedback && (
-          <div style={{ marginBottom:16 }}>
-            <EndexFeedback
-              scenario={scenario} role={role} jurisdiction={jurisdiction}
-              difficulty={difficulty} turns={turns} fs={fs} ac={ac} al={al}
-            />
-          </div>
-        )}
-        {AAR_SECTIONS.filter(s => !activeSection || s.key === activeSection).map((s, idx) => {
-          const content = aar[s.key]
-          if (!content) return null
-
-          // Special rendering for criticalGaps and strengths — split on periods for scannable list
-          const isListSection = s.key === 'strengths' || s.key === 'criticalGaps' || s.key === 'recommendations'
-          const isBorderRed   = s.key === 'criticalGaps'
-          const isBorderGreen = s.key === 'strengths'
-          const borderColor   = isBorderRed ? '#E24B4A' : isBorderGreen ? '#1D9E75' : '#2a2a2a'
-
-          return (
-            <div key={s.key} style={{ marginBottom:activeSection ? 0 : 20, padding:'14px 16px', border:`0.5px solid ${borderColor}`, borderLeft:`3px solid ${borderColor}`, borderRadius:4, background:'#080808' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-                <span style={{ fontSize:14 }}>{s.icon}</span>
-                <span style={{ fontSize:9, fontWeight:700, color: isBorderRed ? '#E24B4A' : isBorderGreen ? '#1D9E75' : '#555', textTransform:'uppercase', letterSpacing:'0.12em' }}>
-                  {s.label}
-                </span>
-                {idx === 0 && !activeSection && (
-                  <span style={{ marginLeft:'auto', fontSize:9, color:'#2a2a2a', letterSpacing:'0.06em' }}>
-                    {`${AAR_SECTIONS.length} sections`}
-                  </span>
-                )}
-              </div>
-              <div style={{ fontSize:fs, color:'#888', lineHeight:1.9 }}>
-                {content}
-              </div>
-            </div>
-          )
-        })}
       </div>
     </div>
   )
@@ -1939,8 +1801,6 @@ export default function App() {
                     lifelines={state.lifelines}
                     situation={state.situation}
                     onReset={reset}
-                    onRestart={() => startScenario(state.scenario)}
-                    onMissionPortal={() => update({ screen:'portal' })}
                     fs={fs}
                     ac={ac}
                     al={al}
