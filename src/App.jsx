@@ -718,27 +718,36 @@ function LifelineTile({ ll, data }) {
 
 function mediaSourceProfile(item = {}) {
   const raw = `${item.source || item.type || item.text || ''}`.toLowerCase()
-  if (raw.includes('radio') || raw.includes('fm') || raw.includes('am ')) return { label:'RAD', sub:'Radio', icon:'◉', bg:'linear-gradient(135deg,#0B4F9F,#1E88E5)' }
-  if (raw.includes('weather') || raw.includes('nws') || raw.includes('storm')) return { label:'NWS', sub:'Wx', icon:'☁', bg:'linear-gradient(135deg,#174A7C,#38BDF8)' }
-  if (raw.includes('social') || raw.includes('citizen') || raw.includes('public')) return { label:'SOC', sub:'Social', icon:'#', bg:'linear-gradient(135deg,#2C3454,#7C3AED)' }
-  if (raw.includes('pio') || raw.includes('county') || raw.includes('eoc') || raw.includes('public information')) return { label:'PIO', sub:'County', icon:'i', bg:'linear-gradient(135deg,#104E3B,#22C55E)' }
-  if (raw.includes('news') || raw.includes('channel') || raw.includes('tv') || raw.includes('daily') || raw.includes('times') || raw.includes('post') || raw.includes('tribune')) {
-    const m = raw.match(/(?:channel|ch\.?)\s*(\d{1,2})/)
-    return { label:m ? m[1] : '7', sub:'News', icon:m ? m[1] : '7', bg:'linear-gradient(135deg,#0B4F9F,#2563EB)' }
+  if (raw.includes('radio') || raw.includes('fm') || raw.includes('am ')) {
+    return { label:'WAVE', sub:'RADIO', bg:'linear-gradient(135deg,#0B4F9F,#1E88E5)', border:'#60A5FA' }
   }
-  return { label:'LIVE', sub:'Media', icon:'●', bg:'linear-gradient(135deg,#334155,#0F766E)' }
+  if (raw.includes('weather') || raw.includes('nws') || raw.includes('storm')) {
+    return { label:'NWS', sub:'WX', bg:'linear-gradient(135deg,#174A7C,#38BDF8)', border:'#7DD3FC' }
+  }
+  if (raw.includes('social') || raw.includes('citizen') || raw.includes('public')) {
+    return { label:'SOC', sub:'FEED', bg:'linear-gradient(135deg,#2C3454,#7C3AED)', border:'#C4B5FD' }
+  }
+  if (raw.includes('pio') || raw.includes('county') || raw.includes('eoc') || raw.includes('public information')) {
+    return { label:'PIO', sub:'COUNTY', bg:'linear-gradient(135deg,#104E3B,#22C55E)', border:'#86EFAC' }
+  }
+  if (raw.includes('news') || raw.includes('channel') || raw.includes('tv') || raw.includes('daily') || raw.includes('times') || raw.includes('post') || raw.includes('tribune') || raw.includes('kwqc') || raw.includes('wqad')) {
+    const m = raw.match(/(?:channel|ch\.?|news)\s*(\d{1,2})/)
+    return { label:m ? m[1] : '7', sub:'NEWS', bg:'linear-gradient(135deg,#0B4F9F,#2563EB)', border:'#93C5FD' }
+  }
+  return { label:'LIVE', sub:'MEDIA', bg:'linear-gradient(135deg,#334155,#0F766E)', border:'#5EEAD4' }
 }
 
 function MediaIconTile({ item }) {
   const p = mediaSourceProfile(item)
+  const isNumber = /^[0-9]{1,2}$/.test(p.label)
   return (
     <div style={{
-      width:42,
-      height:42,
-      borderRadius:9,
+      width:46,
+      height:46,
+      borderRadius:10,
       background:p.bg,
-      border:'1px solid rgba(255,255,255,0.22)',
-      boxShadow:'0 10px 24px rgba(0,0,0,0.28)',
+      border:`1px solid ${p.border}`,
+      boxShadow:'0 10px 24px rgba(0,0,0,0.32), inset 0 0 18px rgba(255,255,255,0.08)',
       display:'flex',
       flexDirection:'column',
       alignItems:'center',
@@ -746,8 +755,8 @@ function MediaIconTile({ item }) {
       flexShrink:0,
       overflow:'hidden'
     }}>
-      <div style={{ fontSize:p.label.length <= 2 ? 20 : 11, lineHeight:1, fontWeight:950, color:'#fff', letterSpacing:p.label.length <= 2 ? '-0.04em' : '0.04em' }}>{p.label}</div>
-      <div style={{ fontSize:8, color:'rgba(255,255,255,0.82)', lineHeight:1, marginTop:3, textTransform:'uppercase', letterSpacing:'0.06em' }}>{p.sub}</div>
+      <div style={{ fontSize:isNumber ? 25 : 11, lineHeight:1, fontWeight:950, color:'#fff', letterSpacing:isNumber ? '-0.08em' : '0.03em' }}>{p.label}</div>
+      <div style={{ fontSize:8, color:'rgba(255,255,255,0.86)', lineHeight:1, marginTop:3, textTransform:'uppercase', letterSpacing:'0.08em', fontWeight:850 }}>{p.sub}</div>
     </div>
   )
 }
@@ -1486,6 +1495,8 @@ export default function App() {
       fontSize:fs,
     }}>
       <style>{`
+        .nexus-map-icon { background: transparent !important; border: none !important; }
+
         .nexus-live-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
         .nexus-live-scroll::-webkit-scrollbar-thumb { background: rgba(87,146,198,.28); border-radius: 999px; }
         .nexus-live-scroll::-webkit-scrollbar-track { background: rgba(3,14,24,.45); }
@@ -1648,13 +1659,10 @@ export default function App() {
                 {state.headlines.length === 0 && <div style={{ color:UI.dim, fontSize:12, padding:10, fontStyle:'italic' }}>Media items appear after your first action.</div>}
                 {state.headlines.map(h => {
                   const isNew = h.turn === state.turn
-                  const badge = mediaSourceBadge(h.source)
                   return (
-                    <div key={h.id} style={{ display:'grid', gridTemplateColumns:'42px 1fr', gap:10, alignItems:'start', padding:'9px 10px', borderRadius:6, border:`1px solid ${isNew ? 'rgba(245,155,34,0.55)' : UI.borderSoft}`, background:isNew ? 'rgba(245,155,34,0.10)' : 'rgba(6,23,38,0.34)', lineHeight:1.5, opacity:isNew ? 1 : 0.68 }}>
-                      <div style={{ width:38, height:38, borderRadius:8, border:`1px solid ${isNew ? 'rgba(245,155,34,0.70)' : UI.borderSoft}`, background:isNew ? 'linear-gradient(180deg, rgba(245,155,34,0.32), rgba(6,23,38,0.72))' : 'rgba(69,163,255,0.10)', color:isNew ? UI.amber : UI.cyan, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:950, letterSpacing:'0.04em', textAlign:'center' }}>
-                        {badge}
-                      </div>
-                      <div>
+                    <div key={h.id} style={{ display:'grid', gridTemplateColumns:'52px 1fr', gap:12, alignItems:'start', padding:'10px 11px', borderRadius:7, border:`1px solid ${isNew ? 'rgba(245,155,34,0.58)' : UI.borderSoft}`, background:isNew ? 'linear-gradient(90deg, rgba(245,155,34,0.12), rgba(6,23,38,0.42))' : 'rgba(6,23,38,0.34)', lineHeight:1.5, opacity:isNew ? 1 : 0.72 }}>
+                      <MediaIconTile item={h} />
+                      <div style={{ minWidth:0 }}>
                         {isNew && <div style={{ fontSize:10, color:UI.amber, fontWeight:950, marginBottom:4, letterSpacing:'0.08em' }}>LIVE</div>}
                         <div style={{ fontSize:fs-1, color:isNew ? UI.text : UI.muted, marginBottom:4 }}>{h.text}</div>
                         <div style={{ fontSize:10, color:UI.dim }}>{h.source} — {h.time}</div>
@@ -1808,7 +1816,7 @@ export default function App() {
                   <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
                   <MapUpdater center={center}/>
                   {initPins.map(pin => (
-                    <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT)}>
+                    <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT, pin.type)}>
                       <Popup>
                         <div style={{ fontFamily:'Inter, sans-serif', fontSize:12 }}>
                           <strong>{pin.label}</strong><br/>
