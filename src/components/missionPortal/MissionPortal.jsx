@@ -436,7 +436,282 @@ function GuidedTourModal({ onClose }) {
 }
 
 
+
+function AboutNexusModal({ onClose }) {
+  const valueCards = [
+    {
+      symbol:'◎',
+      title:'Practical Training',
+      text:'Realistic scenarios and hands-on decision exercises.',
+    },
+    {
+      symbol:'◌',
+      title:'Better Decisions',
+      text:'Sharpen skills, test plans, and improve outcomes under pressure.',
+    },
+    {
+      symbol:'◇',
+      title:'Stronger Response',
+      text:'Build confidence and readiness before your community needs it most.',
+    },
+  ]
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="About NEXUS EOC"
+      style={{
+        position:'fixed',
+        inset:0,
+        zIndex:9998,
+        display:'flex',
+        alignItems:'center',
+        justifyContent:'center',
+        padding:24,
+        background:'rgba(1, 7, 13, 0.76)',
+        backdropFilter:'blur(7px)',
+        WebkitBackdropFilter:'blur(7px)',
+        boxSizing:'border-box'
+      }}
+    >
+      <div style={{
+        width:'min(980px, 96vw)',
+        maxHeight:'92vh',
+        overflowY:'auto',
+        border:'1px solid rgba(87,146,198,0.42)',
+        borderRadius:10,
+        background:'linear-gradient(135deg, rgba(4,17,29,0.98), rgba(2,9,16,0.98) 58%, rgba(3,13,23,0.98))',
+        boxShadow:'0 28px 90px rgba(0,0,0,0.62), 0 0 42px rgba(46,131,255,0.13)',
+        color:'#F4F8FE'
+      }}>
+        <div style={{
+          minHeight:76,
+          padding:'18px 22px',
+          display:'flex',
+          alignItems:'center',
+          justifyContent:'space-between',
+          gap:18,
+          borderBottom:'1px solid rgba(87,146,198,0.24)',
+          background:'linear-gradient(90deg, rgba(46,131,255,0.18), rgba(45,226,184,0.06), transparent)'
+        }}>
+          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+            <div style={{
+              width:52,
+              height:52,
+              borderRadius:14,
+              border:'1.5px solid #F4F8FE',
+              display:'grid',
+              placeItems:'center',
+              background:'rgba(2,11,19,0.52)',
+              color:'#F4F8FE',
+              fontWeight:950,
+              fontSize:26,
+              boxShadow:'0 0 28px rgba(69,163,255,0.14)'
+            }}>
+              N
+            </div>
+            <div>
+              <div style={{ color:'#F4F8FE', fontSize:24, fontWeight:950, letterSpacing:'0.08em' }}>NEXUS <span style={{ color:'#2DE2B8' }}>EOC</span></div>
+              <div style={{ color:'#2DE2B8', fontSize:13, fontWeight:850, letterSpacing:'0.12em', textTransform:'uppercase', marginTop:3 }}>About NEXUS EOC</div>
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            aria-label="Close About NEXUS EOC"
+            style={{
+              width:40,
+              height:40,
+              borderRadius:8,
+              border:'1px solid rgba(87,146,198,0.24)',
+              background:'rgba(2,11,19,0.58)',
+              color:'#F4F8FE',
+              cursor:'pointer',
+              fontSize:26,
+              lineHeight:1,
+              display:'grid',
+              placeItems:'center'
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        <div style={{
+          display:'grid',
+          gridTemplateColumns:'minmax(260px, 0.88fr) minmax(320px, 1.12fr)',
+          gap:36,
+          padding:'30px 34px 26px',
+          alignItems:'stretch'
+        }}>
+          <div style={{
+            border:'1px solid rgba(45,226,184,0.22)',
+            borderRadius:8,
+            overflow:'hidden',
+            background:'radial-gradient(circle at 50% 30%, rgba(45,226,184,0.17), transparent 44%), linear-gradient(180deg, rgba(5,24,39,0.88), rgba(2,10,18,0.96))',
+            minHeight:330,
+            display:'grid',
+            gridTemplateRows:'1fr auto'
+          }}>
+            <div style={{
+              minHeight:230,
+              display:'grid',
+              placeItems:'center',
+              position:'relative',
+              overflow:'hidden'
+            }}>
+              <div style={{
+                position:'absolute',
+                inset:0,
+                backgroundImage:'linear-gradient(rgba(69,163,255,0.065) 1px, transparent 1px), linear-gradient(90deg, rgba(69,163,255,0.065) 1px, transparent 1px)',
+                backgroundSize:'34px 34px',
+                opacity:0.75
+              }} />
+              <div style={{
+                position:'absolute',
+                width:280,
+                height:280,
+                borderRadius:'50%',
+                border:'1px solid rgba(45,226,184,0.18)',
+                boxShadow:'0 0 70px rgba(45,226,184,0.13)'
+              }} />
+              <div style={{
+                position:'relative',
+                width:148,
+                height:148,
+                borderRadius:28,
+                border:'2px solid rgba(45,226,184,0.75)',
+                display:'grid',
+                placeItems:'center',
+                background:'linear-gradient(135deg, rgba(45,226,184,0.17), rgba(2,11,19,0.82))',
+                boxShadow:'0 0 45px rgba(45,226,184,0.24), inset 0 0 34px rgba(69,163,255,0.10)',
+                color:'#F4F8FE',
+                fontSize:74,
+                fontWeight:950,
+                letterSpacing:'-0.05em'
+              }}>
+                N
+              </div>
+            </div>
+
+            <div style={{
+              padding:'22px 28px 26px',
+              borderTop:'1px solid rgba(45,226,184,0.26)',
+              color:'#2DE2B8',
+              fontSize:18,
+              lineHeight:1.65,
+              fontStyle:'italic',
+              background:'linear-gradient(180deg, rgba(3,18,30,0.58), rgba(2,11,19,0.88))'
+            }}>
+              <div style={{ color:'#2DE2B8', fontSize:34, lineHeight:1, marginBottom:4 }}>“</div>
+              <div>Train before the incident.</div>
+              <div>Decide with confidence.</div>
+              <div>Lead when it matters.</div>
+              <div style={{ color:'#2DE2B8', fontSize:34, lineHeight:1, textAlign:'right', marginTop:2 }}>”</div>
+            </div>
+          </div>
+
+          <div style={{ display:'flex', flexDirection:'column', justifyContent:'center' }}>
+            <h2 style={{
+              margin:'0 0 14px',
+              color:'#F4F8FE',
+              fontSize:'clamp(28px, 3vw, 36px)',
+              lineHeight:1.1,
+              fontWeight:950,
+              letterSpacing:'0.01em'
+            }}>
+              Built by a practitioner. For practitioners.
+            </h2>
+            <div style={{
+              width:64,
+              height:2,
+              background:'linear-gradient(90deg, #2DE2B8, rgba(45,226,184,0))',
+              margin:'0 0 22px'
+            }} />
+
+            <div style={{ display:'grid', gap:18, color:'#F4F8FE', fontSize:17, lineHeight:1.62 }}>
+              <p style={{ margin:0 }}>
+                <span style={{ color:'#2DE2B8', fontWeight:900 }}>Nick Edwards</span> created NEXUS EOC to improve emergency operations training through realistic, scenario-based decision exercises.
+              </p>
+              <p style={{ margin:0 }}>
+                The platform draws on experience in emergency management, continuity, military operations, emergency communications, remote sensing, and training design.
+              </p>
+              <p style={{ margin:0 }}>
+                NEXUS EOC is built for emergency managers, EOCs, CERT teams, public safety partners, and response organizations that need practical decision-making reps before the real incident happens.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          margin:'0 34px',
+          borderTop:'1px solid rgba(87,146,198,0.24)',
+          padding:'22px 0',
+          display:'grid',
+          gridTemplateColumns:'repeat(3, 1fr)',
+          gap:16
+        }}>
+          {valueCards.map((card, idx) => (
+            <div key={card.title} style={{
+              display:'grid',
+              gridTemplateColumns:'42px 1fr',
+              gap:12,
+              padding:idx === 1 ? '0 16px' : '0',
+              borderLeft:idx === 0 ? 'none' : '1px solid rgba(87,146,198,0.22)'
+            }}>
+              <div style={{
+                width:38,
+                height:38,
+                borderRadius:12,
+                border:'1px solid rgba(45,226,184,0.56)',
+                display:'grid',
+                placeItems:'center',
+                color:'#2DE2B8',
+                fontSize:24,
+                background:'rgba(45,226,184,0.08)'
+              }}>
+                {card.symbol}
+              </div>
+              <div>
+                <div style={{ color:'#2DE2B8', fontSize:14, fontWeight:900, letterSpacing:'0.05em', textTransform:'uppercase', marginBottom:5 }}>{card.title}</div>
+                <div style={{ color:'#B9C8D8', fontSize:14, lineHeight:1.45 }}>{card.text}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          padding:'0 34px 26px',
+          display:'flex',
+          justifyContent:'center'
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              height:46,
+              minWidth:210,
+              borderRadius:5,
+              border:'1px solid rgba(45,226,184,0.58)',
+              background:'linear-gradient(180deg, rgba(3,13,23,0.82), rgba(2,11,19,0.92))',
+              color:'#F4F8FE',
+              fontSize:16,
+              fontWeight:850,
+              cursor:'pointer',
+              boxShadow:'0 0 24px rgba(45,226,184,0.10)'
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
 export default function MissionPortal({ onStartExercise }) {
+  const [showAboutNexus, setShowAboutNexus] = useState(false)
   const [showGuidedTour, setShowGuidedTour] = useState(false)
   return (
     <div style={{ width:'100vw', minHeight:'100vh', background:`radial-gradient(circle at 22% 18%, rgba(46,131,255,0.12), transparent 34%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`, color:DS.text, fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif', overflow:'hidden' }}>
@@ -453,12 +728,26 @@ export default function MissionPortal({ onStartExercise }) {
           <FeaturedScenarios />
           <HowItWorks />
           <footer style={{ height:34, display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(60px, 12vw, 220px)', color:DS.muted, fontSize:13 }}>
-            <span>© 2026 NEXUS EOC. All rights reserved.</span>
-            <span style={{ color:DS.blue2 }}>About NEXUS EOC</span>
-          </footer>
+        <span>© 2026 NEXUS EOC. All rights reserved.</span>
+        <button
+          onClick={() => setShowAboutNexus(true)}
+          style={{
+            border:'none',
+            background:'transparent',
+            color:'#2DE2B8',
+            font: 'inherit',
+            fontWeight:800,
+            cursor:'pointer',
+            padding:0
+          }}
+        >
+          About NEXUS EOC
+        </button>
+      </footer>
         </div>
       </main>
           {showGuidedTour && <GuidedTourModal onClose={() => setShowGuidedTour(false)} />}
+      {showAboutNexus && <AboutNexusModal onClose={() => setShowAboutNexus(false)} />}
     </div>
   )
 }
