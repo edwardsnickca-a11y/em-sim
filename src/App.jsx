@@ -337,6 +337,82 @@ function downloadTextFile(filename, text) {
   URL.revokeObjectURL(url)
 }
 
+function escapePdfText(value = '') {
+  return String(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)')
+}
+
+function wrapPdfLine(line, maxChars = 92) {
+  const words = String(line || '').split(/\s+/)
+  const lines = []
+  let current = ''
+  words.forEach(word => {
+    if (!word) return
+    if ((current + ' ' + word).trim().length > maxChars) {
+      if (current) lines.push(current)
+      current = word
+    } else {
+      current = (current + ' ' + word).trim()
+    }
+  })
+  if (current) lines.push(current)
+  return lines.length ? lines : ['']
+}
+
+function downloadPdfTextFile(filename, text) {
+  const pageW = 612
+  const pageH = 792
+  const margin = 42
+  const fontSize = 9
+  const lineH = 13
+  const maxLines = Math.floor((pageH - margin * 2) / lineH)
+  const rawLines = String(text || '').split('\n')
+  const lines = rawLines.flatMap(line => wrapPdfLine(line, 92))
+  const pages = []
+  for (let i = 0; i < lines.length; i += maxLines) pages.push(lines.slice(i, i + maxLines))
+  if (!pages.length) pages.push(['NEXUS EOC Transcript'])
+
+  const objects = []
+  const add = value => { objects.push(value); return objects.length }
+  const fontObj = add('<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>')
+  const pageObjs = []
+
+  pages.forEach((pageLines, pageIdx) => {
+    const content = ['BT', `/F1 ${fontSize} Tf`, `${margin} ${pageH - margin} Td`]
+    pageLines.forEach((line, idx) => {
+      if (idx > 0) content.push(`0 -${lineH} Td`)
+      content.push(`(${escapePdfText(line)}) Tj`)
+    })
+    content.push('ET')
+    const stream = content.join('\n')
+    const contentObj = add(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`)
+    const pageObj = add(`<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /Font << /F1 ${fontObj} 0 R >> >> /Contents ${contentObj} 0 R >>`)
+    pageObjs.push(pageObj)
+  })
+
+  const pagesObj = add(`<< /Type /Pages /Kids [${pageObjs.map(n => `${n} 0 R`).join(' ')}] /Count ${pageObjs.length} >>`)
+  pageObjs.forEach(n => { objects[n - 1] = objects[n - 1].replace('/Parent 0 0 R', `/Parent ${pagesObj} 0 R`) })
+  const catalogObj = add(`<< /Type /Catalog /Pages ${pagesObj} 0 R >>`)
+
+  let pdf = '%PDF-1.4\n'
+  const offsets = [0]
+  objects.forEach((obj, idx) => {
+    offsets.push(pdf.length)
+    pdf += `${idx + 1} 0 obj\n${obj}\nendobj\n`
+  })
+  const xref = pdf.length
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`
+  for (let i = 1; i < offsets.length; i++) pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root ${catalogObj} 0 R >>\nstartxref\n${xref}\n%%EOF`
+
+  const blob = new Blob([pdf], { type:'application/pdf' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename.endsWith('.pdf') ? filename : filename.replace(/\.txt$/i, '.pdf')
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 // ─── AAR DISPLAY COMPONENT ────────────────────────────────────────────────────
 function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, fs, ac, al }) {
   const [activeSection, setActiveSection] = useState(null)
@@ -381,7 +457,7 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
       worldState, transcript, finalLifelines: lifelines,
       finalSimTime: simTime, finalSituation: situation, aar,
     })
-    downloadTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.txt`, text)
+    downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.pdf`, text)
   }
 
   const scenarioName = SCENARIOS[scenario]?.name || scenario
@@ -532,11 +608,17 @@ function useVertDrag(containerRef, onUpdate) {
 
 function InfoCallout({ panelKey, anchorRef, onClose }) {
   const info = PANEL_INFO[panelKey]
-  const [pos, setPos] = useState({ top:0, left:0 })
+  const [pos, setPos] = useState({ top:0, left:0, transform:'none' })
   useEffect(() => {
     if (anchorRef?.current) {
       const rect = anchorRef.current.getBoundingClientRect()
-      setPos({ top: rect.bottom + 6, left: Math.min(rect.left, window.innerWidth - 360) })
+      const width = 340
+      const heightEstimate = 190
+      const left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12))
+      const belowTop = rect.bottom + 8
+      const aboveTop = rect.top - heightEstimate - 8
+      const useAbove = belowTop + heightEstimate > window.innerHeight - 12 && aboveTop > 12
+      setPos({ top: useAbove ? aboveTop : Math.min(belowTop, window.innerHeight - heightEstimate - 12), left, transform:'none' })
     }
     const handler = (e) => {
       if (!e.target.closest('[data-info-callout]') && !e.target.closest('[data-info-btn]')) onClose()
@@ -546,12 +628,12 @@ function InfoCallout({ panelKey, anchorRef, onClose }) {
   }, [])
   if (!info) return null
   return (
-    <div data-info-callout="true" style={{ position:'fixed', top:pos.top, left:pos.left, width:340, background:'#141414', border:'0.5px solid #444', borderRadius:8, padding:'12px 14px', zIndex:3000, boxShadow:'0 8px 24px rgba(0,0,0,0.9)' }}>
+    <div data-info-callout="true" className="nexus-live-scroll" style={{ position:'fixed', top:pos.top, left:pos.left, width:340, maxHeight:'min(260px, calc(100vh - 24px))', overflowY:'auto', background:'#071421', border:'1px solid rgba(87,146,198,0.42)', borderRadius:8, padding:'12px 14px', zIndex:3000, boxShadow:'0 14px 40px rgba(0,0,0,0.82)' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-        <span style={{ fontSize:11, fontWeight:500, color:'#ccc', letterSpacing:'0.04em' }}>{info.title}</span>
-        <button onClick={onClose} style={{ fontSize:12, color:'#555', border:'none', background:'none', cursor:'pointer', padding:'0 2px' }}>✕</button>
+        <span style={{ fontSize:11, fontWeight:800, color:'#F4F8FE', letterSpacing:'0.04em' }}>{info.title}</span>
+        <button onClick={onClose} style={{ fontSize:12, color:'#6F8195', border:'none', background:'none', cursor:'pointer', padding:'0 2px' }}>✕</button>
       </div>
-      <p style={{ fontSize:10, color:'#777', lineHeight:1.7, margin:0, whiteSpace:'normal', wordBreak:'break-word' }}>{info.body}</p>
+      <p style={{ fontSize:10, color:'#B9C8D8', lineHeight:1.7, margin:0, whiteSpace:'normal', wordBreak:'break-word' }}>{info.body}</p>
     </div>
   )
 }
@@ -747,6 +829,16 @@ function EndexFeedback({ scenario, role, jurisdiction, difficulty, turns, fs, ac
   )
 }
 
+
+function mediaSourceBadge(source = 'Media') {
+  const s = String(source || 'Media')
+  const lower = s.toLowerCase()
+  if (lower.includes('radio')) return 'RAD'
+  if (lower.includes('tv') || lower.includes('channel') || /\b[0-9]{1,2}\b/.test(lower)) return 'TV'
+  if (lower.includes('news') || lower.includes('press')) return 'NEWS'
+  if (lower.includes('social') || lower.includes('x ') || lower.includes('facebook')) return 'SOC'
+  return s.split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 3).toUpperCase() || 'MED'
+}
 
 function OnboardingModal({ onClose, ac = '#1D9E75' }) {
   return (
@@ -1004,7 +1096,6 @@ export default function App() {
         dispatches: initDispatches,
         terminal: [
           { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${state.difficulty} — ${(state.role||'EOC Director').toUpperCase()}${state.playerName ? ` — ${state.playerName.toUpperCase()}` : ''}` },
-          { type:'system',   text:'Type your decisions as the EM on scene. Be specific. Type ENDEX for AAR.' },
           { type:'divider' },
           { type:'narrator', text:world.openingNarrative + ' What is your first action?' },
         ],
@@ -1023,7 +1114,6 @@ export default function App() {
       update({
         terminal: [
           { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${state.difficulty}` },
-          { type:'system',   text:'Type your decisions as the EM on scene. Be specific. Type ENDEX for AAR.' },
           { type:'divider' },
           { type:'narrator', text:sc.desc + ' Your EOC is activating. What is your first action?' },
         ],
@@ -1163,7 +1253,7 @@ export default function App() {
       finalSituation: state.situation,
       aar: state.aar,
     })
-    downloadTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.txt`, text)
+    downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.pdf`, text)
   }
 
   if (!state) return <div style={{ color:'#888', padding:'2rem', fontFamily:'monospace' }}>Loading...</div>
@@ -1411,10 +1501,10 @@ export default function App() {
         </div>
       </header>
 
-      <main style={{ flex:1, minHeight:0, padding:'clamp(10px, 1vw, 16px)', display:'flex', flexDirection:'column', gap:9, boxSizing:'border-box' }}>
+      <main style={{ flex:1, minHeight:0, padding:'clamp(10px, 1vw, 16px)', display:'flex', flexDirection:'column', alignItems:'center', gap:9, boxSizing:'border-box' }}>
 
         {/* LIFELINE BAR */}
-        <section style={{ ...panelShell, flexShrink:0, minHeight:'auto' }}>
+        <section style={{ ...panelShell, width:'min(100%, 1760px)', flexShrink:0, minHeight:'auto', boxSizing:'border-box' }}>
           <div style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 10px', borderBottom:`1px solid ${UI.borderSoft}` }}>
             <div style={{ fontSize:11, color:UI.text, fontWeight:950, textTransform:'uppercase', letterSpacing:'0.10em', display:'flex', alignItems:'center' }}>
               Community Lifelines
@@ -1428,7 +1518,7 @@ export default function App() {
         </section>
 
         {/* ESF ACTIVATION TRACKER */}
-        <section style={{ display:'flex', alignItems:'center', gap:7, border:`1px solid ${UI.border}`, borderRadius:6, background:'rgba(3,14,24,0.68)', padding:'7px 10px', flexShrink:0 }}>
+        <section style={{ width:'min(100%, 1760px)', display:'flex', alignItems:'center', gap:7, border:`1px solid ${UI.border}`, borderRadius:6, background:'rgba(3,14,24,0.68)', padding:'7px 10px', flexShrink:0, boxSizing:'border-box' }}>
           <div style={{ fontSize:11, color:UI.text, fontWeight:950, textTransform:'uppercase', letterSpacing:'0.10em', whiteSpace:'nowrap', display:'flex', alignItems:'center' }}>
             ESF Activation Tracker
             <InfoBtn panelKey="esf" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
@@ -1454,7 +1544,7 @@ export default function App() {
         </section>
 
         {/* THREE-COLUMN WORKSPACE */}
-        <div ref={containerRef} style={{ display:'flex', flex:1, minHeight:0 }}>
+        <div ref={containerRef} style={{ width:'min(100%, 1760px)', display:'flex', flex:1, minHeight:0, boxSizing:'border-box' }}>
 
           {/* LEFT COLUMN: FLASH CARDS / MEDIA */}
           <div ref={leftColRef} style={{ width:`${leftWidth}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
@@ -1488,11 +1578,17 @@ export default function App() {
                 {state.headlines.length === 0 && <div style={{ color:UI.dim, fontSize:12, padding:10, fontStyle:'italic' }}>Media items appear after your first action.</div>}
                 {state.headlines.map(h => {
                   const isNew = h.turn === state.turn
+                  const badge = mediaSourceBadge(h.source)
                   return (
-                    <div key={h.id} style={{ padding:'9px 10px', borderRadius:6, border:`1px solid ${isNew ? 'rgba(245,155,34,0.55)' : UI.borderSoft}`, background:isNew ? 'rgba(245,155,34,0.10)' : 'rgba(6,23,38,0.34)', lineHeight:1.5, opacity:isNew ? 1 : 0.68 }}>
-                      {isNew && <div style={{ fontSize:10, color:UI.amber, fontWeight:950, marginBottom:4, letterSpacing:'0.08em' }}>LIVE</div>}
-                      <div style={{ fontSize:fs-1, color:isNew ? UI.text : UI.muted, marginBottom:4 }}>{h.text}</div>
-                      <div style={{ fontSize:10, color:UI.dim }}>{h.source} — {h.time}</div>
+                    <div key={h.id} style={{ display:'grid', gridTemplateColumns:'42px 1fr', gap:10, alignItems:'start', padding:'9px 10px', borderRadius:6, border:`1px solid ${isNew ? 'rgba(245,155,34,0.55)' : UI.borderSoft}`, background:isNew ? 'rgba(245,155,34,0.10)' : 'rgba(6,23,38,0.34)', lineHeight:1.5, opacity:isNew ? 1 : 0.68 }}>
+                      <div style={{ width:38, height:38, borderRadius:8, border:`1px solid ${isNew ? 'rgba(245,155,34,0.70)' : UI.borderSoft}`, background:isNew ? 'linear-gradient(180deg, rgba(245,155,34,0.32), rgba(6,23,38,0.72))' : 'rgba(69,163,255,0.10)', color:isNew ? UI.amber : UI.cyan, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:950, letterSpacing:'0.04em', textAlign:'center' }}>
+                        {badge}
+                      </div>
+                      <div>
+                        {isNew && <div style={{ fontSize:10, color:UI.amber, fontWeight:950, marginBottom:4, letterSpacing:'0.08em' }}>LIVE</div>}
+                        <div style={{ fontSize:fs-1, color:isNew ? UI.text : UI.muted, marginBottom:4 }}>{h.text}</div>
+                        <div style={{ fontSize:10, color:UI.dim }}>{h.source} — {h.time}</div>
+                      </div>
                     </div>
                   )
                 })}
@@ -1514,7 +1610,7 @@ export default function App() {
                   {isEndex && state.aar && <span style={{ color:UI.cyan, fontSize:11, fontWeight:950 }}>ENDEX — {state.turn} TURNS</span>}
                   {!isEndex && (state.exerciseTranscript || []).length > 0 && (
                     <button onClick={downloadCurrentTranscript} style={{ fontSize:10, padding:'3px 8px', color:UI.muted, background:'transparent', border:`1px solid ${UI.borderSoft}`, cursor:'pointer', borderRadius:4 }}>
-                      Transcript
+                      Transcript PDF
                     </button>
                   )}
                 </div>
