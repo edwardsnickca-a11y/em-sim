@@ -440,17 +440,17 @@ function GuidedTourModal({ onClose }) {
 function AboutNexusModal({ onClose }) {
   const valueCards = [
     {
-      symbol:'◎',
+      icon:'target',
       title:'Practical Training',
       text:'Realistic scenarios and hands-on decision exercises.',
     },
     {
-      symbol:'◌',
+      icon:'person',
       title:'Better Decisions',
       text:'Sharpen skills, test plans, and improve outcomes under pressure.',
     },
     {
-      symbol:'◇',
+      icon:'shield',
       title:'Stronger Response',
       text:'Build confidence and readiness before your community needs it most.',
     },
@@ -476,8 +476,8 @@ function AboutNexusModal({ onClose }) {
       }}
     >
       <div style={{
-        width:'min(980px, 96vw)',
-        maxHeight:'92vh',
+        width:'min(1040px, 92vw)',
+        maxHeight:'88vh',
         overflowY:'auto',
         border:'1px solid rgba(87,146,198,0.42)',
         borderRadius:10,
@@ -541,8 +541,8 @@ function AboutNexusModal({ onClose }) {
         <div style={{
           display:'grid',
           gridTemplateColumns:'minmax(260px, 0.88fr) minmax(320px, 1.12fr)',
-          gap:36,
-          padding:'30px 34px 26px',
+          gap:32,
+          padding:'28px 34px 24px',
           alignItems:'stretch'
         }}>
           <div style={{
@@ -578,20 +578,17 @@ function AboutNexusModal({ onClose }) {
               }} />
               <div style={{
                 position:'relative',
-                width:148,
-                height:148,
-                borderRadius:28,
-                border:'2px solid rgba(45,226,184,0.75)',
+                width:154,
+                height:154,
                 display:'grid',
                 placeItems:'center',
-                background:'linear-gradient(135deg, rgba(45,226,184,0.17), rgba(2,11,19,0.82))',
-                boxShadow:'0 0 45px rgba(45,226,184,0.24), inset 0 0 34px rgba(69,163,255,0.10)',
-                color:'#F4F8FE',
-                fontSize:74,
-                fontWeight:950,
-                letterSpacing:'-0.05em'
+                filter:'drop-shadow(0 0 30px rgba(45,226,184,0.22))'
               }}>
-                N
+                <svg viewBox="0 0 120 120" width="154" height="154" aria-hidden="true">
+                  <path d="M60 7 L101 25 V58 C101 85 84 105 60 113 C36 105 19 85 19 58 V25 Z" fill="rgba(2,11,19,0.72)" stroke="rgba(45,226,184,0.82)" strokeWidth="2.5" />
+                  <path d="M60 16 L92 30 V58 C92 79 79 95 60 103 C41 95 28 79 28 58 V30 Z" fill="rgba(45,226,184,0.08)" stroke="rgba(69,163,255,0.28)" strokeWidth="1.2" />
+                  <text x="60" y="73" textAnchor="middle" fontSize="50" fontWeight="900" fill="#F4F8FE" fontFamily="Inter, Segoe UI, Arial">N</text>
+                </svg>
               </div>
             </div>
 
@@ -616,7 +613,7 @@ function AboutNexusModal({ onClose }) {
             <h2 style={{
               margin:'0 0 14px',
               color:'#F4F8FE',
-              fontSize:'clamp(28px, 3vw, 36px)',
+              fontSize:'clamp(26px, 2.4vw, 32px)',
               lineHeight:1.1,
               fontWeight:950,
               letterSpacing:'0.01em'
@@ -630,7 +627,7 @@ function AboutNexusModal({ onClose }) {
               margin:'0 0 22px'
             }} />
 
-            <div style={{ display:'grid', gap:18, color:'#F4F8FE', fontSize:17, lineHeight:1.62 }}>
+            <div style={{ display:'grid', gap:18, color:'#F4F8FE', fontSize:16, lineHeight:1.58 }}>
               <p style={{ margin:0 }}>
                 <span style={{ color:'#2DE2B8', fontWeight:900 }}>Nick Edwards</span> created NEXUS EOC to improve emergency operations training through realistic, scenario-based decision exercises.
               </p>
@@ -655,23 +652,23 @@ function AboutNexusModal({ onClose }) {
           {valueCards.map((card, idx) => (
             <div key={card.title} style={{
               display:'grid',
-              gridTemplateColumns:'42px 1fr',
+              gridTemplateColumns:'46px 1fr',
               gap:12,
               padding:idx === 1 ? '0 16px' : '0',
               borderLeft:idx === 0 ? 'none' : '1px solid rgba(87,146,198,0.22)'
             }}>
               <div style={{
-                width:38,
-                height:38,
-                borderRadius:12,
-                border:'1px solid rgba(45,226,184,0.56)',
+                width:42,
+                height:42,
+                borderRadius:14,
+                border:'1px solid rgba(45,226,184,0.58)',
                 display:'grid',
                 placeItems:'center',
                 color:'#2DE2B8',
-                fontSize:24,
-                background:'rgba(45,226,184,0.08)'
+                background:'rgba(45,226,184,0.08)',
+                boxShadow:'0 0 18px rgba(45,226,184,0.10)'
               }}>
-                {card.symbol}
+                <Icon type={card.icon} size={28} color="#2DE2B8" />
               </div>
               <div>
                 <div style={{ color:'#2DE2B8', fontSize:14, fontWeight:900, letterSpacing:'0.05em', textTransform:'uppercase', marginBottom:5 }}>{card.title}</div>
@@ -727,15 +724,15 @@ export default function MissionPortal({ onStartExercise }) {
           <CapabilityBand />
           <FeaturedScenarios />
           <HowItWorks />
-          <footer style={{ height:34, display:'flex', alignItems:'center', justifyContent:'center', gap:'clamp(60px, 12vw, 220px)', color:DS.muted, fontSize:13 }}>
+          <footer style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:26, color:DS.muted, fontSize:14, padding:'18px 20px 24px' }}>
         <span>© 2026 NEXUS EOC. All rights reserved.</span>
         <button
           onClick={() => setShowAboutNexus(true)}
           style={{
             border:'none',
             background:'transparent',
-            color:'#2DE2B8',
-            font: 'inherit',
+            color:DS.green || '#2DE2B8',
+            font:'inherit',
             fontWeight:800,
             cursor:'pointer',
             padding:0
