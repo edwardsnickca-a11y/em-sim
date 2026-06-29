@@ -353,11 +353,35 @@ function formatExerciseTranscript({ scenario, jurisdiction, difficulty, role, pl
 
   text += `${'='.repeat(72)}\n`
   text += `NEXUS EOC — nexuseoc.com\n`
-  return text
+  return cleanPdfText(text)
+}
+
+
+function cleanPdfText(text = '') {
+  return String(text)
+    .replace(/\u00e2\u20ac\u201d/g, ' - ')
+    .replace(/\u00e2\u20ac\u201c/g, ' - ')
+    .replace(/\u00e2\u20ac\u02dc/g, "'")
+    .replace(/\u00e2\u20ac\u2122/g, "'")
+    .replace(/\u00e2\u20ac\u0153/g, '"')
+    .replace(/\u00e2\u20ac\u009d/g, '"')
+    .replace(/\u00e2\u20ac\u00a2/g, '-')
+    .replace(/\u00e2/g, '')
+    .replace(/[–—]/g, ' - ')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/[•·]/g, '-')
+    .replace(/[✓✔]/g, 'OK')
+    .replace(/[→↗]/g, '->')
+    .replace(/[←]/g, '<-')
+    .replace(/[↻]/g, 'Restart')
+    .replace(/[⇩↓]/g, 'Download')
+    .replace(/[★]/g, '*')
+    .replace(/\s+\n/g, '\n')
 }
 
 function downloadTextFile(filename, text) {
-  const blob = new Blob([text], { type:'text/plain' })
+  const blob = new Blob([cleanPdfText(text)], { type:'text/plain;charset=utf-8' })
   const url  = URL.createObjectURL(blob)
   const a    = document.createElement('a')
   a.href     = url
@@ -388,6 +412,7 @@ function wrapPdfLine(line, maxChars = 92) {
 }
 
 function downloadPdfTextFile(filename, text) {
+  text = cleanPdfText(text)
   const pageW = 612
   const pageH = 792
   const margin = 42
