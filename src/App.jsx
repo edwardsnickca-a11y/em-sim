@@ -443,7 +443,209 @@ function downloadPdfTextFile(filename, text) {
 }
 
 // ─── AAR DISPLAY COMPONENT ────────────────────────────────────────────────────
-function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, fs, ac, al }) {
+function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, onRestart, onMissionPortal, fs, ac, al }) {
+  const scenarioName = SCENARIOS[scenario]?.name || scenario || 'Scenario'
+  const safeDate = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
+  const startTime = transcript?.[0]?.time || 'H+0:00'
+  const endTime = simTime || 'ENDEX'
+  const duration = `${turns || 0} turn${turns === 1 ? '' : 's'}`
+  const clean = value => value || 'Not captured in this exercise record.'
+
+  function downloadAAR() {
+    let text = `NEXUS EOC — AFTER-ACTION REVIEW\n`
+    text += `${'='.repeat(72)}\n\n`
+    text += `SCENARIO:        ${scenarioName}\n`
+    text += `JURISDICTION:    ${jurisdiction || 'Unspecified'}\n`
+    text += `ROLE:            ${role || 'EOC Director'}\n`
+    text += `DIFFICULTY:      ${difficulty || 'Unspecified'}\n`
+    if (playerName) text += `COMMANDER:       ${playerName}\n`
+    if (worldState?.location) text += `LOCATION:        ${worldState.location}\n`
+    text += `SESSION START:   ${startTime}\n`
+    text += `SESSION END:     ${endTime}\n`
+    text += `DURATION:        ${duration}\n`
+    text += `GENERATED:       ${safeDate}\n\n`
+    text += `${'='.repeat(72)}\n\n`
+
+    const order = [
+      ['SITUATION SUMMARY', aar?.situationSummary],
+      ['DECISION LOG REVIEW', aar?.decisionLog],
+      ['RESOURCE & COORDINATION EFFECTIVENESS', aar?.resourceCoordination],
+      ['COMMUNICATIONS & INFORMATION MANAGEMENT', aar?.communications],
+      ['DOCTRINE / REFERENCE NOTES', aar?.doctrineReferences],
+      ['STRENGTHS', aar?.strengths],
+      ['CRITICAL GAPS', aar?.criticalGaps],
+      ['RECOMMENDATIONS', aar?.recommendations],
+    ]
+
+    order.forEach(([label, content]) => {
+      text += `${label}\n`
+      text += `${'-'.repeat(label.length)}\n`
+      text += `${clean(content)}\n\n`
+    })
+
+    text += `${'='.repeat(72)}\n`
+    text += `NEXUS EOC — nexuseoc.com\n`
+    downloadPdfTextFile(`NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${safeDate.replace(/\s+/g,'_')}.pdf`, text)
+  }
+
+  function downloadTranscript() {
+    const text = formatExerciseTranscript({
+      scenario, jurisdiction, difficulty, role, playerName,
+      worldState, transcript, finalLifelines: lifelines,
+      finalSimTime: simTime, finalSituation: situation, aar,
+    })
+    downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${safeDate.replace(/\s+/g,'_')}.pdf`, text)
+  }
+
+  const UI = {
+    bg:'#020B13',
+    panel:'rgba(4, 17, 29, 0.84)',
+    panel2:'rgba(6, 23, 38, 0.92)',
+    border:'rgba(87, 146, 198, 0.30)',
+    borderSoft:'rgba(87, 146, 198, 0.18)',
+    text:'#F4F8FE',
+    muted:'#B9C8D8',
+    dim:'#6F8195',
+    cyan:'#45A3FF',
+    teal:'#2DE2B8',
+    green:'#22C55E',
+    red:'#EF4444',
+    amber:'#F59B22',
+    purple:'#A855F7',
+  }
+
+  const metaBox = (label, value, sub) => (
+    <div style={{ borderLeft:`1px solid ${UI.border}`, padding:'0 22px', minHeight:58, display:'flex', flexDirection:'column', justifyContent:'center' }}>
+      <div style={{ color:UI.dim, fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:5 }}>{label}</div>
+      <div style={{ color:UI.text, fontSize:15, fontWeight:850, lineHeight:1.2 }}>{value}</div>
+      {sub && <div style={{ color:UI.muted, fontSize:12, marginTop:4 }}>{sub}</div>}
+    </div>
+  )
+
+  const actionButton = (label, sub, color, onClick, icon) => (
+    <button onClick={onClick} style={{
+      minWidth:170,
+      minHeight:58,
+      display:'grid',
+      gridTemplateColumns:'26px 1fr',
+      gap:10,
+      alignItems:'center',
+      textAlign:'left',
+      padding:'10px 14px',
+      background:`linear-gradient(180deg, ${color}18, rgba(4,17,29,0.76))`,
+      border:`1px solid ${color}80`,
+      borderRadius:6,
+      color:UI.text,
+      cursor:'pointer',
+      boxShadow:`0 14px 34px ${color}12`,
+      fontFamily:'Inter, Segoe UI, sans-serif'
+    }}>
+      <span style={{ color, fontSize:22, lineHeight:1 }}>{icon}</span>
+      <span>
+        <span style={{ display:'block', color, fontWeight:900, fontSize:13, letterSpacing:'0.01em' }}>{label}</span>
+        <span style={{ display:'block', color:UI.muted, fontSize:11, marginTop:3 }}>{sub}</span>
+      </span>
+    </button>
+  )
+
+  const sectionCard = ({ title, icon, accent, content, tone }) => (
+    <section style={{
+      border:`1px solid ${accent}55`,
+      borderLeft:`3px solid ${accent}`,
+      borderRadius:7,
+      background:`linear-gradient(135deg, ${accent}12, rgba(4,17,29,0.84) 42%, rgba(2,11,19,0.96))`,
+      padding:'18px 20px',
+      boxShadow:'0 18px 42px rgba(0,0,0,0.22)',
+    }}>
+      <div style={{ display:'grid', gridTemplateColumns:'42px 1fr', gap:14, alignItems:'start' }}>
+        <div style={{ width:36, height:36, borderRadius:10, border:`1px solid ${accent}80`, color:accent, display:'grid', placeItems:'center', fontSize:22, background:`${accent}10` }}>
+          {icon}
+        </div>
+        <div>
+          <h2 style={{ margin:'1px 0 9px', color:accent, fontSize:18, lineHeight:1.15, fontWeight:950, letterSpacing:'0.04em', textTransform:'uppercase' }}>{title}</h2>
+          <div style={{ color:UI.text, opacity:0.92, fontSize:14, lineHeight:1.62, whiteSpace:'pre-wrap' }}>
+            {clean(content)}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+
+  return (
+    <div style={{
+      minHeight:'100vh',
+      width:'100vw',
+      color:UI.text,
+      fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+      background:`radial-gradient(circle at 72% 8%, rgba(46,131,255,0.14), transparent 30%), linear-gradient(135deg, ${UI.bg}, #02070D 62%)`,
+      overflowX:'hidden'
+    }}>
+      <div style={{ minHeight:'100vh', backgroundImage:'linear-gradient(rgba(69,163,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(69,163,255,0.045) 1px, transparent 1px)', backgroundSize:'48px 48px' }}>
+        <header style={{ borderBottom:`1px solid ${UI.border}`, background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))' }}>
+          <div style={{ width:'min(100%, 1720px)', margin:'0 auto', padding:'18px 24px', display:'grid', gridTemplateColumns:'auto 1fr auto', gap:22, alignItems:'center', boxSizing:'border-box' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:14, paddingRight:18, borderRight:`1px solid ${UI.border}` }}>
+              <div style={{ width:54, height:54, border:`2px solid ${UI.text}`, borderRadius:14, display:'grid', placeItems:'center', color:UI.text, fontWeight:950, fontSize:22, boxShadow:'0 0 28px rgba(69,163,255,0.14)' }}>N</div>
+              <div>
+                <div style={{ color:UI.text, fontSize:29, fontWeight:950, letterSpacing:'0.06em', lineHeight:1 }}>NEXUS <span style={{ color:UI.teal }}>EOC</span></div>
+                <div style={{ color:UI.muted, fontSize:11, marginTop:7 }}>Simulated Emergency Operations Platform</div>
+              </div>
+            </div>
+
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(150px, 1fr))', gap:0 }}>
+              {metaBox('Scenario', scenarioName, worldState?.location)}
+              {metaBox('Position / Function', role || 'EOC Director')}
+              {metaBox('Jurisdiction', jurisdiction || 'Unspecified')}
+              {metaBox('Difficulty', difficulty || 'Unspecified')}
+            </div>
+
+            <div style={{ display:'flex', gap:10, justifyContent:'flex-end', flexWrap:'wrap' }}>
+              {actionButton('Download AAR PDF', 'Review Report', UI.green, downloadAAR, '⇩')}
+              {actionButton('Download Transcript PDF', 'Full Exercise Record', UI.cyan, downloadTranscript, '⇩')}
+              {actionButton('Restart Scenario', 'Same Setup', UI.purple, onRestart || onReset, '↻')}
+              {actionButton('Mission Portal', 'Return to Dashboard', UI.cyan, onMissionPortal || onReset, '▦')}
+            </div>
+          </div>
+        </header>
+
+        <main style={{ width:'min(100%, 1720px)', margin:'0 auto', padding:'28px 24px 34px', boxSizing:'border-box' }}>
+          <section style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:26, alignItems:'center', paddingBottom:28, borderBottom:`1px solid ${UI.border}` }}>
+            <div style={{ display:'grid', gridTemplateColumns:'78px 1fr', gap:20, alignItems:'center' }}>
+              <div style={{ width:70, height:70, borderRadius:18, border:`2px solid ${UI.teal}`, color:UI.teal, display:'grid', placeItems:'center', fontSize:36, background:'rgba(45,226,184,0.10)', boxShadow:'0 16px 40px rgba(45,226,184,0.10)' }}>✓</div>
+              <div>
+                <h1 style={{ margin:0, color:UI.text, fontSize:38, lineHeight:1.05, fontWeight:950, letterSpacing:'0.035em', textTransform:'uppercase' }}>After-Action Review</h1>
+                <p style={{ margin:'10px 0 0', color:UI.text, opacity:0.86, maxWidth:780, fontSize:16, lineHeight:1.5 }}>
+                  This After-Action Review is generated from your exercise transcript, decisions, injects, map updates, media feed, and scenario progression.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3, auto)', gap:0 }}>
+              {metaBox('Session Start', startTime)}
+              {metaBox('Session End', endTime)}
+              {metaBox('Duration', duration)}
+            </div>
+          </section>
+
+          <section style={{ display:'grid', gridTemplateColumns:'1fr 1.02fr', gap:18, alignItems:'start', marginTop:22 }}>
+            <div style={{ display:'grid', gap:12 }}>
+              {sectionCard({ title:'Situation Summary', icon:'⌖', accent:UI.cyan, content:aar?.situationSummary })}
+              {sectionCard({ title:'Decision Log Review', icon:'▣', accent:UI.amber, content:aar?.decisionLog })}
+              {sectionCard({ title:'Resource & Coordination Effectiveness', icon:'⛓', accent:UI.cyan, content:aar?.resourceCoordination })}
+              {sectionCard({ title:'Communications & Information Management', icon:'⌁', accent:UI.cyan, content:aar?.communications })}
+              {sectionCard({ title:'Doctrine / Reference Notes', icon:'▰', accent:UI.purple, content:aar?.doctrineReferences })}
+            </div>
+
+            <div style={{ display:'grid', gap:12 }}>
+              {sectionCard({ title:'Strengths', icon:'✓', accent:UI.green, content:aar?.strengths })}
+              {sectionCard({ title:'Critical Gaps', icon:'!', accent:UI.red, content:aar?.criticalGaps })}
+              {sectionCard({ title:'Recommendations', icon:'☼', accent:UI.amber, content:aar?.recommendations })}
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  )
+}) {
   const [activeSection, setActiveSection] = useState(null)
   const [showFeedback, setShowFeedback] = useState(false)
 
@@ -1288,6 +1490,7 @@ export default function App() {
         turn:nextTurn, lifelines:parsed.lifelines||state.lifelines,
         headlines:newHeadlines, dynamicPins:newDynamicPins,
         aar: parsed.aar || state.aar,
+        screen: resolvedSituation === 'ENDEX' && parsed.aar ? 'aar' : state.screen,
         exerciseTranscript: [...(state.exerciseTranscript || []), transcriptEntry],
       })
 
@@ -1360,6 +1563,33 @@ export default function App() {
     )
   }
 
+
+
+  // ─── DEDICATED AAR SCREEN ───────────────────────────────────────────
+  if (state.screen === 'aar' && state.aar) {
+    return (
+      <AARDisplay
+        aar={state.aar}
+        scenario={state.scenario}
+        jurisdiction={state.jurisdiction}
+        difficulty={state.difficulty}
+        role={state.role}
+        playerName={state.playerName}
+        turns={state.turn}
+        simTime={state.simTime}
+        worldState={state.worldState}
+        transcript={state.exerciseTranscript || []}
+        lifelines={state.lifelines}
+        situation={state.situation}
+        onReset={reset}
+        onRestart={() => startScenario(state.scenario)}
+        onMissionPortal={() => update({ screen:'portal' })}
+        fs={fs}
+        ac={ac}
+        al={al}
+      />
+    )
+  }
 
   // ─── GAME SCREEN ───────────────────────────────────────────────────────────
   const UI = {
@@ -1693,7 +1923,7 @@ export default function App() {
                   )}
                 </div>
               )}
-              {isEndex && state.aar ? (
+              {false && isEndex && state.aar ? (
                 <div style={{ flex:1, minHeight:0, overflow:'hidden', display:'flex', flexDirection:'column' }}>
                   <AARDisplay
                     aar={state.aar}
@@ -1709,6 +1939,8 @@ export default function App() {
                     lifelines={state.lifelines}
                     situation={state.situation}
                     onReset={reset}
+                    onRestart={() => startScenario(state.scenario)}
+                    onMissionPortal={() => update({ screen:'portal' })}
                     fs={fs}
                     ac={ac}
                     al={al}
