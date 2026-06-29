@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import heroImage from '../../assets/missionPortal/hero-command-center.jpg'
 import hurricaneImage from '../../assets/missionPortal/hurricane-landfall.jpg'
 import mciImage from '../../assets/missionPortal/mass-casualty-incident.jpg'
@@ -54,7 +55,7 @@ function Icon({ type, size=28, color=DS.blue2 }) {
   return <svg {...p}>{icons[type] || icons.file}</svg>
 }
 
-function Header({ onStartExercise }) {
+function Header({ onStartExercise, onGuidedTour }) {
   return (
     <header style={{ height:76, display:'flex', alignItems:'center', justifyContent:'center', borderBottom:`1px solid ${DS.border}`, background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))', boxSizing:'border-box', flexShrink:0 }}>
       <div style={{ width:'min(100%, 1680px)', padding:'0 clamp(18px, 2vw, 34px)', display:'flex', alignItems:'center', justifyContent:'space-between', boxSizing:'border-box' }}>
@@ -65,7 +66,7 @@ function Header({ onStartExercise }) {
           <div style={{ color:DS.text, fontSize:'clamp(12px, .74vw, 15px)', lineHeight:1.25 }}>Simulated Emergency<br />Operations Platform</div>
         </div>
         <div style={{ display:'flex', gap:12 }}>
-          <button title="TODO: wire to existing guided tour modal" style={{ height:42, padding:'0 18px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'default' }}>
+          <button onClick={onGuidedTour} style={{ height:42, padding:'0 18px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer' }}>
             <Icon type="play" size={19} color={DS.blue2} /> Guided Tour
           </button>
           <button onClick={onStartExercise} style={{ height:42, padding:'0 20px', display:'flex', alignItems:'center', gap:10, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'linear-gradient(180deg, #1455B8, #0E3F91)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer', boxShadow:'0 0 22px rgba(46,131,255,0.16)' }}>
@@ -127,6 +128,7 @@ function ScenarioCard({ card }) {
         <div style={{ color:DS.text, fontSize:'clamp(14px, .82vw, 17px)', fontWeight:900, marginBottom:8, lineHeight:1.12 }}>{card.title}</div>
         <div style={{ color:DS.text, fontSize:'clamp(11.5px, .68vw, 13.5px)', lineHeight:1.36 }}>{card.desc}</div>
       </div>
+    {showGuidedTour && <GuidedTourModal onClose={() => setShowGuidedTour(false)} />}
     </div>
   )
 }
@@ -176,7 +178,267 @@ function HowItWorks() {
   )
 }
 
+
+const tourSteps = [
+  {
+    title:'Welcome to NEXUS EOC',
+    icon:'shield',
+    accent:DS.blue2,
+    text:[
+      'NEXUS EOC is a simulated emergency operations training platform built around realistic, scenario-based decision exercises.',
+      'This short tour will show you how to configure an exercise, respond to injects, and review your outputs.',
+    ],
+  },
+  {
+    title:'Mission Portal',
+    icon:'target',
+    accent:DS.blue2,
+    text:[
+      'The Mission Portal is your starting point. From here, you can start a new exercise, launch this guided tour, review featured scenarios, and see the basic exercise flow.',
+    ],
+  },
+  {
+    title:'Start Exercise',
+    icon:'person',
+    accent:DS.green,
+    text:[
+      'Use the Start Exercise screen to select a scenario, choose your exercise position or function, set the jurisdiction, select difficulty, and launch the live simulation.',
+    ],
+  },
+  {
+    title:'Live Exercise Interface',
+    icon:'map',
+    accent:DS.orange,
+    text:[
+      'The Live Exercise screen is where the simulation happens. Review the current inject, monitor flash cards and media updates, use the map and reference desk, and submit operational responses as the scenario evolves.',
+    ],
+  },
+  {
+    title:'Panel Info Icons',
+    icon:'file',
+    accent:DS.purple,
+    text:[
+      'Most panels include a small information icon next to the title. Click the ⓘ icon to learn what that panel does, how to interact with it, and what information it provides during the exercise.',
+    ],
+    visual:'ⓘ',
+  },
+  {
+    title:'End Exercise / Generate AAR',
+    icon:'chat',
+    accent:DS.orange,
+    text:[
+      'When you are ready to stop, select End Exercise. You can generate an After-Action Review or exit without creating a report.',
+    ],
+  },
+  {
+    title:'Download Reports',
+    icon:'file',
+    accent:DS.green,
+    text:[
+      'After an AAR is generated, you can download two PDF outputs: the After-Action Review and the full Exercise Transcript.',
+    ],
+  },
+]
+
+function GuidedTourModal({ onClose }) {
+  const [stepIndex, setStepIndex] = useState(0)
+  const step = tourSteps[stepIndex]
+  const isFirst = stepIndex === 0
+  const isLast = stepIndex === tourSteps.length - 1
+
+  const close = () => {
+    setStepIndex(0)
+    onClose?.()
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Guided Tour"
+      style={{
+        position:'fixed',
+        inset:0,
+        zIndex:9000,
+        display:'flex',
+        alignItems:'center',
+        justifyContent:'center',
+        padding:'clamp(16px, 3vw, 34px)',
+        background:'rgba(1, 7, 13, 0.76)',
+        backdropFilter:'blur(7px)',
+        WebkitBackdropFilter:'blur(7px)',
+        boxSizing:'border-box'
+      }}
+    >
+      <div
+        style={{
+          width:'min(760px, 96vw)',
+          border:`1px solid ${DS.borderStrong}`,
+          borderRadius:10,
+          overflow:'hidden',
+          background:'linear-gradient(135deg, rgba(4,17,29,0.98), rgba(2,9,16,0.98) 58%, rgba(3,13,23,0.98))',
+          boxShadow:'0 28px 90px rgba(0,0,0,0.62), 0 0 42px rgba(46,131,255,0.13)',
+          color:DS.text
+        }}
+      >
+        <div style={{
+          minHeight:76,
+          padding:'18px 22px',
+          display:'flex',
+          alignItems:'center',
+          justifyContent:'space-between',
+          gap:18,
+          borderBottom:`1px solid ${DS.border}`,
+          background:'linear-gradient(90deg, rgba(46,131,255,0.18), rgba(45,226,184,0.06), transparent)'
+        }}>
+          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+            <div style={{ width:46, height:46, borderRadius:12, border:`1.5px solid ${DS.blue2}`, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(2,11,19,0.52)' }}>
+              <Icon type="shield" size={28} color={DS.blue2} />
+            </div>
+            <div>
+              <div style={{ color:DS.text, fontSize:22, fontWeight:950, letterSpacing:'0.08em' }}>NEXUS EOC</div>
+              <div style={{ color:DS.blue2, fontSize:13, fontWeight:850, letterSpacing:'0.10em', textTransform:'uppercase', marginTop:3 }}>Guided Tour</div>
+            </div>
+          </div>
+
+          <button
+            onClick={close}
+            aria-label="Close guided tour"
+            style={{
+              width:38,
+              height:38,
+              borderRadius:8,
+              border:`1px solid ${DS.border}`,
+              background:'rgba(2,11,19,0.58)',
+              color:DS.text,
+              cursor:'pointer',
+              fontSize:22,
+              lineHeight:1,
+              display:'grid',
+              placeItems:'center'
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        <div style={{
+          padding:'26px 28px 24px',
+          display:'grid',
+          gridTemplateColumns:'120px 1fr',
+          gap:24,
+          alignItems:'start'
+        }}>
+          <div style={{
+            width:112,
+            height:112,
+            borderRadius:22,
+            border:`1.5px solid ${step.accent}`,
+            display:'flex',
+            alignItems:'center',
+            justifyContent:'center',
+            background:`linear-gradient(135deg, ${step.accent}18, rgba(2,11,19,0.70))`,
+            boxShadow:`0 18px 46px ${step.accent}12`,
+            color:step.accent,
+            fontSize:52,
+            fontWeight:900
+          }}>
+            {step.visual || <Icon type={step.icon} size={58} color={step.accent} />}
+          </div>
+
+          <div>
+            <div style={{ color:DS.muted, fontSize:12, fontWeight:900, letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:10 }}>
+              Step {stepIndex + 1} of {tourSteps.length}
+            </div>
+            <h2 style={{ margin:0, color:DS.text, fontSize:'clamp(28px, 3vw, 38px)', lineHeight:1.06, fontWeight:950, letterSpacing:'0.025em' }}>
+              {step.title}
+            </h2>
+            <div style={{ marginTop:18, display:'grid', gap:13 }}>
+              {step.text.map((line, idx) => (
+                <p key={idx} style={{ margin:0, color:DS.text, opacity:0.90, fontSize:16, lineHeight:1.58 }}>
+                  {line}
+                </p>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding:'0 28px 18px' }}>
+          <div style={{ height:7, borderRadius:99, background:'rgba(87,146,198,0.18)', overflow:'hidden', border:`1px solid ${DS.border}` }}>
+            <div style={{
+              width:`${((stepIndex + 1) / tourSteps.length) * 100}%`,
+              height:'100%',
+              background:`linear-gradient(90deg, ${DS.blue2}, ${DS.green})`,
+              transition:'width 160ms ease'
+            }} />
+          </div>
+          <div style={{ display:'flex', justifyContent:'center', gap:7, marginTop:13 }}>
+            {tourSteps.map((_, idx) => (
+              <span
+                key={idx}
+                style={{
+                  width:idx === stepIndex ? 22 : 8,
+                  height:8,
+                  borderRadius:99,
+                  background:idx === stepIndex ? DS.blue2 : 'rgba(185,200,216,0.28)',
+                  transition:'all 160ms ease'
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div style={{
+          padding:'16px 22px',
+          borderTop:`1px solid ${DS.border}`,
+          display:'flex',
+          justifyContent:'space-between',
+          alignItems:'center',
+          gap:12,
+          background:'rgba(2,11,19,0.56)'
+        }}>
+          <button
+            onClick={() => setStepIndex(Math.max(0, stepIndex - 1))}
+            disabled={isFirst}
+            style={{
+              height:42,
+              minWidth:108,
+              borderRadius:5,
+              border:`1px solid ${isFirst ? 'rgba(87,146,198,0.18)' : DS.border}`,
+              background:isFirst ? 'rgba(5,15,25,0.30)' : 'rgba(3,13,23,0.72)',
+              color:isFirst ? 'rgba(185,200,216,0.35)' : DS.text,
+              fontWeight:850,
+              cursor:isFirst ? 'not-allowed' : 'pointer'
+            }}
+          >
+            Back
+          </button>
+
+          <button
+            onClick={() => isLast ? close() : setStepIndex(Math.min(tourSteps.length - 1, stepIndex + 1))}
+            style={{
+              height:42,
+              minWidth:124,
+              borderRadius:5,
+              border:`1px solid ${isLast ? DS.green : DS.borderStrong}`,
+              background:isLast ? 'linear-gradient(180deg, #168B55, #0D633D)' : 'linear-gradient(180deg, #1455B8, #0E3F91)',
+              color:'#fff',
+              fontWeight:900,
+              cursor:'pointer',
+              boxShadow:`0 0 22px ${isLast ? 'rgba(45,226,110,0.14)' : 'rgba(46,131,255,0.16)'}`
+            }}
+          >
+            {isLast ? 'Finish' : 'Next'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
 export default function MissionPortal({ onStartExercise }) {
+  const [showGuidedTour, setShowGuidedTour] = useState(false)
   return (
     <div style={{ width:'100vw', minHeight:'100vh', background:`radial-gradient(circle at 22% 18%, rgba(46,131,255,0.12), transparent 34%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`, color:DS.text, fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif', overflow:'hidden' }}>
       <style>{`
@@ -184,7 +446,7 @@ export default function MissionPortal({ onStartExercise }) {
         @media (max-width: 1280px) { .nexus-scenario-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
         @media (max-width: 980px) { .nexus-scenario-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
       `}</style>
-      <Header onStartExercise={onStartExercise || (() => {})} />
+      <Header onStartExercise={onStartExercise || (() => {})} onGuidedTour={() => setShowGuidedTour(true)} />
       <main style={{ height:'calc(100vh - 76px)', overflowY:'auto', overflowX:'hidden', padding:'clamp(12px, 1.2vw, 20px)', boxSizing:'border-box' }}>
         <div style={{ width:'min(100%, 1680px)', margin:'0 auto', display:'flex', flexDirection:'column', gap:12 }}>
           <Hero />
