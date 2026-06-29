@@ -22,21 +22,46 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
-function makeIcon(color) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">
-    <path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 28 14 28s14-17.5 14-28C28 6.3 21.7 0 14 0z" fill="${color}" stroke="#111" stroke-width="1.5"/>
-    <circle cx="14" cy="14" r="6" fill="white" opacity="0.9"/>
+function makeIcon(color, type='OTHER') {
+  const t = String(type || 'OTHER').toUpperCase()
+  const iconMap = {
+    EOC:      { glyph:'◆', fill:'#1D9E75', stroke:'#BDEBDD' },
+    HOSPITAL: { glyph:'H', fill:'#3B82F6', stroke:'#D6E8FF' },
+    STAGING:  { glyph:'▲', fill:'#F59B22', stroke:'#FFE7B8' },
+    SHELTER:  { glyph:'⌂', fill:'#9B59B6', stroke:'#F0D8FF' },
+    AFFECTED: { glyph:'!', fill:'#E24B4A', stroke:'#FFD6D6' },
+    FIRE:     { glyph:'♨', fill:'#EF6A32', stroke:'#FFE0D1' },
+    HAZMAT:   { glyph:'☣', fill:'#8E44AD', stroke:'#F1D9FF' },
+    DAM:      { glyph:'≋', fill:'#38BDF8', stroke:'#D9F4FF' },
+    BLOCKED:  { glyph:'×', fill:'#E24B4A', stroke:'#FFD6D6' },
+    OTHER:    { glyph:'•', fill:color || '#45A3FF', stroke:'#EAF4FF' },
+  }
+  const cfg = iconMap[t] || iconMap.OTHER
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">
+    <defs>
+      <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="3" stdDeviation="2.3" flood-color="#000000" flood-opacity="0.75"/>
+      </filter>
+    </defs>
+    <circle cx="17" cy="17" r="12.2" fill="${cfg.fill}" stroke="${cfg.stroke}" stroke-width="2.2" filter="url(#shadow)"/>
+    <circle cx="17" cy="17" r="15.4" fill="none" stroke="${cfg.fill}" stroke-width="1.3" opacity="0.45"/>
+    <text x="17" y="${t === 'HOSPITAL' ? 22 : 21}" text-anchor="middle" font-size="${t === 'HOSPITAL' ? 14 : 15}" font-family="Arial, Helvetica, sans-serif" font-weight="900" fill="#ffffff">${cfg.glyph}</text>
   </svg>`
-  return L.divIcon({ html: svg, className: '', iconSize: [28, 40], iconAnchor: [14, 40], popupAnchor: [0, -40] })
+  return L.divIcon({ html: svg, className: 'nexus-map-icon', iconSize: [34, 34], iconAnchor: [17, 17], popupAnchor: [0, -18] })
 }
 
 function makeDynamicIcon(turnNum) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">
-    <path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 28 14 28s14-17.5 14-28C28 6.3 21.7 0 14 0z" fill="#1a1a1a" stroke="#ffffff" stroke-width="2"/>
-    <circle cx="14" cy="14" r="6" fill="white" opacity="0.15"/>
-    <text x="14" y="18" text-anchor="middle" font-size="9" font-family="monospace" font-weight="bold" fill="#ffffff">T${turnNum}</text>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 38 38">
+    <defs>
+      <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="3" stdDeviation="2.6" flood-color="#000000" flood-opacity="0.78"/>
+      </filter>
+    </defs>
+    <circle cx="19" cy="19" r="13.2" fill="#101923" stroke="#ffffff" stroke-width="2.1" filter="url(#shadow)"/>
+    <circle cx="19" cy="19" r="17" fill="none" stroke="#45A3FF" stroke-width="1.4" opacity="0.75"/>
+    <text x="19" y="23" text-anchor="middle" font-size="10.5" font-family="Arial, Helvetica, sans-serif" font-weight="900" fill="#ffffff">T${turnNum}</text>
   </svg>`
-  return L.divIcon({ html: svg, className: '', iconSize: [28, 40], iconAnchor: [14, 40], popupAnchor: [0, -40] })
+  return L.divIcon({ html: svg, className: 'nexus-map-icon nexus-turn-icon', iconSize: [38, 38], iconAnchor: [19, 19], popupAnchor: [0, -20] })
 }
 
 
@@ -686,6 +711,43 @@ function LifelineTile({ ll, data }) {
           <span style={{ color:c.text, fontWeight:500 }}>{status}</span> — {reason}
         </div>
       )}
+    </div>
+  )
+}
+
+
+function mediaSourceProfile(item = {}) {
+  const raw = `${item.source || item.type || item.text || ''}`.toLowerCase()
+  if (raw.includes('radio') || raw.includes('fm') || raw.includes('am ')) return { label:'RAD', sub:'Radio', icon:'◉', bg:'linear-gradient(135deg,#0B4F9F,#1E88E5)' }
+  if (raw.includes('weather') || raw.includes('nws') || raw.includes('storm')) return { label:'NWS', sub:'Wx', icon:'☁', bg:'linear-gradient(135deg,#174A7C,#38BDF8)' }
+  if (raw.includes('social') || raw.includes('citizen') || raw.includes('public')) return { label:'SOC', sub:'Social', icon:'#', bg:'linear-gradient(135deg,#2C3454,#7C3AED)' }
+  if (raw.includes('pio') || raw.includes('county') || raw.includes('eoc') || raw.includes('public information')) return { label:'PIO', sub:'County', icon:'i', bg:'linear-gradient(135deg,#104E3B,#22C55E)' }
+  if (raw.includes('news') || raw.includes('channel') || raw.includes('tv') || raw.includes('daily') || raw.includes('times') || raw.includes('post') || raw.includes('tribune')) {
+    const m = raw.match(/(?:channel|ch\.?)\s*(\d{1,2})/)
+    return { label:m ? m[1] : '7', sub:'News', icon:m ? m[1] : '7', bg:'linear-gradient(135deg,#0B4F9F,#2563EB)' }
+  }
+  return { label:'LIVE', sub:'Media', icon:'●', bg:'linear-gradient(135deg,#334155,#0F766E)' }
+}
+
+function MediaIconTile({ item }) {
+  const p = mediaSourceProfile(item)
+  return (
+    <div style={{
+      width:42,
+      height:42,
+      borderRadius:9,
+      background:p.bg,
+      border:'1px solid rgba(255,255,255,0.22)',
+      boxShadow:'0 10px 24px rgba(0,0,0,0.28)',
+      display:'flex',
+      flexDirection:'column',
+      alignItems:'center',
+      justifyContent:'center',
+      flexShrink:0,
+      overflow:'hidden'
+    }}>
+      <div style={{ fontSize:p.label.length <= 2 ? 20 : 11, lineHeight:1, fontWeight:950, color:'#fff', letterSpacing:p.label.length <= 2 ? '-0.04em' : '0.04em' }}>{p.label}</div>
+      <div style={{ fontSize:8, color:'rgba(255,255,255,0.82)', lineHeight:1, marginTop:3, textTransform:'uppercase', letterSpacing:'0.06em' }}>{p.sub}</div>
     </div>
   )
 }
