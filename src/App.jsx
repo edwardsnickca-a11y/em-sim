@@ -51,7 +51,7 @@ function makeDynamicIcon(turnNum) {
 
 
 
-const DEFAULT_SETTINGS = { fontSize:11, accentColor:'#1D9E75', alertColor:'#EF9F27' }
+const DEFAULT_SETTINGS = { fontSize:12, accentColor:'#45A3FF', alertColor:'#F59B22' }
 const SETTINGS_KEY = 'em_sim_settings'
 const ONBOARDING_KEY = 'nexus_onboarding_seen'
 
@@ -859,9 +859,9 @@ export default function App() {
   const [initLoading, setInitLoading] = useState(false)
   const [input, setInput]             = useState('')
   const [inputAreaHeight, setInputAreaHeight] = useState(80)
-  const [boundaries, setBoundaries]   = useState([14, 32, 80])
-  const [leftBounds, setLeftBounds]   = useState([40, 70])
-  const [rightSplit, setRightSplit]   = useState(45)
+  const [boundaries, setBoundaries]   = useState([26, 64, 80])
+  const [leftBounds, setLeftBounds]   = useState([52, 70])
+  const [rightSplit, setRightSplit]   = useState(62)
   const [showSettings, setShowSettings] = useState(false)
   const [activeInfo, setActiveInfo]   = useState(null)
   const [activeESFs, setActiveESFs]   = useState({})
@@ -1138,7 +1138,7 @@ export default function App() {
   }
 
   function handleKey(e) {
-    if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendAction() }
+    // Enter creates a new line. Submission is intentionally button-only.
   }
 
   function reset() {
@@ -1192,15 +1192,83 @@ export default function App() {
     )
   }
 
+
   // ─── GAME SCREEN ───────────────────────────────────────────────────────────
-  const divSty    = { width:10, cursor:'col-resize', background:'#161616', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', borderLeft:'0.5px solid #2a2a2a', borderRight:'0.5px solid #2a2a2a' }
-  const divInner  = { width:3, height:28, background:'#3a3a3a', borderRadius:2, pointerEvents:'none' }
-  const hDivSty   = { height:10, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', borderTop:'0.5px solid #2a2a2a', borderBottom:'0.5px solid #2a2a2a', flexShrink:0 }
-  const hDivInner = { width:28, height:3, background:'#3a3a3a', borderRadius:2 }
-  const panelHdr  = (label, infoKey) => (
-    <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', flexShrink:0, display:'flex', alignItems:'center' }}>
-      {label}
-      {infoKey && <InfoBtn panelKey={infoKey} activeInfo={activeInfo} setActiveInfo={setActiveInfo} />}
+  const UI = {
+    bg:'#020B13',
+    panel:'rgba(4, 17, 29, 0.84)',
+    panel2:'rgba(6, 23, 38, 0.92)',
+    border:'rgba(87, 146, 198, 0.30)',
+    borderSoft:'rgba(87, 146, 198, 0.18)',
+    borderStrong:'rgba(65, 141, 255, 0.62)',
+    text:'#F4F8FE',
+    muted:'#B9C8D8',
+    dim:'#6F8195',
+    cyan:'#45A3FF',
+    teal:'#2DE2B8',
+    amber:'#F59B22',
+    danger:'#E24B4A',
+  }
+
+  const dragBar = {
+    width:10,
+    cursor:'col-resize',
+    background:'linear-gradient(180deg, rgba(69,163,255,0.08), rgba(69,163,255,0.02))',
+    flexShrink:0,
+    display:'flex',
+    alignItems:'center',
+    justifyContent:'center',
+    borderLeft:`1px solid ${UI.borderSoft}`,
+    borderRight:`1px solid ${UI.borderSoft}`,
+  }
+  const dragInner = { width:3, height:34, background:'rgba(185,200,216,0.28)', borderRadius:3, pointerEvents:'none' }
+  const hDragBar = {
+    height:9,
+    cursor:'row-resize',
+    background:'linear-gradient(90deg, rgba(69,163,255,0.06), rgba(69,163,255,0.02))',
+    display:'flex',
+    alignItems:'center',
+    justifyContent:'center',
+    borderTop:`1px solid ${UI.borderSoft}`,
+    borderBottom:`1px solid ${UI.borderSoft}`,
+    flexShrink:0,
+  }
+  const hDragInner = { width:34, height:3, background:'rgba(185,200,216,0.28)', borderRadius:3 }
+
+  const panelShell = {
+    display:'flex',
+    flexDirection:'column',
+    border:`1px solid ${UI.border}`,
+    borderRadius:6,
+    background:'rgba(3,14,24,0.78)',
+    boxShadow:'0 18px 48px rgba(0,0,0,0.22)',
+    overflow:'hidden',
+    minHeight:0,
+  }
+
+  const panelHdr  = (label, infoKey, right=null, note=null) => (
+    <div style={{
+      minHeight:34,
+      padding:'7px 10px',
+      borderBottom:`1px solid ${UI.borderSoft}`,
+      background:'linear-gradient(180deg, rgba(69,163,255,0.10), rgba(3,14,24,0.58))',
+      fontSize:11,
+      fontWeight:900,
+      color:UI.text,
+      textTransform:'uppercase',
+      letterSpacing:'0.08em',
+      flexShrink:0,
+      display:'flex',
+      alignItems:'center',
+      gap:7,
+      boxSizing:'border-box',
+    }}>
+      <span style={{ display:'flex', alignItems:'center' }}>
+        {label}
+        {infoKey && <InfoBtn panelKey={infoKey} activeInfo={activeInfo} setActiveInfo={setActiveInfo} />}
+      </span>
+      {note && <span style={{ color:UI.dim, fontSize:9, textTransform:'none', letterSpacing:'0.02em', fontWeight:600 }}>{note}</span>}
+      {right && <span style={{ marginLeft:'auto' }}>{right}</span>}
     </div>
   )
 
@@ -1211,306 +1279,401 @@ export default function App() {
   const initPins    = dynamicPins.filter(p => p.id?.startsWith('init-'))
   const turnPins    = dynamicPins.filter(p => !p.id?.startsWith('init-'))
   const isEndex     = state.situation === 'ENDEX'
+  const scenarioName = SCENARIOS[state.scenario]?.name || state.scenario || 'Active Exercise'
+  const roleLabel = state.role || 'EOC Director'
+  const notepadTitle = state.playerName
+    ? `${state.playerName}'s Notepad`
+    : `${roleLabel}'s Notepad`
+
+  const leftWidth = boundaries[0]
+  const centerWidth = boundaries[1] - boundaries[0]
+  const rightWidth = 100 - boundaries[1]
 
   const termStyles = {
-    header:      { color:'#aaa', fontWeight:500, marginBottom:4, fontSize:fs },
-    system:      { color:'#333', fontSize:Math.max(9,fs-2), marginBottom:6 },
-    narrator:    { color:'#ccc', marginBottom:6, fontSize:fs },
-    player:      { color:ac, marginBottom:4, fontWeight:500, fontSize:fs },
-    consequence: { color:'#777', marginBottom:6, borderLeft:'2px solid #2a2a2a', paddingLeft:10, fontSize:fs },
-    time:        { color:al, fontSize:Math.max(9,fs-1), marginBottom:2, fontWeight:500 },
-    prompt:      { color:al, fontStyle:'italic', marginBottom:4, fontSize:fs },
+    header:      { color:UI.text, fontWeight:800, marginBottom:6, fontSize:fs+1, letterSpacing:'0.02em' },
+    system:      { color:UI.dim, fontSize:Math.max(10,fs-1), marginBottom:8 },
+    narrator:    { color:UI.text, marginBottom:8, fontSize:fs, lineHeight:1.75 },
+    player:      { color:UI.cyan, marginBottom:8, fontWeight:800, fontSize:fs, lineHeight:1.6 },
+    consequence: { color:'#D7E3F1', marginBottom:10, borderLeft:`3px solid ${UI.cyan}`, paddingLeft:12, fontSize:fs, lineHeight:1.75, background:'rgba(69,163,255,0.04)', paddingTop:6, paddingBottom:6 },
+    time:        { color:UI.amber, fontSize:Math.max(10,fs-1), marginBottom:4, fontWeight:900, letterSpacing:'0.05em' },
+    prompt:      { color:UI.amber, fontStyle:'italic', marginBottom:8, fontSize:fs, lineHeight:1.6 },
   }
 
+  const statusBadge = (
+    <span style={{
+      fontSize:10,
+      padding:'3px 8px',
+      borderRadius:999,
+      fontWeight:900,
+      background:(sitColors[state.situation]||'#888')+'24',
+      color:sitColors[state.situation]||'#888',
+      border:`1px solid ${(sitColors[state.situation]||'#888')}55`,
+      letterSpacing:'0.06em',
+    }}>
+      {state.situation}
+    </span>
+  )
+
   return (
-    <div style={{ display:'flex', flexDirection:'column', height:'97vh', padding:'0.75rem', gap:8, fontFamily:'JetBrains Mono, monospace', fontSize:fs, width:'100%', boxSizing:'border-box' }}>
+    <div style={{
+      width:'100vw',
+      height:'100vh',
+      overflow:'hidden',
+      display:'flex',
+      flexDirection:'column',
+      background:`radial-gradient(circle at 76% 8%, rgba(46,131,255,0.14), transparent 30%), radial-gradient(circle at 12% 20%, rgba(45,226,184,0.08), transparent 30%), linear-gradient(135deg, ${UI.bg}, #02070D 68%)`,
+      color:UI.text,
+      fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+      fontSize:fs,
+    }}>
+      <style>{`
+        .nexus-live-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .nexus-live-scroll::-webkit-scrollbar-thumb { background: rgba(87,146,198,.28); border-radius: 999px; }
+        .nexus-live-scroll::-webkit-scrollbar-track { background: rgba(3,14,24,.45); }
+        .nexus-esf-tile .nexus-esf-tip { display: none; }
+        .nexus-esf-tile:hover .nexus-esf-tip { display: block; }
+        .nexus-live-button:hover { filter: brightness(1.12); }
+      `}</style>
 
       {showSettings && <SettingsPanel settings={settings} onChange={updateSettings} onClose={() => setShowSettings(false)} />}
 
-      {/* LIFELINE BAR */}
-      <div style={{ display:'flex', gap:6, padding:'6px 10px', border:'0.5px solid #222', borderRadius:8, background:'#0d0d0d', alignItems:'center', flexShrink:0 }}>
-        <span style={{ fontSize:9, color:'#444', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight:500, marginRight:4, whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:4 }}>
-          Community Lifelines
-          <InfoBtn panelKey="lifelines" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
-        </span>
-        {LIFELINES.map(ll => <LifelineTile key={ll.key} ll={ll} data={state.lifelines?.[ll.key]} />)}
-        <button onClick={() => setShowSettings(s => !s)} title="Display Settings"
-          style={{ marginLeft:8, flexShrink:0, width:26, height:26, borderRadius:5, border:'0.5px solid #333', background:showSettings?'#222':'transparent', color:'#666', cursor:'pointer', fontSize:14, display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
-          ⚙️
-        </button>
-      </div>
-
-      {/* FOUR PANEL ROW */}
-      <div ref={containerRef} style={{ display:'flex', flex:1, minHeight:0 }}>
-
-        {/* LEFT COLUMN */}
-        <div ref={leftColRef} style={{ width:`${colW[0]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
-          <div style={{ height:`${leftBounds[0]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-            {panelHdr('Media Feed', 'media')}
-            <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:6 }}>
-              {state.headlines.length === 0 && <div style={{ color:'#333', fontSize:10, padding:'8px', fontStyle:'italic' }}>Headlines appear after your first action.</div>}
-              {state.headlines.map(h => (
-                <div key={h.id} style={{ padding:'6px 8px', borderRadius:6, border:`0.5px solid ${h.turn===state.turn?'#2a2a3a':'#1a1a1a'}`, background:h.turn===state.turn?'#16161f':'transparent', lineHeight:1.5 }}>
-                  {h.turn===state.turn && <div style={{ fontSize:9, color:'#4A90D9', fontWeight:500, marginBottom:2 }}>LIVE</div>}
-                  <div style={{ fontSize:fs-1, color:h.turn===state.turn?'#ccc':'#444', marginBottom:2 }}>{h.text}</div>
-                  <div style={{ fontSize:9, color:'#333' }}>{h.source} — {h.time}</div>
-                </div>
-              ))}
+      {/* TOP HEADER */}
+      <header style={{
+        height:72,
+        flexShrink:0,
+        display:'flex',
+        alignItems:'center',
+        justifyContent:'center',
+        borderBottom:`1px solid ${UI.border}`,
+        background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))',
+        boxSizing:'border-box',
+      }}>
+        <div style={{ width:'min(100%, 1760px)', padding:'0 clamp(16px, 1.6vw, 28px)', display:'grid', gridTemplateColumns:'auto 1fr auto', gap:18, alignItems:'center', boxSizing:'border-box' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:13 }}>
+            <div style={{ width:42, height:42, border:`1px solid ${UI.cyan}`, borderRadius:'50%', display:'grid', placeItems:'center', color:UI.cyan, fontWeight:950, boxShadow:'0 0 24px rgba(69,163,255,0.18)' }}>N</div>
+            <div>
+              <div style={{ fontSize:19, fontWeight:950, letterSpacing:'0.12em' }}>NEXUS EOC</div>
+              <div style={{ fontSize:10, color:UI.dim, letterSpacing:'0.14em', textTransform:'uppercase' }}>Live Exercise Interface</div>
             </div>
           </div>
-          <div onMouseDown={makeLeftVertDrag(0)} style={hDivSty}><div style={hDivInner}/></div>
-          <div style={{ height:`${leftBounds[1]-leftBounds[0]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-            {panelHdr('Reference Links', 'refs')}
-            <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:4 }}>
-              {refs.length === 0 && <div style={{ color:'#333', fontSize:10, padding:'8px', fontStyle:'italic' }}>Launch a scenario to see references.</div>}
-              {refs.map((r,i) => (
-                <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
-                  style={{ display:'block', padding:'6px 8px', borderRadius:6, border:'0.5px solid #1a1a1a', fontSize:fs-1, color:'#4A90D9', lineHeight:1.5, textDecoration:'none', wordBreak:'break-word' }}
-                  onMouseEnter={e => e.currentTarget.style.background='#0a0a1a'}
-                  onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-                  {r.label} ↗
-                </a>
-              ))}
-            </div>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1.3fr .9fr .9fr .7fr', gap:10, minWidth:0 }}>
+            {[
+              ['Scenario', scenarioName],
+              ['Position / Function', roleLabel],
+              ['Jurisdiction', state.worldState?.location || state.jurisdiction],
+              ['Difficulty', state.difficulty],
+            ].map(([label,value]) => (
+              <div key={label} style={{ minWidth:0, border:`1px solid ${UI.borderSoft}`, borderRadius:5, background:'rgba(6,23,38,0.48)', padding:'7px 10px' }}>
+                <div style={{ fontSize:9, color:UI.dim, textTransform:'uppercase', letterSpacing:'0.10em', marginBottom:3, whiteSpace:'nowrap' }}>{label}</div>
+                <div style={{ fontSize:12, color:UI.text, fontWeight:800, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{value}</div>
+              </div>
+            ))}
           </div>
-          <div onMouseDown={makeLeftVertDrag(1)} style={hDivSty}><div style={hDivInner}/></div>
-          <div style={{ flex:1, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
-            {panelHdr('ESF Reference', 'esf')}
-            <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:3 }}>
-              {activeESFs && Object.values(activeESFs).some(v => v) && (
-                <div style={{ padding:'4px 8px', marginBottom:2, fontSize:9, color:ac, borderBottom:'0.5px solid #1a1a1a' }}>
-                  {Object.values(activeESFs).filter(Boolean).length} ESF{Object.values(activeESFs).filter(Boolean).length !== 1 ? 's' : ''} active — click to toggle
-                </div>
-              )}
-              {ESFS.map(esf => {
-                const isActive = !!activeESFs[esf.num]
-                return (
-                  <div key={esf.num} onClick={() => setActiveESFs(prev => ({ ...prev, [esf.num]: !prev[esf.num] }))}
-                    style={{ padding:'5px 8px', borderRadius:5, border:`0.5px solid ${isActive?ac:'#1a1a1a'}`, lineHeight:1.4, cursor:'pointer', background:isActive?ac+'11':'transparent', borderLeft:isActive?`3px solid ${ac}`:'0.5px solid #1a1a1a', transition:'all 0.1s' }}>
-                    <div style={{ display:'flex', gap:6, alignItems:'center', marginBottom:2 }}>
-                      <span style={{ fontSize:9, color:isActive?ac:al, fontWeight:500, whiteSpace:'nowrap' }}>ESF-{esf.num}</span>
-                      <span style={{ fontSize:fs-1, color:isActive?'#ddd':'#aaa', fontWeight:500, flex:1 }}>{esf.name}</span>
-                      <span style={{ fontSize:8, color:isActive?ac:'#333', fontWeight:500 }}>{isActive?'● ACTIVE':'○'}</span>
+
+          <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+            <button className="nexus-live-button" onClick={() => update({ screen:'portal' })}
+              style={{ height:38, padding:'0 14px', borderRadius:4, border:`1px solid ${UI.borderStrong}`, background:'rgba(3,13,23,0.72)', color:UI.text, cursor:'pointer', fontWeight:850 }}>
+              Mission Portal
+            </button>
+            {!isEndex && (
+              <div style={{ position:'relative' }}>
+                <button className="nexus-live-button" onClick={() => setShowEndDialog(s => !s)}
+                  style={{ height:38, padding:'0 14px', borderRadius:4, border:`1px solid rgba(226,75,74,0.70)`, background:'rgba(226,75,74,0.10)', color:'#FFD2D2', cursor:'pointer', fontWeight:900 }}>
+                  End Exercise
+                </button>
+                {showEndDialog && (
+                  <div style={{ position:'absolute', top:'calc(100% + 8px)', right:0, background:UI.panel2, border:`1px solid ${UI.border}`, borderRadius:8, padding:'12px 14px', zIndex:500, whiteSpace:'nowrap', boxShadow:'0 16px 42px rgba(0,0,0,0.65)' }}>
+                    <div style={{ fontSize:11, color:UI.muted, marginBottom:10 }}>End exercise?</div>
+                    <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+                      <button onClick={() => { setShowEndDialog(false); setInput('ENDEX'); setTimeout(() => sendAction(), 50) }}
+                        style={{ fontSize:12, padding:'7px 12px', color:UI.amber, borderColor:UI.amber, textAlign:'left', background:'transparent', cursor:'pointer', border:`1px solid ${UI.amber}`, borderRadius:4, fontWeight:800 }}>
+                        End with AAR
+                      </button>
+                      <button onClick={() => { setShowEndDialog(false); reset() }}
+                        style={{ fontSize:12, padding:'7px 12px', color:UI.muted, textAlign:'left', background:'transparent', cursor:'pointer', border:`1px solid ${UI.borderSoft}`, borderRadius:4, fontWeight:800 }}>
+                        End without AAR
+                      </button>
+                      <button onClick={() => setShowEndDialog(false)}
+                        style={{ fontSize:12, padding:'7px 12px', color:UI.dim, textAlign:'left', background:'transparent', cursor:'pointer', border:`1px solid ${UI.borderSoft}`, borderRadius:4 }}>
+                        Cancel
+                      </button>
                     </div>
-                    <div style={{ fontSize:9, color:isActive?'#666':'#444' }}>Lead: {esf.lead}</div>
-                    <div style={{ fontSize:9, color:isActive?'#555':'#333', marginTop:1 }}>{esf.desc}</div>
                   </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div style={divSty} onMouseDown={e => onColDown(0,e)}><div style={divInner}/></div>
-
-        {/* DISPATCH */}
-        <div style={{ width:`${colW[1]}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-          <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ display:'flex', alignItems:'center' }}>
-              Field Dispatch
-              <InfoBtn panelKey="dispatch" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
-            </span>
-            <span style={{ background:'#E24B4A', color:'#fff', borderRadius:3, padding:'1px 5px', fontSize:9 }}>{state.dispatches.length}</span>
-          </div>
-          <div style={{ flex:1, overflowY:'auto', padding:'6px 8px', display:'flex', flexDirection:'column', gap:6 }}>
-            {initLoading && (
-              <div style={{ padding:'8px', fontSize:10, color:'#444', fontStyle:'italic', textAlign:'center' }}>
-                Generating scenario world...<br/>
-                <span style={{ fontSize:9, color:'#333' }}>Building location, resources, and initial conditions</span>
+                )}
               </div>
             )}
-            {state.dispatches.map(d => {
-              const isNew = d.turn === state.turn
+            <button className="nexus-live-button" onClick={() => setShowSettings(s => !s)} title="Display Settings"
+              style={{ width:38, height:38, borderRadius:4, border:`1px solid ${UI.borderStrong}`, background:showSettings?'rgba(69,163,255,0.18)':'rgba(3,13,23,0.72)', color:UI.cyan, cursor:'pointer', fontSize:16, display:'grid', placeItems:'center' }}>
+              ⚙
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main style={{ flex:1, minHeight:0, padding:'clamp(10px, 1vw, 16px)', display:'flex', flexDirection:'column', gap:9, boxSizing:'border-box' }}>
+
+        {/* LIFELINE BAR */}
+        <section style={{ ...panelShell, flexShrink:0, minHeight:'auto' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 10px', borderBottom:`1px solid ${UI.borderSoft}` }}>
+            <div style={{ fontSize:11, color:UI.text, fontWeight:950, textTransform:'uppercase', letterSpacing:'0.10em', display:'flex', alignItems:'center' }}>
+              Community Lifelines
+              <InfoBtn panelKey="lifelines" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
+            </div>
+            <div style={{ color:UI.dim, fontSize:10 }}>Hover or click for current impact reason.</div>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(8, minmax(0, 1fr))', gap:6, padding:'7px 10px' }}>
+            {LIFELINES.map(ll => <LifelineTile key={ll.key} ll={ll} data={state.lifelines?.[ll.key]} />)}
+          </div>
+        </section>
+
+        {/* ESF ACTIVATION TRACKER */}
+        <section style={{ display:'flex', alignItems:'center', gap:7, border:`1px solid ${UI.border}`, borderRadius:6, background:'rgba(3,14,24,0.68)', padding:'7px 10px', flexShrink:0 }}>
+          <div style={{ fontSize:11, color:UI.text, fontWeight:950, textTransform:'uppercase', letterSpacing:'0.10em', whiteSpace:'nowrap', display:'flex', alignItems:'center' }}>
+            ESF Activation Tracker
+            <InfoBtn panelKey="esf" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(15, minmax(38px, 1fr))', gap:5, flex:1 }}>
+            {ESFS.map(esf => {
+              const active = !!activeESFs[esf.num]
               return (
-                <div key={d.id} style={{ padding:'6px 8px', borderRadius:6, border:`0.5px solid ${isNew?'#2a3a2a':'#222'}`, background:isNew?'#1a2a1a':'transparent', fontSize:fs-1, color:isNew?'#ddd':'#555', lineHeight:1.5 }}>
-                  {isNew && <div style={{ fontSize:9, color:ac, fontWeight:500, marginBottom:2 }}>NEW — {state.simTime}</div>}
-                  {d.text}
-                </div>
+                <button key={esf.num}
+                  className="nexus-esf-tile"
+                  onClick={() => setActiveESFs(prev => ({ ...prev, [esf.num]: !prev[esf.num] }))}
+                  style={{ position:'relative', height:28, borderRadius:4, border:`1px solid ${active ? UI.cyan : UI.borderSoft}`, background:active ? 'rgba(69,163,255,0.18)' : 'rgba(6,23,38,0.48)', color:active ? UI.text : UI.dim, cursor:'pointer', fontSize:10, fontWeight:950, letterSpacing:'0.04em' }}>
+                  ESF-{esf.num}
+                  <div className="nexus-esf-tip" style={{ position:'absolute', left:'50%', top:34, transform:'translateX(-50%)', zIndex:3000, width:280, padding:'10px 12px', border:`1px solid ${active ? UI.cyan : UI.border}`, borderRadius:7, background:UI.panel2, boxShadow:'0 14px 36px rgba(0,0,0,0.66)', textAlign:'left', pointerEvents:'none' }}>
+                    <div style={{ color:UI.text, fontSize:12, fontWeight:950, marginBottom:4 }}>ESF-{esf.num} — {esf.name}</div>
+                    <div style={{ color:UI.cyan, fontSize:11, marginBottom:6 }}>Lead: {esf.lead}</div>
+                    <div style={{ color:UI.muted, fontSize:11, lineHeight:1.5 }}>{esf.desc}</div>
+                  </div>
+                </button>
               )
             })}
           </div>
-        </div>
+        </section>
 
-        <div style={divSty} onMouseDown={e => onColDown(1,e)}><div style={divInner}/></div>
+        {/* THREE-COLUMN WORKSPACE */}
+        <div ref={containerRef} style={{ display:'flex', flex:1, minHeight:0 }}>
 
-        {/* TERMINAL / AAR PANEL */}
-        <div style={{ width:`${colW[2]}%`, display:'flex', flexDirection:'column', border:`0.5px solid ${isEndex && state.aar ? ac+'44' : '#222'}`, borderRadius:8, overflow:'hidden', flexShrink:0, transition:'border-color 0.3s' }}>
+          {/* LEFT COLUMN: FLASH CARDS / MEDIA */}
+          <div ref={leftColRef} style={{ width:`${leftWidth}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
+            <div style={{ ...panelShell, height:`${leftBounds[0]}%`, flexShrink:0 }}>
+              {panelHdr('Flash Cards', 'dispatch', <span style={{ background:UI.danger, color:'#fff', borderRadius:999, padding:'2px 7px', fontSize:10 }}>{state.dispatches.length}</span>)}
+              <div className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', padding:9, display:'flex', flexDirection:'column', gap:8 }}>
+                {initLoading && (
+                  <div style={{ padding:12, fontSize:12, color:UI.dim, fontStyle:'italic', textAlign:'center' }}>
+                    Generating scenario world...<br/>
+                    <span style={{ fontSize:11 }}>Building location, resources, and initial conditions.</span>
+                  </div>
+                )}
+                {state.dispatches.length === 0 && <div style={{ color:UI.dim, fontSize:12, padding:10, fontStyle:'italic' }}>Flash cards appear as field reports are generated.</div>}
+                {state.dispatches.map(d => {
+                  const isNew = d.turn === state.turn
+                  return (
+                    <div key={d.id} style={{ padding:'9px 10px', borderRadius:6, border:`1px solid ${isNew ? 'rgba(69,163,255,0.55)' : UI.borderSoft}`, background:isNew ? 'rgba(69,163,255,0.12)' : 'rgba(6,23,38,0.38)', fontSize:fs-1, color:isNew ? UI.text : UI.muted, lineHeight:1.55, opacity:isNew ? 1 : 0.72 }}>
+                      {isNew && <div style={{ fontSize:10, color:UI.cyan, fontWeight:950, marginBottom:4, letterSpacing:'0.08em' }}>NEW — {state.simTime}</div>}
+                      {d.text}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
 
-          {/* Panel header */}
-          <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
-            <span style={{ fontSize:10, fontWeight:500, color: isEndex && state.aar ? ac : '#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', alignItems:'center' }}>
-              {isEndex && state.aar ? 'After-Action Review' : SCENARIOS[state.scenario]?.name}
-              {!isEndex && state.worldState && <span style={{ color:ac, marginLeft:6 }}>— {state.worldState.location}</span>}
-              {!isEndex && <InfoBtn panelKey="terminal" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />}
-            </span>
-            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              {!isEndex && <span style={{ fontSize:10, color:'#444' }}>{state.simTime}</span>}
-              {!isEndex && (
-                <span style={{ fontSize:9, padding:'2px 6px', borderRadius:3, fontWeight:500, background:(sitColors[state.situation]||'#888')+'22', color:sitColors[state.situation]||'#888' }}>
-                  {state.situation}
-                </span>
+            <div onMouseDown={makeLeftVertDrag(0)} style={hDragBar}><div style={hDragInner}/></div>
+
+            <div style={{ ...panelShell, flex:1 }}>
+              {panelHdr('Media Feed', 'media')}
+              <div className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', padding:9, display:'flex', flexDirection:'column', gap:8 }}>
+                {state.headlines.length === 0 && <div style={{ color:UI.dim, fontSize:12, padding:10, fontStyle:'italic' }}>Media items appear after your first action.</div>}
+                {state.headlines.map(h => {
+                  const isNew = h.turn === state.turn
+                  return (
+                    <div key={h.id} style={{ padding:'9px 10px', borderRadius:6, border:`1px solid ${isNew ? 'rgba(245,155,34,0.55)' : UI.borderSoft}`, background:isNew ? 'rgba(245,155,34,0.10)' : 'rgba(6,23,38,0.34)', lineHeight:1.5, opacity:isNew ? 1 : 0.68 }}>
+                      {isNew && <div style={{ fontSize:10, color:UI.amber, fontWeight:950, marginBottom:4, letterSpacing:'0.08em' }}>LIVE</div>}
+                      <div style={{ fontSize:fs-1, color:isNew ? UI.text : UI.muted, marginBottom:4 }}>{h.text}</div>
+                      <div style={{ fontSize:10, color:UI.dim }}>{h.source} — {h.time}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div style={dragBar} onMouseDown={e => onColDown(0,e)}><div style={dragInner}/></div>
+
+          {/* CENTER COLUMN: CURRENT SITUATION / RESPONSE / NOTEPAD */}
+          <div style={{ width:`${centerWidth}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
+            <div style={{ ...panelShell, flex:1, border:`1px solid ${isEndex && state.aar ? ac+'66' : UI.border}` }}>
+              {panelHdr(
+                isEndex && state.aar ? 'After-Action Review' : 'Current Situation / Inject',
+                'terminal',
+                <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                  {!isEndex && <span style={{ color:UI.amber, fontSize:11, fontWeight:950 }}>{state.simTime}</span>}
+                  {!isEndex && statusBadge}
+                  {isEndex && state.aar && <span style={{ color:UI.cyan, fontSize:11, fontWeight:950 }}>ENDEX — {state.turn} TURNS</span>}
+                  {!isEndex && (state.exerciseTranscript || []).length > 0 && (
+                    <button onClick={downloadCurrentTranscript} style={{ fontSize:10, padding:'3px 8px', color:UI.muted, background:'transparent', border:`1px solid ${UI.borderSoft}`, cursor:'pointer', borderRadius:4 }}>
+                      Transcript
+                    </button>
+                  )}
+                </div>
               )}
-              {isEndex && state.aar && (
-                <span style={{ fontSize:9, padding:'2px 6px', borderRadius:3, fontWeight:500, background:ac+'22', color:ac }}>
-                  ENDEX — {state.turn} TURNS
-                </span>
-              )}
-              {!isEndex && (state.exerciseTranscript || []).length > 0 && (
-                <button onClick={downloadCurrentTranscript}
-                  style={{ fontSize:10, padding:'2px 8px', color:'#555', background:'transparent', border:'0.5px solid #333', cursor:'pointer', fontFamily:'JetBrains Mono, monospace' }}>
-                  Transcript
-                </button>
-              )}
-              {!isEndex && (
-                <div style={{ position:'relative' }}>
-                  <button onClick={() => setShowEndDialog(s => !s)}
-                    style={{ fontSize:10, padding:'2px 8px', color:'#555', background:'transparent', border:'0.5px solid #333', cursor:'pointer', fontFamily:'JetBrains Mono, monospace' }}>New</button>
-                  {showEndDialog && (
-                    <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, background:'#1a1a1a', border:'0.5px solid #333', borderRadius:6, padding:'10px 12px', zIndex:500, whiteSpace:'nowrap', boxShadow:'0 4px 12px rgba(0,0,0,0.8)' }}>
-                      <div style={{ fontSize:10, color:'#666', marginBottom:8 }}>End scenario?</div>
-                      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                        <button onClick={() => { setShowEndDialog(false); setInput('ENDEX'); setTimeout(() => sendAction(), 50) }}
-                          style={{ fontSize:10, padding:'4px 10px', color:al, borderColor:al, textAlign:'left', background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', border:`0.5px solid ${al}` }}>
-                          End with AAR ↗
-                        </button>
-                        <button onClick={() => { setShowEndDialog(false); reset() }}
-                          style={{ fontSize:10, padding:'4px 10px', color:'#555', textAlign:'left', background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', border:'0.5px solid #333' }}>
-                          End without AAR
-                        </button>
-                      </div>
+              {isEndex && state.aar ? (
+                <div style={{ flex:1, minHeight:0, overflow:'hidden', display:'flex', flexDirection:'column' }}>
+                  <AARDisplay
+                    aar={state.aar}
+                    scenario={state.scenario}
+                    jurisdiction={state.jurisdiction}
+                    difficulty={state.difficulty}
+                    role={state.role}
+                    playerName={state.playerName}
+                    turns={state.turn}
+                    simTime={state.simTime}
+                    worldState={state.worldState}
+                    transcript={state.exerciseTranscript || []}
+                    lifelines={state.lifelines}
+                    situation={state.situation}
+                    onReset={reset}
+                    fs={fs}
+                    ac={ac}
+                    al={al}
+                  />
+                </div>
+              ) : (
+                <div ref={termRef} className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', padding:'14px 16px', lineHeight:1.8 }}>
+                  {state.terminal.map((line,i) => {
+                    if (!line) return null
+                    if (line.type==='divider') return <hr key={i} style={{ border:'none', borderTop:`1px solid ${UI.borderSoft}`, margin:'10px 0' }}/>
+                    return <div key={i} style={termStyles[line.type]||{ fontSize:fs }}>{line.text}</div>
+                  })}
+                  {isEndex && !state.aar && (
+                    <div style={{ marginTop:16, paddingTop:12, borderTop:`1px solid ${UI.borderSoft}` }}>
+                      <div style={{ fontSize:fs-1, color:UI.muted, marginBottom:8 }}>Generating AAR...</div>
+                      <button onClick={reset}
+                        style={{ padding:'8px 20px', fontSize:fs, fontWeight:850, color:UI.cyan, border:`1px solid ${UI.cyan}`, background:'transparent', cursor:'pointer', borderRadius:4 }}>
+                        Return to Mission Portal
+                      </button>
+                    </div>
+                  )}
+                  {(loading || initLoading) && (
+                    <div style={{ color:UI.dim, fontStyle:'italic', fontSize:fs }}>
+                      {initLoading ? 'Building scenario world...' : 'Evaluating action...'}
                     </div>
                   )}
                 </div>
               )}
             </div>
-          </div>
 
-          {/* AAR display replaces terminal on ENDEX */}
-          {isEndex && state.aar ? (
-            <div style={{ flex:1, minHeight:0, overflow:'hidden', display:'flex', flexDirection:'column' }}>
-              <AARDisplay
-                aar={state.aar}
-                scenario={state.scenario}
-                jurisdiction={state.jurisdiction}
-                difficulty={state.difficulty}
-                role={state.role}
-                playerName={state.playerName}
-                turns={state.turn}
-                simTime={state.simTime}
-                worldState={state.worldState}
-                transcript={state.exerciseTranscript || []}
-                lifelines={state.lifelines}
-                situation={state.situation}
-                onReset={reset}
-                fs={fs}
-                ac={ac}
-                al={al}
-              />
-            </div>
-          ) : (
-            /* Normal terminal */
-            <>
-              <div ref={termRef} style={{ flex:1, overflowY:'auto', padding:'10px 14px', lineHeight:1.8 }}>
-                {state.terminal.map((line,i) => {
-                  if (!line) return null
-                  if (line.type==='divider') return <hr key={i} style={{ border:'none', borderTop:'0.5px solid #1a1a1a', margin:'8px 0' }}/>
-                  return <div key={i} style={termStyles[line.type]||{ fontSize:fs }}>{line.text}</div>
-                })}
-                {/* Fallback ENDEX if aar not yet populated */}
-                {isEndex && !state.aar && (
-                  <div style={{ marginTop:16, paddingTop:12, borderTop:'0.5px solid #1a1a1a' }}>
-                    <div style={{ fontSize:fs-1, color:'#555', marginBottom:8 }}>Generating AAR...</div>
-                    <button onClick={reset}
-                      style={{ padding:'8px 20px', fontSize:fs, fontWeight:500, color:ac, border:`0.5px solid ${ac}`, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', borderRadius:3 }}>
-                      ↩ Return to Mission Select
+            {!isEndex && (
+              <>
+                <div style={hDragBar}
+                  onMouseDown={e => {
+                    e.preventDefault()
+                    const startY = e.clientY
+                    const startHeight = inputAreaHeight
+                    function onMove(ev) { setInputAreaHeight(Math.max(90, Math.min(340, startHeight + (startY - ev.clientY)))) }
+                    function onUp() { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+                    window.addEventListener('mousemove', onMove)
+                    window.addEventListener('mouseup', onUp)
+                  }}>
+                  <div style={hDragInner}/>
+                </div>
+
+                <div style={{ ...panelShell, height:inputAreaHeight, flexShrink:0 }}>
+                  {panelHdr('Your Response', 'terminal')}
+                  <div style={{ flex:1, display:'flex', gap:9, padding:10, minHeight:0 }}>
+                    <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
+                      placeholder={initLoading ? 'Generating scenario...' : 'Enter your operational response. Enter creates a new line.'}
+                      disabled={initLoading}
+                      style={{ flex:1, resize:'none', lineHeight:1.6, fontSize:fs, background:'rgba(2,11,19,0.82)', border:`1px solid ${UI.borderSoft}`, borderRadius:5, color:UI.text, padding:'9px 10px', fontFamily:'Inter, Segoe UI, sans-serif', height:'100%', boxSizing:'border-box', outline:'none' }}/>
+                    <button className="nexus-live-button" onClick={sendAction} disabled={loading||!input.trim()||initLoading}
+                      style={{ width:138, fontWeight:950, alignSelf:'stretch', color:'#fff', border:'none', borderRadius:5, background:(loading||!input.trim()||initLoading) ? 'rgba(87,146,198,0.18)' : 'linear-gradient(180deg, #2E83FF, #1455B8)', cursor:(loading||!input.trim()||initLoading)?'not-allowed':'pointer', opacity:(loading||!input.trim()||initLoading)?0.55:1 }}>
+                      Submit Response
                     </button>
                   </div>
-                )}
-                {(loading || initLoading) && (
-                  <div style={{ color:'#333', fontStyle:'italic', fontSize:fs }}>
-                    {initLoading ? 'Building scenario world...' : 'Evaluating action...'}
-                  </div>
-                )}
-              </div>
-              <div style={{ borderTop:'0.5px solid #222', height:8, cursor:'row-resize', background:'#161616', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
-                onMouseDown={e => {
-                  e.preventDefault()
-                  const startY = e.clientY
-                  const startHeight = inputAreaHeight
-                  function onMove(ev) { setInputAreaHeight(Math.max(60, Math.min(400, startHeight + (startY - ev.clientY)))) }
-                  function onUp() { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-                  window.addEventListener('mousemove', onMove)
-                  window.addEventListener('mouseup', onUp)
-                }}>
-                <div style={{ width:28, height:3, background:'#3a3a3a', borderRadius:2 }}/>
-              </div>
-              <div style={{ padding:'8px 10px', display:'flex', gap:6, height:inputAreaHeight, flexShrink:0 }}>
-                <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
-                  placeholder={initLoading ? 'Generating scenario...' : 'Your action...'}
-                  disabled={initLoading}
-                  style={{ flex:1, resize:'none', lineHeight:1.6, fontSize:fs, background:'#0d0d0d', border:'0.5px solid #222', color:'#ccc', padding:'6px 8px', fontFamily:'JetBrains Mono, monospace', height:'100%', boxSizing:'border-box' }}/>
-                <button onClick={sendAction} disabled={loading||!input.trim()||initLoading}
-                  style={{ padding:'6px 14px', fontWeight:500, alignSelf:'stretch', color:ac, borderColor:ac, background:'transparent', cursor:'pointer', fontFamily:'JetBrains Mono, monospace', border:`0.5px solid ${ac}`, opacity:(loading||!input.trim()||initLoading)?0.4:1 }}>
-                  Execute
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+                </div>
 
-        <div style={divSty} onMouseDown={e => onColDown(2,e)}><div style={divInner}/></div>
+                <div style={hDragBar}><div style={hDragInner}/></div>
 
-        {/* RIGHT COLUMN */}
-        <div ref={rightColRef} style={{ width:`${colW[3]}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
-          <div style={{ height:`${rightSplit}%`, display:'flex', flexDirection:'column', border:'0.5px solid #222', borderRadius:8, overflow:'hidden', flexShrink:0 }}>
-            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', alignItems:'center' }}>
-              {state.playerName ? `${state.playerName}'s Notepad` : "Director's Notepad"}
-              <InfoBtn panelKey="notepad" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
-            </div>
-            <textarea value={state.notepad} onChange={e => update({ notepad:e.target.value })}
-              placeholder={'Priorities, resource gaps...\n\nPersists across sessions.'}
-              style={{ flex:1, resize:'none', border:'none', padding:'8px 10px', background:'transparent', color:'#888', lineHeight:1.7, outline:'none', fontSize:fs }}/>
-            <div style={{ padding:'4px 10px', borderTop:'0.5px solid #1a1a1a', fontSize:10, color:'#333' }}>Turn {state.turn} — {state.difficulty}</div>
+                <div style={{ ...panelShell, height:'22%', minHeight:110, flexShrink:0 }}>
+                  {panelHdr(notepadTitle, 'notepad')}
+                  <textarea value={state.notepad} onChange={e => update({ notepad:e.target.value })}
+                    placeholder={'Local notes only. Notes are not submitted with your response.'}
+                    className="nexus-live-scroll"
+                    style={{ flex:1, resize:'none', border:'none', padding:'10px 12px', background:'transparent', color:UI.muted, lineHeight:1.65, outline:'none', fontSize:fs, fontFamily:'Inter, Segoe UI, sans-serif' }}/>
+                </div>
+              </>
+            )}
           </div>
-          <div onMouseDown={onRightDown} style={hDivSty}><div style={hDivInner}/></div>
-          <div style={{ flex:1, border:'0.5px solid #222', borderRadius:8, overflow:'hidden', minHeight:0 }}>
-            <div style={{ padding:'6px 10px', borderBottom:'0.5px solid #222', background:'#111', fontSize:10, fontWeight:500, color:'#666', textTransform:'uppercase', letterSpacing:'0.08em', display:'flex', alignItems:'center' }}>
-              Incident Map
-              {state.worldState && <span style={{ color:'#333', marginLeft:6, fontSize:9 }}>— {state.worldState.location}</span>}
-              <span style={{ marginLeft:'auto', fontSize:9, color:'#333' }}>{turnPins.length} event{turnPins.length!==1?'s':''}</span>
-              <InfoBtn panelKey="map" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
+
+          <div style={dragBar} onMouseDown={e => onColDown(1,e)}><div style={dragInner}/></div>
+
+          {/* RIGHT COLUMN: MAP / REFERENCE DESK */}
+          <div ref={rightColRef} style={{ width:`${rightWidth}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
+            <div style={{ ...panelShell, height:`${rightSplit}%`, flexShrink:0 }}>
+              {panelHdr(
+                'Situation Map',
+                'map',
+                <span style={{ fontSize:10, color:UI.dim }}>{turnPins.length} event{turnPins.length!==1?'s':''}</span>,
+                'Pins are clickable for details'
+              )}
+              <div style={{ position:'relative', flex:1, minHeight:0 }}>
+                <MapContainer center={center} zoom={mapZoom} style={{ height:'100%', width:'100%' }}>
+                  <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
+                  <MapUpdater center={center}/>
+                  {initPins.map(pin => (
+                    <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT)}>
+                      <Popup>
+                        <div style={{ fontFamily:'Inter, sans-serif', fontSize:12 }}>
+                          <strong>{pin.label}</strong><br/>
+                          <span style={{ color:'#666' }}>{pin.type}</span><br/>
+                          {pin.note}
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                  {turnPins.map(pin => (
+                    <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeDynamicIcon(pin.turn)}>
+                      <Popup>
+                        <div style={{ fontFamily:'Inter, sans-serif', fontSize:12 }}>
+                          <strong>{pin.label}</strong><br/>
+                          <span style={{ color:'#666' }}>Turn {pin.turn} — {pin.type}</span><br/>
+                          {pin.note}
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                </MapContainer>
+                <div style={{ position:'absolute', left:10, bottom:10, zIndex:450, border:`1px solid ${UI.border}`, borderRadius:6, background:'rgba(2,9,16,0.84)', padding:'7px 9px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'5px 10px', fontSize:10, color:UI.muted, backdropFilter:'blur(4px)' }}>
+                  {['EOC','HOSPITAL','STAGING','SHELTER','AFFECTED','FIRE','HAZMAT','BLOCKED'].map(t => (
+                    <div key={t} style={{ display:'flex', alignItems:'center', gap:5, whiteSpace:'nowrap' }}>
+                      <span style={{ width:8, height:8, borderRadius:'50%', background:PIN_COLORS[t]||PIN_COLORS.DEFAULT, display:'inline-block' }} />
+                      {t}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div style={{ height:'calc(100% - 28px)' }}>
-              <MapContainer center={center} zoom={mapZoom} style={{ height:'100%', width:'100%' }}>
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
-                <MapUpdater center={center}/>
-                {initPins.map(pin => (
-                  <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT)}>
-                    <Popup>
-                      <div style={{ fontFamily:'monospace', fontSize:11 }}>
-                        <strong>{pin.label}</strong><br/>
-                        <span style={{ color:'#666' }}>{pin.type}</span><br/>
-                        {pin.note}
-                      </div>
-                    </Popup>
-                  </Marker>
+
+            <div onMouseDown={onRightDown} style={hDragBar}><div style={hDragInner}/></div>
+
+            <div style={{ ...panelShell, flex:1 }}>
+              {panelHdr('Reference Desk', 'refs')}
+              <div className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', padding:9, display:'flex', flexDirection:'column', gap:7 }}>
+                {refs.length === 0 && <div style={{ color:UI.dim, fontSize:12, padding:10, fontStyle:'italic' }}>Scenario reference links appear here after launch.</div>}
+                {refs.map((r,i) => (
+                  <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
+                    style={{ display:'block', padding:'8px 10px', borderRadius:6, border:`1px solid ${UI.borderSoft}`, background:'rgba(6,23,38,0.34)', fontSize:fs-1, color:UI.cyan, lineHeight:1.45, textDecoration:'none', wordBreak:'break-word' }}>
+                    ↗ {r.label}
+                  </a>
                 ))}
-                {turnPins.map(pin => (
-                  <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeDynamicIcon(pin.turn)}>
-                    <Popup>
-                      <div style={{ fontFamily:'monospace', fontSize:11 }}>
-                        <strong>{pin.label}</strong><br/>
-                        <span style={{ color:'#666' }}>Turn {pin.turn} — {pin.type}</span><br/>
-                        {pin.note}
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
-              </MapContainer>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   )
+
 }
