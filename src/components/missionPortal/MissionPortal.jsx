@@ -549,87 +549,55 @@ function AboutNexusModal({ onClose }) {
             border:'1px solid rgba(45,226,184,0.22)',
             borderRadius:8,
             overflow:'hidden',
-            background:'linear-gradient(180deg, rgba(5,24,39,0.86), rgba(2,10,18,0.96))',
+            background:'linear-gradient(180deg, rgba(5,24,39,0.76), rgba(2,10,18,0.96))',
             minHeight:330,
-            display:'grid',
-            gridTemplateRows:'1fr auto'
+            display:'flex',
+            flexDirection:'column',
+            justifyContent:'center',
+            padding:'34px 34px',
+            boxSizing:'border-box'
           }}>
             <div style={{
-              minHeight:230,
-              position:'relative',
-              overflow:'hidden',
-              background:'radial-gradient(circle at 48% 18%, rgba(69,163,255,0.16), transparent 34%), linear-gradient(135deg, rgba(3,18,30,0.96), rgba(2,10,18,0.96))'
+              color:'#2DE2B8',
+              fontSize:13,
+              fontWeight:900,
+              letterSpacing:'0.14em',
+              textTransform:'uppercase',
+              marginBottom:18
             }}>
-              <div style={{
-                position:'absolute',
-                inset:0,
-                backgroundImage:'linear-gradient(rgba(69,163,255,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(69,163,255,0.055) 1px, transparent 1px)',
-                backgroundSize:'36px 36px',
-                opacity:0.65
-              }} />
+              Mission
+            </div>
 
-              <div style={{ position:'absolute', left:28, right:28, top:30, height:52, border:'1px solid rgba(69,163,255,0.24)', borderRadius:6, background:'rgba(2,11,19,0.46)' }}>
-                <div style={{ position:'absolute', left:16, top:16, width:80, height:8, borderRadius:99, background:'rgba(45,226,184,0.58)' }} />
-                <div style={{ position:'absolute', left:112, top:16, width:52, height:8, borderRadius:99, background:'rgba(69,163,255,0.32)' }} />
-                <div style={{ position:'absolute', right:16, top:12, width:26, height:26, borderRadius:'50%', border:'1px solid rgba(45,226,184,0.44)' }} />
+            <div style={{
+              borderLeft:'3px solid #2DE2B8',
+              paddingLeft:20,
+              color:'#F4F8FE'
+            }}>
+              <div style={{ color:'#2DE2B8', fontSize:24, lineHeight:1.45, fontWeight:850 }}>
+                Train before the incident.
               </div>
-
-              <div style={{ position:'absolute', left:28, bottom:28, width:'40%', height:94, border:'1px solid rgba(69,163,255,0.24)', borderRadius:6, background:'rgba(2,11,19,0.50)', padding:12, boxSizing:'border-box' }}>
-                <div style={{ color:'#2DE2B8', fontSize:11, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:10 }}>Exercise Flow</div>
-                <div style={{ height:7, width:'82%', borderRadius:99, background:'rgba(69,163,255,0.42)', marginBottom:9 }} />
-                <div style={{ height:7, width:'64%', borderRadius:99, background:'rgba(45,226,184,0.38)', marginBottom:9 }} />
-                <div style={{ height:7, width:'72%', borderRadius:99, background:'rgba(185,200,216,0.22)' }} />
+              <div style={{ color:'#2DE2B8', fontSize:24, lineHeight:1.45, fontWeight:850 }}>
+                Decide with confidence.
               </div>
-
-              <div style={{ position:'absolute', right:28, bottom:28, width:'45%', height:94, border:'1px solid rgba(45,226,184,0.22)', borderRadius:6, background:'rgba(2,11,19,0.50)', padding:12, boxSizing:'border-box' }}>
-                <div style={{ color:'#45A3FF', fontSize:11, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:10 }}>Decision Space</div>
-                <div style={{ display:'flex', gap:7, marginBottom:11 }}>
-                  <span style={{ width:28, height:28, borderRadius:7, border:'1px solid rgba(45,226,184,0.38)', display:'block' }} />
-                  <span style={{ width:28, height:28, borderRadius:7, border:'1px solid rgba(69,163,255,0.36)', display:'block' }} />
-                  <span style={{ width:28, height:28, borderRadius:7, border:'1px solid rgba(245,155,34,0.34)', display:'block' }} />
-                </div>
-                <div style={{ height:7, width:'88%', borderRadius:99, background:'rgba(185,200,216,0.18)' }} />
-              </div>
-
-              <div style={{
-                position:'absolute',
-                left:'50%',
-                top:'50%',
-                transform:'translate(-50%, -42%)',
-                width:90,
-                height:90,
-                borderRadius:18,
-                border:'1px solid rgba(45,226,184,0.48)',
-                display:'grid',
-                placeItems:'center',
-                background:'rgba(2,11,19,0.58)',
-                color:'#F4F8FE',
-                fontSize:42,
-                fontWeight:950,
-                boxShadow:'0 0 34px rgba(45,226,184,0.12)'
-              }}>
-                N
+              <div style={{ color:'#2DE2B8', fontSize:24, lineHeight:1.45, fontWeight:850 }}>
+                Lead when it matters.
               </div>
             </div>
 
             <div style={{
-              padding:'24px 30px 28px',
-              borderTop:'1px solid rgba(45,226,184,0.24)',
-              background:'linear-gradient(180deg, rgba(3,18,30,0.58), rgba(2,11,19,0.88))'
+              height:1,
+              background:'linear-gradient(90deg, rgba(45,226,184,0.52), rgba(45,226,184,0))',
+              margin:'30px 0 22px'
+            }} />
+
+            <p style={{
+              margin:0,
+              color:'#B9C8D8',
+              fontSize:15,
+              lineHeight:1.58
             }}>
-              <div style={{
-                borderLeft:'3px solid #2DE2B8',
-                paddingLeft:18,
-                color:'#2DE2B8',
-                fontSize:20,
-                lineHeight:1.62,
-                fontStyle:'italic'
-              }}>
-                <div>Train before the incident.</div>
-                <div>Decide with confidence.</div>
-                <div>Lead when it matters.</div>
-              </div>
-            </div>
+              NEXUS EOC focuses on practical emergency operations decision-making, not passive slide-based training.
+            </p>
           </div>
 
           <div style={{ display:'flex', flexDirection:'column', justifyContent:'center' }}>
@@ -658,7 +626,7 @@ function AboutNexusModal({ onClose }) {
                 The platform draws on experience in emergency management, continuity, military operations, emergency communications, remote sensing, and training design.
               </p>
               <p style={{ margin:0 }}>
-                NEXUS EOC is built for emergency managers, EOCs, CERT teams, public safety partners, and response organizations that need practical decision-making reps before the real incident happens.
+                NEXUS EOC is built for emergency managers, EOCs, public safety partners, and response organizations that need practical decision-making reps before the real incident happens.
               </p>
             </div>
           </div>
