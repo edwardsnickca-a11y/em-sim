@@ -215,12 +215,16 @@ ENDEX RESPONSE FORMAT — use this exact format when player types ENDEX:
 }`
 }
 
+const INITIAL_LIFELINES_UNKNOWN = Object.fromEntries(
+  LIFELINES.map(ll => [ll.key, { status:'UNKNOWN', reason:'Initial assessment pending. Lifeline status will update after the first exercise turn.' }])
+)
+
 const SAVE_KEY = 'em_sim_v14'
 
 const defaultState = {
   screen:'portal', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'', role:'EOC Director',
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
-  situation:'DEVELOPING', turn:0, lifelines:DEFAULT_LIFELINES, headlines:[],
+  situation:'DEVELOPING', turn:0, lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[],
   dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[],
 }
 
@@ -596,7 +600,7 @@ function useVertDrag(containerRef, onUpdate) {
     if (!drag.current) return
     const { containerTop, containerH } = drag.current
     const pct = ((e.clientY - containerTop) / containerH) * 100
-    onUpdate(Math.max(10, Math.min(90, pct)))
+    onUpdate(Math.max(3, Math.min(97, pct)))
   }
   function onUp() {
     drag.current = null
@@ -606,50 +610,52 @@ function useVertDrag(containerRef, onUpdate) {
   return onMouseDown
 }
 
-function InfoCallout({ panelKey, anchorRef, onClose }) {
+function InfoCallout({ panelKey, anchorEl, onClose }) {
   const info = PANEL_INFO[panelKey]
-  const [pos, setPos] = useState({ top:0, left:0, transform:'none' })
+  const [pos, setPos] = useState({ top:0, left:0 })
   useEffect(() => {
-    if (anchorRef?.current) {
-      const rect = anchorRef.current.getBoundingClientRect()
+    if (anchorEl) {
+      const rect = anchorEl.getBoundingClientRect()
       const width = 340
-      const heightEstimate = 190
-      const left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12))
-      const belowTop = rect.bottom + 8
-      const aboveTop = rect.top - heightEstimate - 8
-      const useAbove = belowTop + heightEstimate > window.innerHeight - 12 && aboveTop > 12
-      setPos({ top: useAbove ? aboveTop : Math.min(belowTop, window.innerHeight - heightEstimate - 12), left, transform:'none' })
+      const margin = 12
+      let left = Math.min(Math.max(rect.left, margin), window.innerWidth - width - margin)
+      let top = rect.bottom + 8
+      const estimatedHeight = 220
+      if (top + estimatedHeight > window.innerHeight - margin) {
+        top = Math.max(margin, rect.top - estimatedHeight - 8)
+      }
+      setPos({ top, left })
     }
     const handler = (e) => {
       if (!e.target.closest('[data-info-callout]') && !e.target.closest('[data-info-btn]')) onClose()
     }
     setTimeout(() => window.addEventListener('click', handler), 50)
     return () => window.removeEventListener('click', handler)
-  }, [])
+  }, [anchorEl])
   if (!info) return null
   return (
-    <div data-info-callout="true" className="nexus-live-scroll" style={{ position:'fixed', top:pos.top, left:pos.left, width:340, maxHeight:'min(260px, calc(100vh - 24px))', overflowY:'auto', background:'#071421', border:'1px solid rgba(87,146,198,0.42)', borderRadius:8, padding:'12px 14px', zIndex:3000, boxShadow:'0 14px 40px rgba(0,0,0,0.82)' }}>
+    <div data-info-callout="true" style={{ position:'fixed', top:pos.top, left:pos.left, width:340, maxHeight:'min(360px, calc(100vh - 24px))', overflowY:'auto', background:'#0A1724', border:'1px solid rgba(87,146,198,0.45)', borderRadius:8, padding:'12px 14px', zIndex:5000, boxShadow:'0 18px 42px rgba(0,0,0,0.72)' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-        <span style={{ fontSize:11, fontWeight:800, color:'#F4F8FE', letterSpacing:'0.04em' }}>{info.title}</span>
+        <span style={{ fontSize:11, fontWeight:900, color:'#F4F8FE', letterSpacing:'0.04em', textTransform:'uppercase' }}>{info.title}</span>
         <button onClick={onClose} style={{ fontSize:12, color:'#6F8195', border:'none', background:'none', cursor:'pointer', padding:'0 2px' }}>✕</button>
       </div>
-      <p style={{ fontSize:10, color:'#B9C8D8', lineHeight:1.7, margin:0, whiteSpace:'normal', wordBreak:'break-word' }}>{info.body}</p>
+      <p style={{ fontSize:11, color:'#B9C8D8', lineHeight:1.65, margin:0, whiteSpace:'normal', wordBreak:'break-word' }}>{info.body}</p>
     </div>
   )
 }
 
 function InfoBtn({ panelKey, activeInfo, setActiveInfo }) {
   const btnRef = useRef(null)
-  const isActive = activeInfo === panelKey
+  const isActive = activeInfo?.key === panelKey
   return (
-    <>
-      <button ref={btnRef} data-info-btn="true"
-        onClick={e => { e.stopPropagation(); setActiveInfo(isActive ? null : panelKey) }}
-        style={{ marginLeft:6, width:14, height:14, borderRadius:'50%', border:'0.5px solid #444', background:isActive?'#333':'transparent', color:'#555', cursor:'pointer', fontSize:9, display:'inline-flex', alignItems:'center', justifyContent:'center', padding:0, flexShrink:0 }}>
-        ⓘ
-      </button>
-      {isActive && <InfoCallout panelKey={panelKey} anchorRef={btnRef} onClose={() => setActiveInfo(null)} />}
-    </>
+    <button ref={btnRef} data-info-btn="true"
+      onClick={e => {
+        e.stopPropagation()
+        setActiveInfo(isActive ? null : { key:panelKey, anchor:btnRef.current })
+      }}
+      style={{ marginLeft:6, width:14, height:14, borderRadius:'50%', border:'0.5px solid rgba(87,146,198,0.45)', background:isActive?'rgba(69,163,255,0.18)':'transparent', color:isActive?'#45A3FF':'#6F8195', cursor:'pointer', fontSize:9, display:'inline-flex', alignItems:'center', justifyContent:'center', padding:0, flexShrink:0 }}>
+      ⓘ
+    </button>
   )
 }
 
@@ -1015,7 +1021,7 @@ export default function App() {
 
   const onColDown = useHorizDrag(containerRef, (idx, pct) => {
     setBoundaries(prev => {
-      const n = [...prev], min = 8
+      const n = [...prev], min = 5
       if (idx === 0) n[0] = Math.max(min, Math.min(pct, n[1] - min))
       if (idx === 1) n[1] = Math.max(n[0] + min, Math.min(pct, n[2] - min))
       if (idx === 2) n[2] = Math.max(n[1] + min, Math.min(pct, 100 - min))
@@ -1032,8 +1038,8 @@ export default function App() {
         const pct = ((ev.clientY - info.top) / info.h) * 100
         setLeftBounds(prev => {
           const n = [...prev]
-          if (divIdx === 0) n[0] = Math.max(10, Math.min(pct, prev[1] - 10))
-          else              n[1] = Math.max(prev[0] + 10, Math.min(pct, 90))
+          if (divIdx === 0) n[0] = Math.max(4, Math.min(pct, prev[1] - 4))
+          else              n[1] = Math.max(prev[0] + 4, Math.min(pct, 96))
           return n
         })
       }
@@ -1083,7 +1089,7 @@ export default function App() {
         { type:'system', text:'Generating scenario world...' },
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
-      notepad:'', lifelines:DEFAULT_LIFELINES, headlines:[], dynamicPins:[],
+      notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
       worldState:null, aar:null, exerciseTranscript:[],
     })
 
@@ -1107,7 +1113,7 @@ export default function App() {
           narrative: world.openingNarrative + ' What is your first action?',
           dispatches: initDispatches,
           pins: initPins,
-          lifelines: DEFAULT_LIFELINES,
+          lifelines: INITIAL_LIFELINES_UNKNOWN,
         }],
       })
     } catch(e) {
@@ -1125,7 +1131,7 @@ export default function App() {
           narrative: sc.desc + ' Your EOC is activating. What is your first action?',
           dispatches: [{ id:0, text:`${sc.name} confirmed. EOC activation underway. Resources status unknown.`, turn:0 }],
           pins: [],
-          lifelines: DEFAULT_LIFELINES,
+          lifelines: INITIAL_LIFELINES_UNKNOWN,
         }],
       })
     }
@@ -1426,6 +1432,7 @@ export default function App() {
       `}</style>
 
       {showSettings && <SettingsPanel settings={settings} onChange={updateSettings} onClose={() => setShowSettings(false)} />}
+      {activeInfo?.key && activeInfo?.anchor && <InfoCallout panelKey={activeInfo.key} anchorEl={activeInfo.anchor} onClose={() => setActiveInfo(null)} />}
 
       {/* TOP HEADER */}
       <header style={{
