@@ -549,63 +549,86 @@ function AboutNexusModal({ onClose }) {
             border:'1px solid rgba(45,226,184,0.22)',
             borderRadius:8,
             overflow:'hidden',
-            background:'radial-gradient(circle at 50% 30%, rgba(45,226,184,0.17), transparent 44%), linear-gradient(180deg, rgba(5,24,39,0.88), rgba(2,10,18,0.96))',
+            background:'linear-gradient(180deg, rgba(5,24,39,0.86), rgba(2,10,18,0.96))',
             minHeight:330,
             display:'grid',
             gridTemplateRows:'1fr auto'
           }}>
             <div style={{
               minHeight:230,
-              display:'grid',
-              placeItems:'center',
               position:'relative',
-              overflow:'hidden'
+              overflow:'hidden',
+              background:'radial-gradient(circle at 48% 18%, rgba(69,163,255,0.16), transparent 34%), linear-gradient(135deg, rgba(3,18,30,0.96), rgba(2,10,18,0.96))'
             }}>
               <div style={{
                 position:'absolute',
                 inset:0,
-                backgroundImage:'linear-gradient(rgba(69,163,255,0.065) 1px, transparent 1px), linear-gradient(90deg, rgba(69,163,255,0.065) 1px, transparent 1px)',
-                backgroundSize:'34px 34px',
-                opacity:0.75
+                backgroundImage:'linear-gradient(rgba(69,163,255,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(69,163,255,0.055) 1px, transparent 1px)',
+                backgroundSize:'36px 36px',
+                opacity:0.65
               }} />
+
+              <div style={{ position:'absolute', left:28, right:28, top:30, height:52, border:'1px solid rgba(69,163,255,0.24)', borderRadius:6, background:'rgba(2,11,19,0.46)' }}>
+                <div style={{ position:'absolute', left:16, top:16, width:80, height:8, borderRadius:99, background:'rgba(45,226,184,0.58)' }} />
+                <div style={{ position:'absolute', left:112, top:16, width:52, height:8, borderRadius:99, background:'rgba(69,163,255,0.32)' }} />
+                <div style={{ position:'absolute', right:16, top:12, width:26, height:26, borderRadius:'50%', border:'1px solid rgba(45,226,184,0.44)' }} />
+              </div>
+
+              <div style={{ position:'absolute', left:28, bottom:28, width:'40%', height:94, border:'1px solid rgba(69,163,255,0.24)', borderRadius:6, background:'rgba(2,11,19,0.50)', padding:12, boxSizing:'border-box' }}>
+                <div style={{ color:'#2DE2B8', fontSize:11, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:10 }}>Exercise Flow</div>
+                <div style={{ height:7, width:'82%', borderRadius:99, background:'rgba(69,163,255,0.42)', marginBottom:9 }} />
+                <div style={{ height:7, width:'64%', borderRadius:99, background:'rgba(45,226,184,0.38)', marginBottom:9 }} />
+                <div style={{ height:7, width:'72%', borderRadius:99, background:'rgba(185,200,216,0.22)' }} />
+              </div>
+
+              <div style={{ position:'absolute', right:28, bottom:28, width:'45%', height:94, border:'1px solid rgba(45,226,184,0.22)', borderRadius:6, background:'rgba(2,11,19,0.50)', padding:12, boxSizing:'border-box' }}>
+                <div style={{ color:'#45A3FF', fontSize:11, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:10 }}>Decision Space</div>
+                <div style={{ display:'flex', gap:7, marginBottom:11 }}>
+                  <span style={{ width:28, height:28, borderRadius:7, border:'1px solid rgba(45,226,184,0.38)', display:'block' }} />
+                  <span style={{ width:28, height:28, borderRadius:7, border:'1px solid rgba(69,163,255,0.36)', display:'block' }} />
+                  <span style={{ width:28, height:28, borderRadius:7, border:'1px solid rgba(245,155,34,0.34)', display:'block' }} />
+                </div>
+                <div style={{ height:7, width:'88%', borderRadius:99, background:'rgba(185,200,216,0.18)' }} />
+              </div>
+
               <div style={{
                 position:'absolute',
-                width:280,
-                height:280,
-                borderRadius:'50%',
-                border:'1px solid rgba(45,226,184,0.18)',
-                boxShadow:'0 0 70px rgba(45,226,184,0.13)'
-              }} />
-              <div style={{
-                position:'relative',
-                width:154,
-                height:154,
+                left:'50%',
+                top:'50%',
+                transform:'translate(-50%, -42%)',
+                width:90,
+                height:90,
+                borderRadius:18,
+                border:'1px solid rgba(45,226,184,0.48)',
                 display:'grid',
                 placeItems:'center',
-                filter:'drop-shadow(0 0 30px rgba(45,226,184,0.22))'
+                background:'rgba(2,11,19,0.58)',
+                color:'#F4F8FE',
+                fontSize:42,
+                fontWeight:950,
+                boxShadow:'0 0 34px rgba(45,226,184,0.12)'
               }}>
-                <svg viewBox="0 0 120 120" width="154" height="154" aria-hidden="true">
-                  <path d="M60 7 L101 25 V58 C101 85 84 105 60 113 C36 105 19 85 19 58 V25 Z" fill="rgba(2,11,19,0.72)" stroke="rgba(45,226,184,0.82)" strokeWidth="2.5" />
-                  <path d="M60 16 L92 30 V58 C92 79 79 95 60 103 C41 95 28 79 28 58 V30 Z" fill="rgba(45,226,184,0.08)" stroke="rgba(69,163,255,0.28)" strokeWidth="1.2" />
-                  <text x="60" y="73" textAnchor="middle" fontSize="50" fontWeight="900" fill="#F4F8FE" fontFamily="Inter, Segoe UI, Arial">N</text>
-                </svg>
+                N
               </div>
             </div>
 
             <div style={{
-              padding:'22px 28px 26px',
-              borderTop:'1px solid rgba(45,226,184,0.26)',
-              color:'#2DE2B8',
-              fontSize:18,
-              lineHeight:1.65,
-              fontStyle:'italic',
+              padding:'24px 30px 28px',
+              borderTop:'1px solid rgba(45,226,184,0.24)',
               background:'linear-gradient(180deg, rgba(3,18,30,0.58), rgba(2,11,19,0.88))'
             }}>
-              <div style={{ color:'#2DE2B8', fontSize:34, lineHeight:1, marginBottom:4 }}>“</div>
-              <div>Train before the incident.</div>
-              <div>Decide with confidence.</div>
-              <div>Lead when it matters.</div>
-              <div style={{ color:'#2DE2B8', fontSize:34, lineHeight:1, textAlign:'right', marginTop:2 }}>”</div>
+              <div style={{
+                borderLeft:'3px solid #2DE2B8',
+                paddingLeft:18,
+                color:'#2DE2B8',
+                fontSize:20,
+                lineHeight:1.62,
+                fontStyle:'italic'
+              }}>
+                <div>Train before the incident.</div>
+                <div>Decide with confidence.</div>
+                <div>Lead when it matters.</div>
+              </div>
             </div>
           </div>
 
