@@ -665,7 +665,7 @@ function LifelineTile({ ll, data }) {
   const tileRef               = useRef(null)
   const status = data?.status || 'YELLOW'
   const reason = data?.reason || 'Assessment pending.'
-  const c = LL_COLORS[status]
+  const c = LL_COLORS[status] || LL_COLORS.UNKNOWN || { border:'rgba(148,163,184,0.50)', bg:'rgba(148,163,184,0.12)', text:'#B9C8D8' }
   function handleMouseEnter() {
     if (tileRef.current) {
       const rect = tileRef.current.getBoundingClientRect()
