@@ -1698,9 +1698,28 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={hDragBar}><div style={hDragInner}/></div>
+                <div style={hDragBar}
+                  onMouseDown={e => {
+                    e.preventDefault()
+                    const startY = e.clientY
+                    const startHeight = notepadHeight
+                    const centerColumn = e.currentTarget.parentElement
+                    const parentH = centerColumn?.getBoundingClientRect?.().height || 720
+                    function onMove(ev) {
+                      const next = startHeight + (startY - ev.clientY)
+                      setNotepadHeight(Math.max(32, Math.min(parentH - 72, next)))
+                    }
+                    function onUp() {
+                      window.removeEventListener('mousemove', onMove)
+                      window.removeEventListener('mouseup', onUp)
+                    }
+                    window.addEventListener('mousemove', onMove)
+                    window.addEventListener('mouseup', onUp)
+                  }}>
+                  <div style={hDragInner}/>
+                </div>
 
-                <div style={{ ...panelShell, height:'22%', minHeight:110, flexShrink:0 }}>
+                <div style={{ ...panelShell, height:notepadHeight, minHeight:32, flexShrink:0, overflow:'hidden' }}>
                   {panelHdr(notepadTitle, 'notepad')}
                   <textarea value={state.notepad} onChange={e => update({ notepad:e.target.value })}
                     placeholder={'Local notes only. Notes are not submitted with your response.'}
