@@ -128,7 +128,6 @@ function ScenarioCard({ card }) {
         <div style={{ color:DS.text, fontSize:'clamp(14px, .82vw, 17px)', fontWeight:900, marginBottom:8, lineHeight:1.12 }}>{card.title}</div>
         <div style={{ color:DS.text, fontSize:'clamp(11.5px, .68vw, 13.5px)', lineHeight:1.36 }}>{card.desc}</div>
       </div>
-    {showGuidedTour && <GuidedTourModal onClose={() => setShowGuidedTour(false)} />}
     </div>
   )
 }
@@ -459,6 +458,7 @@ export default function MissionPortal({ onStartExercise }) {
           </footer>
         </div>
       </main>
+          {showGuidedTour && <GuidedTourModal onClose={() => setShowGuidedTour(false)} />}
     </div>
   )
 }
