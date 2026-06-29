@@ -467,7 +467,7 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
   const scenarioName = SCENARIOS[scenario]?.name || scenario
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', height:'100%', minHeight:0, fontFamily:'JetBrains Mono, monospace' , minHeight:0, overflow:'hidden'}}>
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', fontFamily:'JetBrains Mono, monospace' }}>
 
       {/* AAR HEADER */}
       <div style={{ padding:'12px 16px', borderBottom:'0.5px solid #2a2a2a', background:'#0a0a0a', flexShrink:0 }}>
@@ -521,7 +521,7 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
       </div>
 
       {/* AAR BODY */}
-      <div style={{ flex:1, overflowY:'auto', minHeight:0, padding:'16px' }}>
+      <div style={{ flex:1, overflowY:'auto', padding:'16px' }}>
         {showFeedback && (
           <div style={{ marginBottom:16 }}>
             <EndexFeedback
@@ -600,7 +600,7 @@ function useVertDrag(containerRef, onUpdate) {
     if (!drag.current) return
     const { containerTop, containerH } = drag.current
     const pct = ((e.clientY - containerTop) / containerH) * 100
-    onUpdate(Math.max(1.5, Math.min(98.5, pct)))
+    onUpdate(Math.max(2, Math.min(98, pct)))
   }
   function onUp() {
     drag.current = null
@@ -634,7 +634,7 @@ function InfoCallout({ panelKey, anchorEl, onClose }) {
   }, [anchorEl])
   if (!info) return null
   return (
-    <div data-info-callout="true" style={{ position:'fixed', top:pos.top, left:pos.left, width:340, maxHeight:'min(360px, calc(100vh - 24px))', overflowY:'auto', minHeight:0, background:'#0A1724', border:'1px solid rgba(87,146,198,0.45)', borderRadius:8, padding:'12px 14px', zIndex:5000, boxShadow:'0 18px 42px rgba(0,0,0,0.72)' }}>
+    <div data-info-callout="true" style={{ position:'fixed', top:pos.top, left:pos.left, width:340, maxHeight:'min(360px, calc(100vh - 24px))', overflowY:'auto', background:'#0A1724', border:'1px solid rgba(87,146,198,0.45)', borderRadius:8, padding:'12px 14px', zIndex:5000, boxShadow:'0 18px 42px rgba(0,0,0,0.72)' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
         <span style={{ fontSize:11, fontWeight:900, color:'#F4F8FE', letterSpacing:'0.04em', textTransform:'uppercase' }}>{info.title}</span>
         <button onClick={onClose} style={{ fontSize:12, color:'#6F8195', border:'none', background:'none', cursor:'pointer', padding:'0 2px' }}>✕</button>
@@ -665,7 +665,7 @@ function LifelineTile({ ll, data }) {
   const tileRef               = useRef(null)
   const status = data?.status || 'YELLOW'
   const reason = data?.reason || 'Assessment pending.'
-  const c = LL_COLORS[status] || LL_COLORS.UNKNOWN || { border:'rgba(148,163,184,0.50)', bg:'rgba(148,163,184,0.12)', text:'#B9C8D8' }
+  const c = LL_COLORS[status] || LL_COLORS.UNKNOWN || { border:'rgba(148,163,184,0.50)', bg:'rgba(148,163,184,0.12)', text:'#B9C8D8' } || LL_COLORS.UNKNOWN || { border:'rgba(148,163,184,0.50)', bg:'rgba(148,163,184,0.12)', text:'#B9C8D8' }
   function handleMouseEnter() {
     if (tileRef.current) {
       const rect = tileRef.current.getBoundingClientRect()
@@ -957,6 +957,7 @@ export default function App() {
   const [initLoading, setInitLoading] = useState(false)
   const [input, setInput]             = useState('')
   const [inputAreaHeight, setInputAreaHeight] = useState(80)
+  const [notepadHeight, setNotepadHeight] = useState(180)
   const [boundaries, setBoundaries]   = useState([26, 64, 80])
   const [leftBounds, setLeftBounds]   = useState([52, 70])
   const [rightSplit, setRightSplit]   = useState(62)
@@ -1038,8 +1039,8 @@ export default function App() {
         const pct = ((ev.clientY - info.top) / info.h) * 100
         setLeftBounds(prev => {
           const n = [...prev]
-          if (divIdx === 0) n[0] = Math.max(2, Math.min(pct, prev[1] - 2))
-          else              n[1] = Math.max(prev[0] + 2, Math.min(pct, 98))
+          if (divIdx === 0) n[0] = Math.max(2, Math.min(pct, 98))
+          else              n[1] = Math.max(prev[0] + 4, Math.min(pct, 96))
           return n
         })
       }
@@ -1344,7 +1345,7 @@ export default function App() {
 
   const panelHdr  = (label, infoKey, right=null, note=null) => (
     <div style={{
-      minHeight:0,
+      minHeight:34,
       padding:'7px 10px',
       borderBottom:`1px solid ${UI.borderSoft}`,
       background:'linear-gradient(180deg, rgba(69,163,255,0.10), rgba(3,14,24,0.58))',
@@ -1431,17 +1432,6 @@ export default function App() {
         .nexus-live-button:hover { filter: brightness(1.12); }
       `}</style>
 
-      
-      <style>{`
-        .nexus-live-panel {
-          min-height: 0 !important;
-          overflow: hidden !important;
-        }
-        .nexus-live-panel > * {
-          min-height: 0;
-        }
-      `}</style>
-
       {showSettings && <SettingsPanel settings={settings} onChange={updateSettings} onClose={() => setShowSettings(false)} />}
       {activeInfo?.key && activeInfo?.anchor && <InfoCallout panelKey={activeInfo.key} anchorEl={activeInfo.anchor} onClose={() => setActiveInfo(null)} />}
 
@@ -1493,7 +1483,7 @@ export default function App() {
                 {showEndDialog && (
                   <div style={{ position:'absolute', top:'calc(100% + 8px)', right:0, background:UI.panel2, border:`1px solid ${UI.border}`, borderRadius:8, padding:'12px 14px', zIndex:500, whiteSpace:'nowrap', boxShadow:'0 16px 42px rgba(0,0,0,0.65)' }}>
                     <div style={{ fontSize:11, color:UI.muted, marginBottom:10 }}>End exercise?</div>
-                    <div style={{ display:'flex', flexDirection:'column', gap:7 , minHeight:0, overflow:'hidden'}}>
+                    <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
                       <button onClick={() => { setShowEndDialog(false); setInput('ENDEX'); setTimeout(() => sendAction(), 50) }}
                         style={{ fontSize:12, padding:'7px 12px', color:UI.amber, borderColor:UI.amber, textAlign:'left', background:'transparent', cursor:'pointer', border:`1px solid ${UI.amber}`, borderRadius:4, fontWeight:800 }}>
                         End with AAR
@@ -1568,7 +1558,7 @@ export default function App() {
           <div ref={leftColRef} style={{ width:`${leftWidth}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
             <div style={{ ...panelShell, height:`${leftBounds[0]}%`, flexShrink:0 }}>
               {panelHdr('Flash Cards', 'dispatch', <span style={{ background:UI.danger, color:'#fff', borderRadius:999, padding:'2px 7px', fontSize:10 }}>{state.dispatches.length}</span>)}
-              <div className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', minHeight:0, padding:9, display:'flex', flexDirection:'column', gap:8 }}>
+              <div className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', padding:9, display:'flex', flexDirection:'column', gap:8 }}>
                 {initLoading && (
                   <div style={{ padding:12, fontSize:12, color:UI.dim, fontStyle:'italic', textAlign:'center' }}>
                     Generating scenario world...<br/>
@@ -1592,7 +1582,7 @@ export default function App() {
 
             <div style={{ ...panelShell, flex:1 }}>
               {panelHdr('Media Feed', 'media')}
-              <div className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', minHeight:0, padding:9, display:'flex', flexDirection:'column', gap:8 }}>
+              <div className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', padding:9, display:'flex', flexDirection:'column', gap:8 }}>
                 {state.headlines.length === 0 && <div style={{ color:UI.dim, fontSize:12, padding:10, fontStyle:'italic' }}>Media items appear after your first action.</div>}
                 {state.headlines.map(h => {
                   const isNew = h.turn === state.turn
@@ -1655,7 +1645,7 @@ export default function App() {
                   />
                 </div>
               ) : (
-                <div ref={termRef} className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', minHeight:0, padding:'14px 16px', lineHeight:1.8 }}>
+                <div ref={termRef} className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', padding:'14px 16px', lineHeight:1.8 }}>
                   {state.terminal.map((line,i) => {
                     if (!line) return null
                     if (line.type==='divider') return <hr key={i} style={{ border:'none', borderTop:`1px solid ${UI.borderSoft}`, margin:'10px 0' }}/>
@@ -1686,7 +1676,7 @@ export default function App() {
                     e.preventDefault()
                     const startY = e.clientY
                     const startHeight = inputAreaHeight
-                    function onMove(ev) { setInputAreaHeight(Math.max(90, Math.min(340, startHeight + (startY - ev.clientY)))) }
+                    function onMove(ev) { setInputAreaHeight(Math.max(34, Math.min(420, startHeight + (startY - ev.clientY)))) }
                     function onUp() { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
                     window.addEventListener('mousemove', onMove)
                     window.addEventListener('mouseup', onUp)
@@ -1694,13 +1684,13 @@ export default function App() {
                   <div style={hDragInner}/>
                 </div>
 
-                <div style={{ ...panelShell, height:inputAreaHeight, minHeight:0, flexShrink:0 }}>
+                <div style={{ ...panelShell, height:inputAreaHeight, flexShrink:0 }}>
                   {panelHdr('Your Response', 'terminal')}
                   <div style={{ flex:1, display:'flex', gap:9, padding:10, minHeight:0 }}>
                     <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
                       placeholder={initLoading ? 'Generating scenario...' : 'Enter your operational response. Enter creates a new line.'}
                       disabled={initLoading}
-                      style={{ flex:1, resize:'none', lineHeight:1.6, fontSize:fs, background:'rgba(2,11,19,0.82)', border:`1px solid ${UI.borderSoft}`, borderRadius:5, color:UI.text, padding:'9px 10px', fontFamily:'Inter, Segoe UI, sans-serif', height:'100%', minHeight:0, boxSizing:'border-box', outline:'none' }}/>
+                      style={{ flex:1, resize:'none', lineHeight:1.6, fontSize:fs, background:'rgba(2,11,19,0.82)', border:`1px solid ${UI.borderSoft}`, borderRadius:5, color:UI.text, padding:'9px 10px', fontFamily:'Inter, Segoe UI, sans-serif', height:'100%', boxSizing:'border-box', outline:'none' }}/>
                     <button className="nexus-live-button" onClick={sendAction} disabled={loading||!input.trim()||initLoading}
                       style={{ width:138, fontWeight:950, alignSelf:'stretch', color:'#fff', border:'none', borderRadius:5, background:(loading||!input.trim()||initLoading) ? 'rgba(87,146,198,0.18)' : 'linear-gradient(180deg, #2E83FF, #1455B8)', cursor:(loading||!input.trim()||initLoading)?'not-allowed':'pointer', opacity:(loading||!input.trim()||initLoading)?0.55:1 }}>
                       Submit Response
@@ -1710,12 +1700,12 @@ export default function App() {
 
                 <div style={hDragBar}><div style={hDragInner}/></div>
 
-                <div style={{ ...panelShell, height:'22%', minHeight:0, flexShrink:0 }}>
+                <div style={{ ...panelShell, height:'22%', minHeight:110, flexShrink:0 }}>
                   {panelHdr(notepadTitle, 'notepad')}
                   <textarea value={state.notepad} onChange={e => update({ notepad:e.target.value })}
                     placeholder={'Local notes only. Notes are not submitted with your response.'}
                     className="nexus-live-scroll"
-                    style={{ flex:1, resize:'none', border:'none', padding:'10px 12px', background:'transparent', color:UI.muted, lineHeight:1.65, outline:'none', fontSize:fs, fontFamily:'Inter, Segoe UI, sans-serif' }}/>
+                    style={{ flex:1, minHeight:0, resize:'none', border:'none', padding:'10px 12px', background:'transparent', color:UI.muted, lineHeight:1.65, outline:'none', fontSize:fs, fontFamily:'Inter, Segoe UI, sans-serif' }}/>
                 </div>
               </>
             )}
@@ -1733,7 +1723,7 @@ export default function App() {
                 'Pins are clickable for details'
               )}
               <div style={{ position:'relative', flex:1, minHeight:0 }}>
-                <MapContainer center={center} zoom={mapZoom} style={{ height:'100%', minHeight:0, width:'100%' }}>
+                <MapContainer center={center} zoom={mapZoom} style={{ height:'100%', width:'100%' }}>
                   <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
                   <MapUpdater center={center}/>
                   {initPins.map(pin => (
@@ -1774,7 +1764,7 @@ export default function App() {
 
             <div style={{ ...panelShell, flex:1 }}>
               {panelHdr('Reference Desk', 'refs')}
-              <div className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', minHeight:0, padding:9, display:'flex', flexDirection:'column', gap:7 }}>
+              <div className="nexus-live-scroll" style={{ flex:1, overflowY:'auto', padding:9, display:'flex', flexDirection:'column', gap:7 }}>
                 {refs.length === 0 && <div style={{ color:UI.dim, fontSize:12, padding:10, fontStyle:'italic' }}>Scenario reference links appear here after launch.</div>}
                 {refs.map((r,i) => (
                   <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
