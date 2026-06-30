@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import posthog from 'posthog-js'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap, ScaleControl } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { PIN_COLORS } from './data/mapConfig'
@@ -111,7 +111,7 @@ SCENARIO PLACEMENT NOTES: ${scenarioNotes[scenario] || ''}
 YOUR TASK:
 Generate a specific, realistic, geographically accurate opening world state for this exact combination of scenario and jurisdiction. Pick a DIFFERENT city every time — do not default to the same locations repeatedly. Prioritize geographic diversity across the US.
 
-Generate 4-7 initial map pins representing key infrastructure for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically accurate and within ~15 miles of your chosen center point.
+Generate 4-7 initial map pins representing key infrastructure for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically accurate and within ~5 miles of your chosen center point. For named highways, interchanges, airports, hospitals, schools, shelters, and public facilities, place the pin on or very near the named feature.
 
 Generate 4-6 opening dispatch items that reflect the specific local conditions, named local agencies, and realistic resource constraints for this jurisdiction. A tribal nation dispatch sounds different from a large urban metro dispatch — use the right terminology, the right agency names, the right resource gaps.
 
@@ -153,7 +153,7 @@ function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playe
   const locationBlock = worldState
     ? `LOCATION: ${worldState.location}
 MAP CENTER: lat ${worldState.center[0]}, lng ${worldState.center[1]}
-All coordinates must be geographically plausible within ~10 miles of this center point.`
+All coordinates must be geographically plausible within ~5 miles of this center point. For named highways, interchanges, airports, hospitals, schools, shelters, and public facilities, place the pin on or very near the named feature.`
     : `JURISDICTION: ${jurisdiction}`
 
   return `You are the AI engine for an emergency management training simulator. The player is a senior emergency manager.
@@ -858,7 +858,7 @@ function MapUpdater({ center }) {
 
 function SettingsPanel({ settings, onChange, onClose }) {
   return (
-    <div style={{ position:'fixed', top:60, right:16, width:260, background:'#141414', border:'0.5px solid #333', borderRadius:10, padding:'14px 16px', zIndex:2000, boxShadow:'0 8px 24px rgba(0,0,0,0.8)' }}>
+    <div style={{ position:'absolute', top:'calc(100% + 8px)', right:0, width:280, background:'#0A1724', border:'1px solid rgba(87,146,198,0.45)', borderRadius:10, padding:'14px 16px', zIndex:6000, boxShadow:'0 16px 42px rgba(0,0,0,0.72)' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
         <span style={{ fontSize:11, fontWeight:500, color:'#aaa', textTransform:'uppercase', letterSpacing:'0.08em' }}>Display Settings</span>
         <button onClick={onClose} style={{ fontSize:14, color:'#555', padding:'0 4px', border:'none', background:'none', cursor:'pointer' }}>✕</button>
@@ -1622,8 +1622,133 @@ export default function App() {
         .nexus-live-button:hover { filter: brightness(1.12); }
       `}</style>
 
-      {showSettings && <SettingsPanel settings={settings} onChange={updateSettings} onClose={() => setShowSettings(false)} />}
       {activeInfo?.key && activeInfo?.anchor && <InfoCallout panelKey={activeInfo.key} anchorEl={activeInfo.anchor} onClose={() => setActiveInfo(null)} />}
+
+      {showEndDialog && !isEndex && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="End Exercise"
+          onClick={() => setShowEndDialog(false)}
+          style={{
+            position:'fixed',
+            inset:0,
+            zIndex:7000,
+            display:'flex',
+            alignItems:'center',
+            justifyContent:'center',
+            padding:24,
+            background:'rgba(1, 7, 13, 0.72)',
+            backdropFilter:'blur(6px)',
+            WebkitBackdropFilter:'blur(6px)',
+            boxSizing:'border-box'
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width:'min(520px, 94vw)',
+              border:`1px solid ${UI.borderStrong}`,
+              borderRadius:10,
+              background:'linear-gradient(135deg, rgba(4,17,29,0.98), rgba(2,9,16,0.98))',
+              boxShadow:'0 28px 90px rgba(0,0,0,0.68), 0 0 42px rgba(226,75,74,0.10)',
+              overflow:'hidden',
+              color:UI.text
+            }}
+          >
+            <div style={{
+              padding:'18px 20px',
+              display:'flex',
+              alignItems:'center',
+              justifyContent:'space-between',
+              gap:14,
+              borderBottom:`1px solid ${UI.borderSoft}`,
+              background:'linear-gradient(90deg, rgba(226,75,74,0.13), rgba(69,163,255,0.04), transparent)'
+            }}>
+              <div>
+                <div style={{ color:'#FFD2D2', fontSize:18, fontWeight:950, letterSpacing:'0.05em', textTransform:'uppercase' }}>End Exercise</div>
+                <div style={{ color:UI.muted, fontSize:12, marginTop:5 }}>Choose how to close this scenario.</div>
+              </div>
+              <button
+                onClick={() => setShowEndDialog(false)}
+                aria-label="Close end exercise dialog"
+                style={{
+                  width:34,
+                  height:34,
+                  borderRadius:7,
+                  border:`1px solid ${UI.borderSoft}`,
+                  background:'rgba(2,11,19,0.58)',
+                  color:UI.text,
+                  cursor:'pointer',
+                  fontSize:20,
+                  lineHeight:1,
+                  display:'grid',
+                  placeItems:'center'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ padding:20, display:'grid', gap:12 }}>
+              <button
+                onClick={() => { setShowEndDialog(false); setInput('ENDEX'); setTimeout(() => sendAction(), 50) }}
+                style={{
+                  width:'100%',
+                  minHeight:48,
+                  borderRadius:6,
+                  border:`1px solid ${UI.amber}`,
+                  background:'linear-gradient(180deg, rgba(245,155,34,0.16), rgba(2,11,19,0.78))',
+                  color:UI.amber,
+                  cursor:'pointer',
+                  fontWeight:950,
+                  fontSize:14,
+                  textAlign:'left',
+                  padding:'0 16px'
+                }}
+              >
+                End with AAR
+              </button>
+
+              <button
+                onClick={() => { setShowEndDialog(false); reset() }}
+                style={{
+                  width:'100%',
+                  minHeight:48,
+                  borderRadius:6,
+                  border:`1px solid ${UI.borderStrong}`,
+                  background:'rgba(6,23,38,0.48)',
+                  color:UI.text,
+                  cursor:'pointer',
+                  fontWeight:900,
+                  fontSize:14,
+                  textAlign:'left',
+                  padding:'0 16px'
+                }}
+              >
+                End without AAR
+              </button>
+
+              <button
+                onClick={() => setShowEndDialog(false)}
+                style={{
+                  width:'100%',
+                  minHeight:42,
+                  borderRadius:6,
+                  border:`1px solid ${UI.borderSoft}`,
+                  background:'transparent',
+                  color:UI.muted,
+                  cursor:'pointer',
+                  fontWeight:800,
+                  fontSize:13
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TOP HEADER */}
       <header style={{
@@ -1670,31 +1795,15 @@ export default function App() {
                   style={{ height:38, padding:'0 14px', borderRadius:4, border:`1px solid rgba(226,75,74,0.70)`, background:'rgba(226,75,74,0.10)', color:'#FFD2D2', cursor:'pointer', fontWeight:900 }}>
                   End Exercise
                 </button>
-                {showEndDialog && (
-                  <div style={{ position:'absolute', top:'calc(100% + 8px)', right:0, background:UI.panel2, border:`1px solid ${UI.border}`, borderRadius:8, padding:'12px 14px', zIndex:500, whiteSpace:'nowrap', boxShadow:'0 16px 42px rgba(0,0,0,0.65)' }}>
-                    <div style={{ fontSize:11, color:UI.muted, marginBottom:10 }}>End exercise?</div>
-                    <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-                      <button onClick={() => { setShowEndDialog(false); setInput('ENDEX'); setTimeout(() => sendAction(), 50) }}
-                        style={{ fontSize:12, padding:'7px 12px', color:UI.amber, borderColor:UI.amber, textAlign:'left', background:'transparent', cursor:'pointer', border:`1px solid ${UI.amber}`, borderRadius:4, fontWeight:800 }}>
-                        End with AAR
-                      </button>
-                      <button onClick={() => { setShowEndDialog(false); reset() }}
-                        style={{ fontSize:12, padding:'7px 12px', color:UI.muted, textAlign:'left', background:'transparent', cursor:'pointer', border:`1px solid ${UI.borderSoft}`, borderRadius:4, fontWeight:800 }}>
-                        End without AAR
-                      </button>
-                      <button onClick={() => setShowEndDialog(false)}
-                        style={{ fontSize:12, padding:'7px 12px', color:UI.dim, textAlign:'left', background:'transparent', cursor:'pointer', border:`1px solid ${UI.borderSoft}`, borderRadius:4 }}>
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
-            <button className="nexus-live-button" onClick={() => setShowSettings(s => !s)} title="Display Settings"
-              style={{ width:38, height:38, borderRadius:4, border:`1px solid ${UI.borderStrong}`, background:showSettings?'rgba(69,163,255,0.18)':'rgba(3,13,23,0.72)', color:UI.cyan, cursor:'pointer', fontSize:16, display:'grid', placeItems:'center' }}>
-              ⚙
-            </button>
+            <div style={{ position:'relative' }}>
+              <button className="nexus-live-button" onClick={() => setShowSettings(s => !s)} title="Display Settings"
+                style={{ width:38, height:38, borderRadius:4, border:`1px solid ${UI.borderStrong}`, background:showSettings?'rgba(69,163,255,0.18)':'rgba(3,13,23,0.72)', color:UI.cyan, cursor:'pointer', fontSize:16, display:'grid', placeItems:'center' }}>
+                ⚙
+              </button>
+              {showSettings && <SettingsPanel settings={settings} onChange={updateSettings} onClose={() => setShowSettings(false)} />}
+            </div>
           </div>
         </div>
       </header>
@@ -1863,7 +1972,7 @@ export default function App() {
                     e.preventDefault()
                     const startY = e.clientY
                     const startHeight = inputAreaHeight
-                    function onMove(ev) { setInputAreaHeight(Math.max(34, Math.min(420, startHeight + (startY - ev.clientY)))) }
+                    function onMove(ev) { setInputAreaHeight(Math.max(34, Math.min(720, startHeight + (startY - ev.clientY)))) }
                     function onUp() { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
                     window.addEventListener('mousemove', onMove)
                     window.addEventListener('mouseup', onUp)
@@ -1931,6 +2040,7 @@ export default function App() {
               <div style={{ position:'relative', flex:1, minHeight:0 }}>
                 <MapContainer center={center} zoom={mapZoom} style={{ height:'100%', width:'100%' }}>
                   <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
+                  <ScaleControl position="bottomright" imperial={true} metric={true} />
                   <MapUpdater center={center}/>
                   {initPins.map(pin => (
                     <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT, pin.type)}>
