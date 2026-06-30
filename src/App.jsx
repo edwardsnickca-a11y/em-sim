@@ -960,6 +960,467 @@ async function renderAarPdfV8(filename, rawText) {
 }
 
 
+
+function parseTranscriptForPdf(rawText = '') {
+  const safe = pdfSafe(rawText)
+    .split('\n')
+    .filter(line => !/^[=\-]{8,}$/.test(line.trim()))
+    .filter(line => !/^NEXUS EOC\s*-\s*nexuseoc\.com\s*$/i.test(line.trim()))
+    .join('\n')
+
+  const meta = {}
+  const lines = safe.split('\n')
+  for (const line of lines) {
+    if (line.trim().toUpperCase() === 'OPENING BASELINE') break
+    const m = line.trim().match(/^([A-Z][A-Z0-9 /_-]{1,34}):\s*(.*)$/)
+    if (m) meta[m[1].trim().toUpperCase()] = m[2].trim()
+  }
+
+  const entries = []
+  let current = null
+  const push = () => {
+    if (current && current.lines.some(line => line.trim())) entries.push(current)
+  }
+
+  lines.forEach(line => {
+    const trimmed = line.trim()
+    if (trimmed === 'OPENING BASELINE') {
+      push()
+      current = { kind:'opening', title:'Opening Baseline', lines:[] }
+      return
+    }
+    if (/^TURN\s+\d+/i.test(trimmed)) {
+      push()
+      current = { kind:'turn', title:trimmed.replace(/endex/i, 'ENDEX'), lines:[] }
+      return
+    }
+    if (trimmed === 'FINAL COMMUNITY LIFELINES') {
+      push()
+      current = { kind:'lifelines', title:'Final Community Lifelines', lines:[] }
+      return
+    }
+    if (trimmed === 'AFTER-ACTION REVIEW SUMMARY') {
+      push()
+      current = { kind:'aar', title:'After-Action Review Summary', lines:[] }
+      return
+    }
+    if (current) current.lines.push(line)
+  })
+  push()
+
+  const subheads = new Set([
+    'SIM TIME', 'LOCATION', 'NARRATIVE', 'INITIAL DISPATCHES', 'INITIAL MAP PINS',
+    'STATUS', 'DIRECTOR INPUT', 'NEXUS RESPONSE', 'NEXT PROMPT', 'NEW DISPATCHES',
+    'MEDIA HEADLINES', 'NEW MAP PINS', 'COMMUNITY LIFELINES',
+    'SITUATION SUMMARY', 'DECISION LOG REVIEW', 'RESOURCE & COORDINATION EFFECTIVENESS',
+    'COMMUNICATIONS & INFORMATION MGMT', 'STRENGTHS', 'CRITICAL GAPS',
+    'DOCTRINE REFERENCES', 'RECOMMENDATIONS'
+  ])
+
+  const prettyLabel = label => label
+    .toLowerCase()
+    .replace(/\b\w/g, ch => ch.toUpperCase())
+    .replace('Nexus', 'NEXUS')
+    .replace('Mgmt', 'Management')
+
+  const parseSubs = entry => {
+    const subs = []
+    let curLabel = 'Timing / Status'
+    let curLines = []
+    const flush = () => {
+      const body = curLines.join('\n').trim()
+      if (body) subs.push({ label:curLabel, body })
+      curLines = []
+    }
+    entry.lines.forEach(line => {
+      const upper = line.trim().toUpperCase()
+      if (subheads.has(upper)) {
+        flush()
+        curLabel = prettyLabel(upper)
+      } else {
+        curLines.push(line)
+      }
+    })
+    flush()
+    return subs
+  }
+
+  return {
+    meta,
+    entries: entries.map(entry => ({ ...entry, subs: parseSubs(entry) }))
+  }
+}
+
+async function renderTranscriptPdfV5(filename, rawText) {
+  const { meta, entries } = parseTranscriptForPdf(rawText)
+  const scenarioName = meta.SCENARIO || 'Scenario'
+  const generated = meta.GENERATED || new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
+  const participant = meta.COMMANDER || meta.PARTICIPANT || meta.NAME || 'Not provided'
+  const scenarioImage = await loadJpegForPdf(getAarScenarioImageUrl(scenarioName))
+
+  const W = 792
+  const H = 612
+  const contentX = 24
+  const contentW = W - 48
+  const top = H - 22
+  const colors = {
+    navy:[2/255, 11/255, 19/255],
+    navy2:[6/255, 20/255, 33/255],
+    header:'#061522',
+    panel:'#081827',
+    panel2:'#0B1D2E',
+    panel3:'#0A1825',
+    border:'#24445F',
+    border2:'#315B78',
+    teal:'#2DE2B8',
+    cyan:'#45A3FF',
+    blue:'#2E83FF',
+    green:'#22C55E',
+    red:'#EF4444',
+    amber:'#F59B22',
+    purple:'#A855F7',
+    text:'#F4F8FE',
+    muted:'#B9C8D8',
+    dim:'#6F8195',
+  }
+
+  const hexToRgb = hex => {
+    const clean = hex.replace('#', '')
+    return [
+      parseInt(clean.slice(0,2), 16) / 255,
+      parseInt(clean.slice(2,4), 16) / 255,
+      parseInt(clean.slice(4,6), 16) / 255,
+    ]
+  }
+  const rg = hex => hexToRgb(hex).map(v => v.toFixed(3)).join(' ')
+  const opsPages = []
+  let ops = []
+  const add = op => ops.push(op)
+  const fill = hex => add(`${rg(hex)} rg`)
+  const stroke = hex => add(`${rg(hex)} RG`)
+  const rect = (x, y, w, h, color, mode = 'f') => {
+    fill(color)
+    add(`${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re ${mode}`)
+  }
+  const rectStroke = (x, y, w, h, color, lw = 0.6) => {
+    stroke(color)
+    add(`${lw} w ${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re S`)
+  }
+  const line = (x1, y1, x2, y2, color, lw = 0.8) => {
+    stroke(color)
+    add(`${lw} w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S`)
+  }
+  const textAt = (value, x, y, size = 8, font = 'F1', color = colors.text) => {
+    fill(color)
+    add(`BT /${font} ${size} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td (${escapePdf(pdfSafe(value))}) Tj ET`)
+  }
+  const wrap = (value, size, maxW, fontFactor = 0.50) => {
+    const words = pdfSafe(value).replace(/\s+/g, ' ').trim().split(' ').filter(Boolean)
+    const maxChars = Math.max(12, Math.floor(maxW / (size * fontFactor)))
+    const lines = []
+    let cur = ''
+    words.forEach(word => {
+      const next = `${cur} ${word}`.trim()
+      if (next.length > maxChars) {
+        if (cur) lines.push(cur)
+        cur = word
+      } else {
+        cur = next
+      }
+    })
+    if (cur) lines.push(cur)
+    return lines
+  }
+  const textLines = (value, maxW, size = 7.25, font = 'F1') => {
+    let lines = []
+    String(value || '').split(/\n\s*\n/).forEach(part => {
+      if (part.trim()) {
+        lines.push(...wrap(part, size, maxW, font === 'F3' ? 0.60 : 0.50))
+        lines.push('')
+      }
+    })
+    if (lines.length && lines[lines.length - 1] === '') lines.pop()
+    return lines
+  }
+  const drawPara = (value, x, y, maxW, size = 7.25, leading = 8.65, color = colors.text, font = 'F1', maxLines = null) => {
+    let lines = textLines(value, maxW, size, font)
+    if (maxLines && lines.length > maxLines) {
+      lines = lines.slice(0, maxLines)
+      lines[lines.length - 1] = `${lines[lines.length - 1].replace(/\.*$/, '')}...`
+    }
+    lines.forEach(lineText => {
+      if (!lineText) y -= leading * 0.45
+      else {
+        textAt(lineText, x, y, size, font, color)
+        y -= leading
+      }
+    })
+    return y
+  }
+
+  function drawBackground() {
+    const steps = 90
+    for (let i = 0; i < steps; i++) {
+      const t = i / (steps - 1)
+      const r = colors.navy[0] * (1 - t) + colors.navy2[0] * t
+      const g = colors.navy[1] * (1 - t) + colors.navy2[1] * t
+      const b = colors.navy[2] * (1 - t) + colors.navy2[2] * t
+      add(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg`)
+      add(`0 ${(H * (i / steps)).toFixed(2)} ${W} ${(H / steps + 1).toFixed(2)} re f`)
+    }
+  }
+  function drawHeader() {
+    const h = 34
+    rect(contentX, top - h, contentW, h, colors.header)
+    rectStroke(contentX, top - h, contentW, h, colors.border, 0.7)
+    rect(contentX, top - h - 3, contentW, 3, colors.teal)
+    textAt('NEXUS', contentX + 14, top - 27, 23, 'F2', colors.text)
+    textAt('EOC', contentX + 104, top - 27, 23, 'F2', colors.teal)
+    textAt('Exercise Transcript', contentX + contentW / 2 - 72, top - 25, 16, 'F2', colors.text)
+    textAt(`Generated ${generated}`, contentX + contentW - 136, top - 24, 6.8, 'F2', colors.dim)
+  }
+  function drawFooter(pageNo) {
+    line(24, 24, W - 24, 24, colors.border, 0.5)
+    textAt('NEXUS EOC', 24, 11, 7, 'F2', colors.dim)
+    textAt('Exercise Transcript', 88, 11, 7, 'F1', colors.dim)
+    textAt(`Page ${pageNo}`, W - 55, 11, 7, 'F1', colors.dim)
+  }
+  function drawSetupBox(x, yTop, w, h, label, value) {
+    rect(x, yTop - h, w, h, colors.panel3)
+    rectStroke(x, yTop - h, w, h, colors.border2, 0.5)
+    textAt(label.toUpperCase(), x + 8, yTop - 11, 6.8, 'F2', colors.teal)
+    drawPara(value, x + 8, yTop - 23, w - 16, 6.9, 7.8, colors.text, 'F1', 3)
+  }
+  function drawTranscriptPurpose(x, yTop, w, h) {
+    rect(x, yTop - h, w, h, colors.panel3)
+    rectStroke(x, yTop - h, w, h, colors.border2, 0.5)
+    textAt('TRANSCRIPT PURPOSE', x + 8, yTop - 11, 6.8, 'F2', colors.teal)
+    drawPara('Chronological record of player inputs, NEXUS responses, prompts, dispatches, media updates, map pins, and lifeline status changes.', x + 8, yTop - 23, w - 16, 6.55, 7.2, colors.text, 'F1', 4)
+  }
+  function drawScenarioImage(x, yTop, imgW, imgH) {
+    rect(x, yTop - imgH - 18, imgW, imgH + 18, colors.panel2)
+    if (scenarioImage) {
+      add('q')
+      add(`${imgW.toFixed(2)} 0 0 ${imgH.toFixed(2)} ${x.toFixed(2)} ${(yTop - imgH).toFixed(2)} cm /Im1 Do`)
+      add('Q')
+    }
+    rectStroke(x, yTop - imgH - 18, imgW, imgH + 18, colors.border, 0.5)
+    textAt(scenarioName, x + 8, yTop - imgH - 12, 8.5, 'F2', colors.amber)
+  }
+  function drawHero(yTop) {
+    const heroH = 172
+    const imgW = 174
+    const imgH = imgW / (16 / 9)
+    const imgFrameH = imgH + 18
+    drawScenarioImage(contentX, yTop, imgW, imgH)
+    drawTranscriptPurpose(contentX, yTop - imgFrameH - 6, imgW, heroH - imgFrameH - 6)
+
+    const rightX = contentX + imgW + 12
+    const rightW = contentW - imgW - 12
+    const gap = 6
+    const boxH = (heroH - 3 * gap) / 4
+    ;[
+      ['Scenario', scenarioDescriptionForPdf(scenarioName)],
+      ['Jurisdiction', jurisdictionDescriptionForPdf(meta.JURISDICTION)],
+      ['Role / Position', roleDescriptionForPdf(meta.ROLE)],
+      ['Difficulty', difficultyDescriptionForPdf(meta.DIFFICULTY)],
+    ].forEach(([label, value], idx) => drawSetupBox(rightX, yTop - idx * (boxH + gap), rightW, boxH, label, value))
+    return yTop - heroH
+  }
+  function drawMetaStrip(x, yTop, w, h, pairs) {
+    rect(x, yTop - h, w, h, colors.panel2)
+    rectStroke(x, yTop - h, w, h, colors.border, 0.5)
+    const cellW = w / pairs.length
+    pairs.forEach(([label, value], i) => {
+      const cx = x + i * cellW
+      if (i) line(cx, yTop - h + 5, cx, yTop - 5, colors.border, 0.45)
+      textAt(label.toUpperCase(), cx + 5, yTop - 12, 5.7, 'F2', colors.dim)
+      drawPara(value || 'Not captured', cx + 5, yTop - 25, cellW - 10, 6.85, 7.8, colors.text, 'F2', 2)
+    })
+  }
+
+  const labelColor = (label, kind) => {
+    const l = String(label || '').toLowerCase()
+    if (l.includes('director input')) return colors.dim
+    if (l.includes('nexus response')) return colors.cyan
+    if (l.includes('prompt')) return colors.teal
+    if (l.includes('dispatch')) return colors.amber
+    if (l.includes('media')) return colors.blue
+    if (l.includes('map')) return colors.purple
+    if (l.includes('lifeline')) return colors.teal
+    if (l.includes('critical')) return colors.red
+    if (l.includes('strength')) return colors.green
+    if (l.includes('recommend')) return colors.amber
+    if (l.includes('narrative')) return colors.cyan
+    return kind === 'turn' ? colors.cyan : colors.teal
+  }
+  const entryAccent = kind => kind === 'opening' || kind === 'lifelines' ? colors.teal : kind === 'turn' ? colors.cyan : colors.amber
+  const sectionItems = (label, body) => {
+    const isDirector = String(label || '').toLowerCase() === 'director input'
+    const size = isDirector ? 6.95 : 7.25
+    const leading = isDirector ? 8.2 : 8.65
+    const font = isDirector ? 'F3' : 'F1'
+    return { label, size, leading, font, lines:textLines(body, contentW - 36, size, font) }
+  }
+  const statusLine = entry => {
+    const found = entry.subs.find(s => String(s.label).toLowerCase() === 'timing / status')
+    return found ? pdfSafe(found.body).replace(/\s+/g, ' ').slice(0, 120) : ''
+  }
+
+  const startPage = () => {
+    ops = []
+    drawBackground()
+    drawHeader()
+  }
+  const finishPage = pageNo => {
+    drawFooter(pageNo)
+    opsPages.push(ops)
+  }
+
+  let pageNo = 1
+  startPage()
+  let y = top - 44
+  y = drawHero(y)
+  y -= 8
+  drawMetaStrip(contentX, y, contentW, 34, [
+    ['Participant', participant],
+    ['Scenario', scenarioName],
+    ['Jurisdiction', meta.JURISDICTION || 'Unspecified'],
+    ['Role', meta.ROLE || 'EOC Director'],
+    ['Difficulty', meta.DIFFICULTY || 'Unspecified'],
+    ['Location', meta.LOCATION || 'Unspecified'],
+    ['Session', meta['FINAL TIME'] || 'N/A'],
+    ['Turns', meta.TURNS || 'N/A'],
+  ])
+  y -= 46
+
+  const minY = 42
+  const pageTopY = H - 72
+  const newPage = () => {
+    finishPage(pageNo)
+    pageNo += 1
+    startPage()
+    y = pageTopY
+  }
+
+  entries.forEach(entry => {
+    const accent = entryAccent(entry.kind)
+    const sections = entry.subs.map(sub => sectionItems(sub.label, sub.body))
+    let sectionIndex = 0
+    let continued = false
+    while (sectionIndex < sections.length) {
+      if (y < minY + 88) newPage()
+      const segmentTop = y
+      let cursor = y - 12
+      const titleH = 22
+      cursor -= titleH
+      const included = []
+      while (sectionIndex < sections.length) {
+        const sec = sections[sectionIndex]
+        const headingH = 13.5
+        if (cursor - headingH - sec.leading < minY) break
+        if (!sec.remaining) sec.remaining = [...sec.lines]
+        cursor -= headingH
+        const drawnLines = []
+        while (sec.remaining.length && cursor - sec.leading >= minY) {
+          drawnLines.push(sec.remaining.shift())
+          cursor -= sec.leading
+        }
+        included.push({ ...sec, drawnLines })
+        cursor -= 5.5
+        if (!sec.remaining.length) sectionIndex += 1
+        else break
+      }
+      if (!included.length) {
+        newPage()
+        continue
+      }
+      const segmentBottom = cursor - 7
+      const h = segmentTop - segmentBottom
+      rect(contentX, segmentBottom, contentW, h, entry.kind === 'aar' ? colors.panel2 : colors.panel)
+      rectStroke(contentX, segmentBottom, contentW, h, accent, 0.9)
+      rect(contentX, segmentBottom, 3, h, accent)
+      textAt(`${entry.title}${continued ? ' (continued)' : ''}`.toUpperCase(), contentX + 14, segmentTop - 19, 12.2, 'F2', accent)
+      const status = statusLine(entry)
+      if (status && !continued) textAt(status.slice(0, 105), contentX + contentW - 365, segmentTop - 18, 6.8, 'F2', colors.dim)
+      let drawY = segmentTop - 37
+      included.forEach(sec => {
+        textAt(sec.label.toUpperCase(), contentX + 18, drawY, 7.4, 'F2', labelColor(sec.label, entry.kind))
+        drawY -= 9.5
+        sec.drawnLines.forEach(lineText => {
+          if (!lineText) drawY -= sec.leading * 0.45
+          else {
+            textAt(lineText, contentX + 18, drawY, sec.size, sec.font, colors.text)
+            drawY -= sec.leading
+          }
+        })
+        drawY -= 5.5
+      })
+      y = segmentBottom - 8
+      continued = true
+      if (sectionIndex < sections.length) newPage()
+    }
+  })
+  finishPage(pageNo)
+
+  const objects = []
+  const addObj = value => { objects.push(value); return objects.length }
+  const font1 = addObj(encodePdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'))
+  const font2 = addObj(encodePdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>'))
+  const font3 = addObj(encodePdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>'))
+  let imageObj = null
+  if (scenarioImage) {
+    const header = encodePdfAscii(`<< /Type /XObject /Subtype /Image /Width ${scenarioImage.width} /Height ${scenarioImage.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${scenarioImage.bytes.length} >>\nstream\n`)
+    const footer = encodePdfAscii('\nendstream')
+    imageObj = addObj(concatPdfChunks([header, scenarioImage.bytes, footer]))
+  }
+
+  const pageObjs = []
+  opsPages.forEach(pageOps => {
+    const stream = pageOps.join('\n')
+    const contentObj = addObj(encodePdfAscii(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`))
+    const xobjects = imageObj ? `/XObject << /Im1 ${imageObj} 0 R >>` : ''
+    const pageObj = addObj(encodePdfAscii(`<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 ${font1} 0 R /F2 ${font2} 0 R /F3 ${font3} 0 R >> ${xobjects} >> /Contents ${contentObj} 0 R >>`))
+    pageObjs.push(pageObj)
+  })
+
+  const pagesObj = addObj(encodePdfAscii(`<< /Type /Pages /Kids [${pageObjs.map(n => `${n} 0 R`).join(' ')}] /Count ${pageObjs.length} >>`))
+  pageObjs.forEach(n => {
+    const oldText = new TextDecoder().decode(objects[n - 1])
+    objects[n - 1] = encodePdfAscii(oldText.replace('/Parent 0 0 R', `/Parent ${pagesObj} 0 R`))
+  })
+  const catalogObj = addObj(encodePdfAscii(`<< /Type /Catalog /Pages ${pagesObj} 0 R >>`))
+
+  const chunks = []
+  let offset = 0
+  const pushChunk = chunk => {
+    chunks.push(chunk)
+    offset += chunk.length
+  }
+  pushChunk(encodePdfAscii('%PDF-1.4\n'))
+  const offsets = [0]
+  objects.forEach((obj, idx) => {
+    offsets.push(offset)
+    pushChunk(encodePdfAscii(`${idx + 1} 0 obj\n`))
+    pushChunk(obj)
+    pushChunk(encodePdfAscii('\nendobj\n'))
+  })
+  const xref = offset
+  pushChunk(encodePdfAscii(`xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`))
+  for (let i = 1; i < offsets.length; i++) pushChunk(encodePdfAscii(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`))
+  pushChunk(encodePdfAscii(`trailer\n<< /Size ${objects.length + 1} /Root ${catalogObj} 0 R >>\nstartxref\n${xref}\n%%EOF`))
+
+  const pdfBytes = concatPdfChunks(chunks)
+  const blob = new Blob([pdfBytes], { type:'application/pdf' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename.endsWith('.pdf') ? filename : filename.replace(/\.txt$/i, '.pdf')
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+
 function downloadPlainPdfTextFile(filename, text) {
   text = cleanPdfText(text)
   const pageW = 612
@@ -1020,7 +1481,12 @@ function downloadPlainPdfTextFile(filename, text) {
 async function downloadPdfTextFile(filename, text) {
   const cleaned = cleanPdfText(text)
   if (/transcript/i.test(filename) || /EXERCISE TRANSCRIPT/i.test(cleaned)) {
-    downloadPlainPdfTextFile(filename, cleaned)
+    try {
+      await renderTranscriptPdfV5(filename, cleaned)
+    } catch (err) {
+      console.error('Transcript PDF render failed; using plain fallback.', err)
+      downloadPlainPdfTextFile(filename, cleaned)
+    }
     return
   }
   try {
