@@ -411,7 +411,556 @@ function wrapPdfLine(line, maxChars = 92) {
   return lines.length ? lines : ['']
 }
 
-function downloadPdfTextFile(filename, text) {
+
+const AAR_SCENARIO_IMAGE_URLS = {
+  'hurricane landfall': new URL('./assets/missionPortal/hurricane-landfall.jpg', import.meta.url).href,
+  'mass casualty incident': new URL('./assets/missionPortal/mass-casualty-incident.jpg', import.meta.url).href,
+  'hazardous materials release': new URL('./assets/missionPortal/hazardous-materials-release.jpg', import.meta.url).href,
+  'cyber-infrastructure cascade': new URL('./assets/missionPortal/cyber-infrastructure-cascade.jpg', import.meta.url).href,
+  'major earthquake': new URL('./assets/missionPortal/major-earthquake.jpg', import.meta.url).href,
+  'flash flood / dam failure': new URL('./assets/missionPortal/flash-flood-dam-failure.jpg', import.meta.url).href,
+  'urban wildfire': new URL('./assets/missionPortal/urban-wildfire.jpg', import.meta.url).href,
+  'winter storm cascade': new URL('./assets/missionPortal/winter-storm-cascade.jpg', import.meta.url).href,
+  'radiological dispersal device': new URL('./assets/missionPortal/radiological-dispersal-device.jpg', import.meta.url).href,
+  'train derailment - mci / hazmat': new URL('./assets/missionPortal/train-derailment-mci-hazmat.jpg', import.meta.url).href,
+}
+
+function pdfSafe(value = '') {
+  return cleanPdfText(value)
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '')
+    .replace(/\s+\n/g, '\n')
+}
+
+function parseAarForPdf(rawText = '') {
+  const safe = pdfSafe(rawText)
+  const headings = [
+    'SITUATION SUMMARY',
+    'DECISION LOG REVIEW',
+    'RESOURCE & COORDINATION EFFECTIVENESS',
+    'COMMUNICATIONS & INFORMATION MANAGEMENT',
+    'DOCTRINE / REFERENCE NOTES',
+    'STRENGTHS',
+    'CRITICAL GAPS',
+    'RECOMMENDATIONS',
+  ]
+  const headingSet = new Set(headings)
+  const meta = {}
+  const sections = {}
+  let current = '_meta'
+  sections[current] = []
+
+  safe.split('\n')
+    .filter(line => !/^[=\-]{8,}$/.test(line.trim()))
+    .forEach(line => {
+      const trimmed = line.trim()
+      const upper = trimmed.toUpperCase()
+      if (headingSet.has(upper)) {
+        current = upper
+        sections[current] = []
+        return
+      }
+      if (current === '_meta') {
+        const m = trimmed.match(/^([A-Z][A-Z0-9 /_-]{1,34}):\s*(.*)$/)
+        if (m) meta[m[1].trim()] = m[2].trim()
+      }
+      sections[current].push(line)
+    })
+
+  Object.keys(sections).forEach(key => {
+    sections[key] = sections[key]
+      .join('\n')
+      .replace(/\n?NEXUS EOC\s*-\s*nexuseoc\.com\s*$/i, '')
+      .trim()
+  })
+
+  return { meta, sections }
+}
+
+function normalizePdfScenarioName(name = '') {
+  return String(name || '')
+    .toLowerCase()
+    .replace(/[—–]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function getAarScenarioImageUrl(scenarioName = '') {
+  const normalized = normalizePdfScenarioName(scenarioName)
+  if (AAR_SCENARIO_IMAGE_URLS[normalized]) return AAR_SCENARIO_IMAGE_URLS[normalized]
+  if (normalized.includes('wildfire')) return AAR_SCENARIO_IMAGE_URLS['urban wildfire']
+  if (normalized.includes('hurricane')) return AAR_SCENARIO_IMAGE_URLS['hurricane landfall']
+  if (normalized.includes('mass casualty')) return AAR_SCENARIO_IMAGE_URLS['mass casualty incident']
+  if (normalized.includes('hazard')) return AAR_SCENARIO_IMAGE_URLS['hazardous materials release']
+  if (normalized.includes('cyber')) return AAR_SCENARIO_IMAGE_URLS['cyber-infrastructure cascade']
+  if (normalized.includes('earthquake')) return AAR_SCENARIO_IMAGE_URLS['major earthquake']
+  if (normalized.includes('flood') || normalized.includes('dam')) return AAR_SCENARIO_IMAGE_URLS['flash flood / dam failure']
+  if (normalized.includes('winter')) return AAR_SCENARIO_IMAGE_URLS['winter storm cascade']
+  if (normalized.includes('radiological')) return AAR_SCENARIO_IMAGE_URLS['radiological dispersal device']
+  if (normalized.includes('train')) return AAR_SCENARIO_IMAGE_URLS['train derailment - mci / hazmat']
+  return null
+}
+
+function findScenarioForPdf(scenarioName = '') {
+  const needle = normalizePdfScenarioName(scenarioName)
+  return Object.entries(SCENARIOS || {}).find(([, value]) => normalizePdfScenarioName(value?.name || value?.title || '') === needle)?.[1]
+    || Object.values(SCENARIOS || {}).find(value => normalizePdfScenarioName(value?.name || value?.title || '').includes(needle) || needle.includes(normalizePdfScenarioName(value?.name || value?.title || '')))
+    || null
+}
+
+function firstTextField(obj, keys = []) {
+  if (!obj || typeof obj !== 'object') return ''
+  for (const key of keys) {
+    if (typeof obj[key] === 'string' && obj[key].trim()) return obj[key].trim()
+  }
+  return ''
+}
+
+function roleDescriptionForPdf(roleName = '') {
+  const role = Object.values(ROLES || {}).find(r => normalizePdfScenarioName(r?.name || r?.label || r?.title || '') === normalizePdfScenarioName(roleName))
+  return firstTextField(role, ['description', 'summary', 'focus', 'function'])
+    || 'Senior emergency management coordinator responsible for cross-ESF coordination, resource prioritization, policy support, and strategic decision-making.'
+}
+
+function difficultyDescriptionForPdf(difficultyName = '') {
+  const d = Object.values(DIFFICULTIES || {}).find(item => normalizePdfScenarioName(item?.name || item?.label || item?.title || '') === normalizePdfScenarioName(difficultyName))
+  const desc = firstTextField(d, ['description', 'summary', 'profile'])
+  return desc || `${difficultyName || 'Selected'} exercise pressure with realistic incident consequences and decision trade-offs.`
+}
+
+function jurisdictionDescriptionForPdf(jurisdictionName = '') {
+  const context = JURISDICTION_CONTEXT?.[jurisdictionName]
+    || Object.entries(JURISDICTION_CONTEXT || {}).find(([key]) => normalizePdfScenarioName(key) === normalizePdfScenarioName(jurisdictionName))?.[1]
+  return firstTextField(context, ['description', 'summary', 'context'])
+    || (typeof context === 'string' ? context : '')
+    || `${jurisdictionName || 'Selected jurisdiction'} operating environment with local capabilities, constraints, mutual aid considerations, and jurisdiction-specific incident impacts.`
+}
+
+function scenarioDescriptionForPdf(scenarioName = '') {
+  const scenario = findScenarioForPdf(scenarioName)
+  return firstTextField(scenario, ['description', 'summary', 'shortDescription', 'subtitle'])
+    || `${scenarioName || 'Selected scenario'} emergency operations exercise with realistic incident pressure, resource trade-offs, and cross-functional coordination requirements.`
+}
+
+function escapePdf(value = '') {
+  return String(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)')
+}
+
+function encodePdfAscii(value = '') {
+  return new TextEncoder().encode(value)
+}
+
+function concatPdfChunks(chunks) {
+  const total = chunks.reduce((sum, chunk) => sum + chunk.length, 0)
+  const out = new Uint8Array(total)
+  let offset = 0
+  chunks.forEach(chunk => {
+    out.set(chunk, offset)
+    offset += chunk.length
+  })
+  return out
+}
+
+function parseJpegSize(bytes) {
+  let offset = 2
+  while (offset < bytes.length) {
+    if (bytes[offset] !== 0xFF) break
+    const marker = bytes[offset + 1]
+    const length = (bytes[offset + 2] << 8) + bytes[offset + 3]
+    if (marker >= 0xC0 && marker <= 0xC3) {
+      return {
+        height: (bytes[offset + 5] << 8) + bytes[offset + 6],
+        width: (bytes[offset + 7] << 8) + bytes[offset + 8],
+      }
+    }
+    offset += 2 + length
+  }
+  return { width: 960, height: 540 }
+}
+
+async function loadJpegForPdf(url) {
+  if (!url) return null
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const bytes = new Uint8Array(await res.arrayBuffer())
+    const size = parseJpegSize(bytes)
+    return { bytes, ...size }
+  } catch {
+    return null
+  }
+}
+
+async function renderAarPdfV8(filename, rawText) {
+  const { meta, sections } = parseAarForPdf(rawText)
+  const scenarioName = meta.SCENARIO || 'Scenario'
+  const generated = meta.GENERATED || new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
+  const participant = meta.COMMANDER || meta.PARTICIPANT || meta.NAME || 'Not provided'
+  const scenarioImage = await loadJpegForPdf(getAarScenarioImageUrl(scenarioName))
+
+  const W = 792
+  const H = 612
+  const contentX = 24
+  const contentW = W - 48
+  const top = H - 22
+  const colors = {
+    navy:[2/255, 11/255, 19/255],
+    navy2:[6/255, 20/255, 33/255],
+    header:'#061522',
+    panel:'#081827',
+    panel2:'#0B1D2E',
+    panel3:'#0A1825',
+    border:'#24445F',
+    border2:'#315B78',
+    teal:'#2DE2B8',
+    cyan:'#45A3FF',
+    blue:'#2E83FF',
+    green:'#22C55E',
+    red:'#EF4444',
+    amber:'#F59B22',
+    purple:'#A855F7',
+    text:'#F4F8FE',
+    muted:'#B9C8D8',
+    dim:'#6F8195',
+  }
+
+  const hexToRgb = hex => {
+    const clean = hex.replace('#', '')
+    return [
+      parseInt(clean.slice(0,2), 16) / 255,
+      parseInt(clean.slice(2,4), 16) / 255,
+      parseInt(clean.slice(4,6), 16) / 255,
+    ]
+  }
+  const rg = hex => hexToRgb(hex).map(v => v.toFixed(3)).join(' ')
+  const opsPages = []
+  let ops = []
+  const add = op => ops.push(op)
+  const fill = hex => add(`${rg(hex)} rg`)
+  const stroke = hex => add(`${rg(hex)} RG`)
+  const textAt = (value, x, y, size = 8, font = 'F1', color = colors.text) => {
+    fill(color)
+    add(`BT /${font} ${size} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td (${escapePdf(pdfSafe(value))}) Tj ET`)
+  }
+  const rect = (x, y, w, h, color, mode = 'f') => {
+    fill(color)
+    add(`${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re ${mode}`)
+  }
+  const rectStroke = (x, y, w, h, color, lw = 0.6) => {
+    stroke(color)
+    add(`${lw} w ${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re S`)
+  }
+  const line = (x1, y1, x2, y2, color, lw = 0.8) => {
+    stroke(color)
+    add(`${lw} w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S`)
+  }
+  const circle = (cx, cy, r, color, filled = false) => {
+    const k = 0.5522847498
+    filled ? fill(color) : stroke(color)
+    add(`${(cx+r).toFixed(2)} ${cy.toFixed(2)} m ${(cx+r).toFixed(2)} ${(cy+k*r).toFixed(2)} ${(cx+k*r).toFixed(2)} ${(cy+r).toFixed(2)} ${cx.toFixed(2)} ${(cy+r).toFixed(2)} c ${(cx-k*r).toFixed(2)} ${(cy+r).toFixed(2)} ${(cx-r).toFixed(2)} ${(cy+k*r).toFixed(2)} ${(cx-r).toFixed(2)} ${cy.toFixed(2)} c ${(cx-r).toFixed(2)} ${(cy-k*r).toFixed(2)} ${(cx-k*r).toFixed(2)} ${(cy-r).toFixed(2)} ${cx.toFixed(2)} ${(cy-r).toFixed(2)} c ${(cx+k*r).toFixed(2)} ${(cy-r).toFixed(2)} ${(cx+r).toFixed(2)} ${(cy-k*r).toFixed(2)} ${(cx+r).toFixed(2)} ${cy.toFixed(2)} c ${filled ? 'f' : 'S'}`)
+  }
+  const roundedRect = (x, y, w, h, color, filled = true, lw = 0.8) => {
+    filled ? fill(color) : stroke(color)
+    add(`${lw} w ${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re ${filled ? 'f' : 'S'}`)
+  }
+
+  const wrap = (value, size, maxW, fontFactor = 0.50) => {
+    const words = pdfSafe(value).replace(/\s+/g, ' ').trim().split(' ').filter(Boolean)
+    const maxChars = Math.max(12, Math.floor(maxW / (size * fontFactor)))
+    const lines = []
+    let cur = ''
+    words.forEach(word => {
+      const next = `${cur} ${word}`.trim()
+      if (next.length > maxChars) {
+        if (cur) lines.push(cur)
+        cur = word
+      } else cur = next
+    })
+    if (cur) lines.push(cur)
+    return lines
+  }
+  const paraHeight = (value, maxW, size, leading) => {
+    let lines = 0
+    String(value || '').split(/\n\s*\n/).forEach(part => {
+      if (part.trim()) lines += wrap(part, size, maxW).length + 1
+    })
+    return Math.max(0, lines - 1) * leading
+  }
+  const drawPara = (value, x, y, maxW, size = 8, leading = 9.8, color = colors.text, font = 'F1', maxLines = null) => {
+    let lines = []
+    String(value || '').split(/\n\s*\n/).forEach(part => {
+      if (part.trim()) {
+        lines.push(...wrap(part, size, maxW))
+        lines.push('')
+      }
+    })
+    if (lines.length && lines[lines.length - 1] === '') lines.pop()
+    if (maxLines && lines.length > maxLines) {
+      lines = lines.slice(0, maxLines)
+      lines[lines.length - 1] = `${lines[lines.length - 1].replace(/\.*$/, '')}...`
+    }
+    lines.forEach(lineText => {
+      if (!lineText) y -= leading * 0.5
+      else {
+        textAt(lineText, x, y, size, font, color)
+        y -= leading
+      }
+    })
+    return y
+  }
+
+  function drawBackground() {
+    const steps = 90
+    for (let i = 0; i < steps; i++) {
+      const t = i / (steps - 1)
+      const r = colors.navy[0] * (1 - t) + colors.navy2[0] * t
+      const g = colors.navy[1] * (1 - t) + colors.navy2[1] * t
+      const b = colors.navy[2] * (1 - t) + colors.navy2[2] * t
+      add(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg`)
+      add(`0 ${(H * (i / steps)).toFixed(2)} ${W} ${(H / steps + 1).toFixed(2)} re f`)
+    }
+  }
+
+  function drawHeader() {
+    const h = 34
+    rect(contentX, top - h, contentW, h, colors.header)
+    rectStroke(contentX, top - h, contentW, h, colors.border, 0.7)
+    rect(contentX, top - h - 3, contentW, 3, colors.teal)
+    textAt('NEXUS', contentX + 14, top - 27, 23, 'F2', colors.text)
+    textAt('EOC', contentX + 104, top - 27, 23, 'F2', colors.teal)
+    textAt('After-Action Review', contentX + contentW / 2 - 72, top - 25, 16, 'F2', colors.text)
+    textAt(`Generated ${generated}`, contentX + contentW - 110, top - 24, 6.8, 'F2', colors.dim)
+  }
+
+  function drawFooter(pageNo) {
+    line(24, 24, W - 24, 24, colors.border, 0.5)
+    textAt('NEXUS EOC', 24, 11, 7, 'F2', colors.dim)
+    textAt('After-Action Review', 88, 11, 7, 'F1', colors.dim)
+    textAt(`Page ${pageNo}`, W - 55, 11, 7, 'F1', colors.dim)
+  }
+
+  function drawIcon(icon, x, y, size, accent) {
+    rectStroke(x, y, size, size, accent, 0.8)
+    const cx = x + size / 2
+    const cy = y + size / 2
+    stroke(accent)
+    fill(accent)
+    add(`0.95 w`)
+    if (icon === 'pin') {
+      circle(cx, cy + 2, 3.6, accent)
+      line(cx, cy - 1.6, cx, y + 5.5, accent, 0.95)
+      circle(cx, cy + 2, 1.0, accent, true)
+    } else if (icon === 'clipboard') {
+      rectStroke(x + 7, y + 6, size - 14, size - 12, accent, 0.95)
+      rectStroke(cx - 5, y + size - 9, 10, 5, accent, 0.95)
+      line(x + 10, cy + 2, x + size - 10, cy + 2, accent, 0.95)
+      line(x + 10, cy - 3, x + size - 10, cy - 3, accent, 0.95)
+    } else if (icon === 'chain') {
+      rectStroke(x + 6, cy - 3, 10, 10, accent, 0.95)
+      rectStroke(x + size - 16, cy - 7, 10, 10, accent, 0.95)
+      line(cx - 4, cy + 2, cx + 4, cy - 2, accent, 0.95)
+    } else if (icon === 'comms') {
+      const mastTop = y + size - 7
+      const mastBase = y + 6
+      line(cx, mastBase, cx, mastTop, accent, 0.95)
+      line(cx, mastTop, x + 7, mastBase, accent, 0.95)
+      line(cx, mastTop, x + size - 7, mastBase, accent, 0.95)
+      line(cx - 4, mastBase + 5, cx + 4, mastBase + 5, accent, 0.95)
+      line(x + 6, y + size - 5, x + 10, y + size - 9, accent, 0.95)
+      line(x + size - 6, y + size - 5, x + size - 10, y + size - 9, accent, 0.95)
+      line(x + 8, y + size - 2, x + 13, y + size - 7, accent, 0.95)
+      line(x + size - 8, y + size - 2, x + size - 13, y + size - 7, accent, 0.95)
+      circle(cx, mastTop, 1.1, accent, true)
+    } else if (icon === 'book') {
+      rectStroke(x + 7, y + 7, size / 2 - 7, size - 14, accent, 0.95)
+      rectStroke(cx, y + 7, size / 2 - 7, size - 14, accent, 0.95)
+      line(cx, y + 7, cx, y + size - 7, accent, 0.95)
+    } else if (icon === 'check') {
+      line(x + 8, cy, cx - 1, y + 8, accent, 0.95)
+      line(cx - 1, y + 8, x + size - 7, y + size - 8, accent, 0.95)
+    } else if (icon === 'warn') {
+      line(cx, y + size - 6, x + 7, y + 7, accent, 0.95)
+      line(x + 7, y + 7, x + size - 7, y + 7, accent, 0.95)
+      line(x + size - 7, y + 7, cx, y + size - 6, accent, 0.95)
+      line(cx, y + 14, cx, y + 21, accent, 0.95)
+      circle(cx, y + 10, 1, accent, true)
+    } else if (icon === 'bulb') {
+      circle(cx, cy + 3, 6.5, accent)
+      line(cx - 4, cy - 4, cx + 4, cy - 4, accent, 0.95)
+      line(cx - 3, cy - 8, cx + 3, cy - 8, accent, 0.95)
+      line(cx, y + size - 6, cx, y + size - 3, accent, 0.95)
+    }
+  }
+
+  const drawCard = (x, yTop, w, title, body, accent, icon, size = 8, leading = 9.55, fillColor = colors.panel) => {
+    const bodyW = w - 18 - 34
+    const bodyH = paraHeight(body, bodyW, size, leading)
+    const h = Math.max(58, 38 + bodyH)
+    const yBottom = yTop - h
+    roundedRect(x, yBottom, w, h, fillColor)
+    rectStroke(x, yBottom, w, h, accent, 0.9)
+    rect(x, yBottom, 3, h, accent)
+    drawIcon(icon, x + 10, yTop - 31, 20, accent)
+    textAt(title.toUpperCase(), x + 40, yTop - 23, 11.5, 'F2', accent)
+    drawPara(body, x + 40, yTop - 42, bodyW, size, leading, colors.text)
+    return yBottom
+  }
+
+  function setupBox(x, yTop, w, label, value, h = 35) {
+    rect(x, yTop - h, w, h, colors.panel3)
+    rectStroke(x, yTop - h, w, h, colors.border2, 0.5)
+    textAt(label.toUpperCase(), x + 8, yTop - 11, 6.8, 'F2', colors.teal)
+    drawPara(value, x + 8, yTop - 23, w - 16, 6.9, 7.8, colors.text, 'F1', 3)
+  }
+
+  function metaStrip(x, yTop, w, h, pairs) {
+    rect(x, yTop - h, w, h, colors.panel2)
+    rectStroke(x, yTop - h, w, h, colors.border, 0.5)
+    const cellW = w / pairs.length
+    pairs.forEach(([label, value], i) => {
+      const cx = x + i * cellW
+      if (i) line(cx, yTop - h + 5, cx, yTop - 5, colors.border, 0.45)
+      textAt(label.toUpperCase(), cx + 5, yTop - 12, 5.7, 'F2', colors.dim)
+      drawPara(value, cx + 5, yTop - 25, cellW - 10, 6.85, 7.8, colors.text, 'F2', 2)
+    })
+  }
+
+  function drawScenarioImage(x, yTop, imgW) {
+    const imgH = imgW / (16 / 9)
+    rect(x, yTop - imgH - 18, imgW, imgH + 18, colors.panel2)
+    if (scenarioImage) {
+      add('q')
+      add(`${imgW.toFixed(2)} 0 0 ${imgH.toFixed(2)} ${x.toFixed(2)} ${(yTop - imgH).toFixed(2)} cm /Im1 Do`)
+      add('Q')
+    }
+    rectStroke(x, yTop - imgH - 18, imgW, imgH + 18, colors.border, 0.5)
+    textAt(scenarioName, x + 8, yTop - imgH - 12, 8.5, 'F2', colors.amber)
+  }
+
+  const startPage = pageNo => {
+    ops = []
+    drawBackground()
+    drawHeader()
+  }
+  const finishPage = pageNo => {
+    drawFooter(pageNo)
+    opsPages.push(ops)
+  }
+
+  const scenarioDesc = scenarioDescriptionForPdf(scenarioName)
+  const jurisdictionDesc = jurisdictionDescriptionForPdf(meta.JURISDICTION)
+  const roleDesc = roleDescriptionForPdf(meta.ROLE)
+  const difficultyDesc = difficultyDescriptionForPdf(meta.DIFFICULTY)
+
+  const colGap = 14
+  const colW = (contentW - colGap) / 2
+  const leftX = contentX
+  const rightX = contentX + colW + colGap
+
+  startPage(1)
+  let y = top - 44
+  const heroH = 148
+  const imgW = 188
+  drawScenarioImage(contentX, y, imgW)
+  const rightSetupX = contentX + imgW + 12
+  const rightSetupW = contentW - imgW - 12
+  const setupGap = 6
+  const setupBoxH = (heroH - 3 * setupGap) / 4
+  ;[
+    ['Scenario', scenarioDesc],
+    ['Jurisdiction', jurisdictionDesc],
+    ['Role / Position', roleDesc],
+    ['Difficulty', difficultyDesc],
+  ].forEach(([label, value], idx) => setupBox(rightSetupX, y - idx * (setupBoxH + setupGap), rightSetupW, label, value, setupBoxH))
+  y -= heroH + 8
+
+  metaStrip(contentX, y, contentW, 34, [
+    ['Participant', participant],
+    ['Scenario', scenarioName],
+    ['Jurisdiction', meta.JURISDICTION || 'Unspecified'],
+    ['Role', meta.ROLE || 'EOC Director'],
+    ['Difficulty', meta.DIFFICULTY || 'Unspecified'],
+    ['Location', meta.LOCATION || 'Unspecified'],
+    ['Session', `${meta['SESSION START'] || 'N/A'} to ${meta['SESSION END'] || 'N/A'}`],
+    ['Duration', meta.DURATION || 'N/A'],
+  ])
+  y -= 44
+
+  let leftY = y
+  let rightY = y
+  leftY = drawCard(leftX, leftY, colW, 'Situation Summary', sections['SITUATION SUMMARY'], colors.cyan, 'pin', 8.0, 9.55, colors.panel) - 8
+  leftY = drawCard(leftX, leftY, colW, 'Decision Log Review', sections['DECISION LOG REVIEW'], colors.blue, 'clipboard', 8.0, 9.55, colors.panel)
+  rightY = drawCard(rightX, rightY, colW, 'Strengths', sections.STRENGTHS, colors.green, 'check', 7.95, 9.5, colors.panel2) - 8
+  rightY = drawCard(rightX, rightY, colW, 'Critical Gaps', sections['CRITICAL GAPS'], colors.red, 'warn', 7.95, 9.5, colors.panel2)
+  finishPage(1)
+
+  startPage(2)
+  y = top - 52
+  leftY = y
+  rightY = y
+  leftY = drawCard(leftX, leftY, colW, 'Resource & Coordination Effectiveness', sections['RESOURCE & COORDINATION EFFECTIVENESS'], colors.teal, 'chain', 8.0, 9.55, colors.panel) - 8
+  leftY = drawCard(leftX, leftY, colW, 'Communications & Information Management', sections['COMMUNICATIONS & INFORMATION MANAGEMENT'], colors.cyan, 'comms', 8.0, 9.55, colors.panel) - 8
+  leftY = drawCard(leftX, leftY, colW, 'Doctrine / Reference Notes', sections['DOCTRINE / REFERENCE NOTES'], colors.purple, 'book', 7.8, 9.3, colors.panel)
+  rightY = drawCard(rightX, rightY, colW, 'Recommendations', sections.RECOMMENDATIONS, colors.amber, 'bulb', 8.0, 9.55, colors.panel2)
+  finishPage(2)
+
+  const objects = []
+  const addObj = value => { objects.push(value); return objects.length }
+  const font1 = addObj(encodePdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'))
+  const font2 = addObj(encodePdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>'))
+  let imageObj = null
+  if (scenarioImage) {
+    const header = encodePdfAscii(`<< /Type /XObject /Subtype /Image /Width ${scenarioImage.width} /Height ${scenarioImage.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${scenarioImage.bytes.length} >>\nstream\n`)
+    const footer = encodePdfAscii('\nendstream')
+    imageObj = addObj(concatPdfChunks([header, scenarioImage.bytes, footer]))
+  }
+
+  const pageObjs = []
+  opsPages.forEach(pageOps => {
+    const stream = pageOps.join('\n')
+    const contentObj = addObj(encodePdfAscii(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`))
+    const xobjects = imageObj ? `/XObject << /Im1 ${imageObj} 0 R >>` : ''
+    const pageObj = addObj(encodePdfAscii(`<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 ${font1} 0 R /F2 ${font2} 0 R >> ${xobjects} >> /Contents ${contentObj} 0 R >>`))
+    pageObjs.push(pageObj)
+  })
+
+  const pagesObj = addObj(encodePdfAscii(`<< /Type /Pages /Kids [${pageObjs.map(n => `${n} 0 R`).join(' ')}] /Count ${pageObjs.length} >>`))
+  pageObjs.forEach(n => {
+    const oldText = new TextDecoder().decode(objects[n - 1])
+    objects[n - 1] = encodePdfAscii(oldText.replace('/Parent 0 0 R', `/Parent ${pagesObj} 0 R`))
+  })
+  const catalogObj = addObj(encodePdfAscii(`<< /Type /Catalog /Pages ${pagesObj} 0 R >>`))
+
+  const chunks = []
+  let offset = 0
+  const push = chunk => {
+    chunks.push(chunk)
+    offset += chunk.length
+  }
+  push(encodePdfAscii('%PDF-1.4\n'))
+  const offsets = [0]
+  objects.forEach((obj, idx) => {
+    offsets.push(offset)
+    push(encodePdfAscii(`${idx + 1} 0 obj\n`))
+    push(obj)
+    push(encodePdfAscii('\nendobj\n'))
+  })
+  const xref = offset
+  push(encodePdfAscii(`xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`))
+  for (let i = 1; i < offsets.length; i++) push(encodePdfAscii(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`))
+  push(encodePdfAscii(`trailer\n<< /Size ${objects.length + 1} /Root ${catalogObj} 0 R >>\nstartxref\n${xref}\n%%EOF`))
+
+  const pdfBytes = concatPdfChunks(chunks)
+  const blob = new Blob([pdfBytes], { type:'application/pdf' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename.endsWith('.pdf') ? filename : filename.replace(/\.txt$/i, '.pdf')
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+
+function downloadPlainPdfTextFile(filename, text) {
   text = cleanPdfText(text)
   const pageW = 612
   const pageH = 792
@@ -466,6 +1015,22 @@ function downloadPdfTextFile(filename, text) {
   a.click()
   URL.revokeObjectURL(url)
 }
+
+
+async function downloadPdfTextFile(filename, text) {
+  const cleaned = cleanPdfText(text)
+  if (/transcript/i.test(filename) || /EXERCISE TRANSCRIPT/i.test(cleaned)) {
+    downloadPlainPdfTextFile(filename, cleaned)
+    return
+  }
+  try {
+    await renderAarPdfV8(filename, cleaned)
+  } catch (err) {
+    console.error('AAR PDF render failed; using plain fallback.', err)
+    downloadPlainPdfTextFile(filename, cleaned)
+  }
+}
+
 
 // ─── AAR DISPLAY COMPONENT ────────────────────────────────────────────────────
 function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, onRestart, onMissionPortal, fs, ac, al }) {
