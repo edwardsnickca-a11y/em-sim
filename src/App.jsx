@@ -413,6 +413,8 @@ function wrapPdfLine(line, maxChars = 92) {
 }
 
 
+const NEXUS_REPORT_LOGO_URL = new URL('./assets/brand/nexus-eoc-primary-logo-dark-pdf.jpg', import.meta.url).href
+
 const AAR_SCENARIO_IMAGE_URLS = {
   'hurricane landfall': new URL('./assets/missionPortal/hurricane-landfall.jpg', import.meta.url).href,
   'mass casualty incident': new URL('./assets/missionPortal/mass-casualty-incident.jpg', import.meta.url).href,
@@ -597,6 +599,7 @@ async function renderAarPdfV8(filename, rawText) {
   const generated = meta.GENERATED || new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
   const participant = meta.COMMANDER || meta.PARTICIPANT || meta.NAME || 'Not provided'
   const scenarioImage = await loadJpegForPdf(getAarScenarioImageUrl(scenarioName))
+  const reportLogo = await loadJpegForPdf(NEXUS_REPORT_LOGO_URL)
 
   const W = 792
   const H = 612
@@ -726,8 +729,16 @@ async function renderAarPdfV8(filename, rawText) {
     rect(contentX, top - h, contentW, h, colors.header)
     rectStroke(contentX, top - h, contentW, h, colors.border, 0.7)
     rect(contentX, top - h - 3, contentW, 3, colors.teal)
-    textAt('NEXUS', contentX + 14, top - 27, 23, 'F2', colors.text)
-    textAt('EOC', contentX + 104, top - 27, 23, 'F2', colors.teal)
+    if (reportLogo) {
+      const logoH = 25
+      const logoW = logoH * (reportLogo.width / reportLogo.height)
+      add('q')
+      add(`${logoW.toFixed(2)} 0 0 ${logoH.toFixed(2)} ${(contentX + 12).toFixed(2)} ${(top - 29).toFixed(2)} cm /ImLogo Do`)
+      add('Q')
+    } else {
+      textAt('NEXUS', contentX + 14, top - 27, 23, 'F2', colors.text)
+      textAt('EOC', contentX + 104, top - 27, 23, 'F2', colors.teal)
+    }
     textAt('After-Action Review', contentX + contentW / 2 - 72, top - 25, 16, 'F2', colors.text)
     textAt(`Generated ${generated}`, contentX + contentW - 110, top - 24, 6.8, 'F2', colors.dim)
   }
@@ -914,12 +925,21 @@ async function renderAarPdfV8(filename, rawText) {
     const footer = encodePdfAscii('\nendstream')
     imageObj = addObj(concatPdfChunks([header, scenarioImage.bytes, footer]))
   }
+  let logoObj = null
+  if (reportLogo) {
+    const header = encodePdfAscii(`<< /Type /XObject /Subtype /Image /Width ${reportLogo.width} /Height ${reportLogo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${reportLogo.bytes.length} >>\nstream\n`)
+    const footer = encodePdfAscii('\nendstream')
+    logoObj = addObj(concatPdfChunks([header, reportLogo.bytes, footer]))
+  }
 
   const pageObjs = []
   opsPages.forEach(pageOps => {
     const stream = pageOps.join('\n')
     const contentObj = addObj(encodePdfAscii(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`))
-    const xobjects = imageObj ? `/XObject << /Im1 ${imageObj} 0 R >>` : ''
+    const xobjectItems = []
+    if (imageObj) xobjectItems.push(`/Im1 ${imageObj} 0 R`)
+    if (logoObj) xobjectItems.push(`/ImLogo ${logoObj} 0 R`)
+    const xobjects = xobjectItems.length ? `/XObject << ${xobjectItems.join(' ')} >>` : ''
     const pageObj = addObj(encodePdfAscii(`<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 ${font1} 0 R /F2 ${font2} 0 R >> ${xobjects} >> /Contents ${contentObj} 0 R >>`))
     pageObjs.push(pageObj)
   })
@@ -1058,6 +1078,7 @@ async function renderTranscriptPdfV5(filename, rawText) {
   const generated = meta.GENERATED || new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
   const participant = meta.COMMANDER || meta.PARTICIPANT || meta.NAME || 'Not provided'
   const scenarioImage = await loadJpegForPdf(getAarScenarioImageUrl(scenarioName))
+  const reportLogo = await loadJpegForPdf(NEXUS_REPORT_LOGO_URL)
 
   const W = 792
   const H = 612
@@ -1175,8 +1196,16 @@ async function renderTranscriptPdfV5(filename, rawText) {
     rect(contentX, top - h, contentW, h, colors.header)
     rectStroke(contentX, top - h, contentW, h, colors.border, 0.7)
     rect(contentX, top - h - 3, contentW, 3, colors.teal)
-    textAt('NEXUS', contentX + 14, top - 27, 23, 'F2', colors.text)
-    textAt('EOC', contentX + 104, top - 27, 23, 'F2', colors.teal)
+    if (reportLogo) {
+      const logoH = 25
+      const logoW = logoH * (reportLogo.width / reportLogo.height)
+      add('q')
+      add(`${logoW.toFixed(2)} 0 0 ${logoH.toFixed(2)} ${(contentX + 12).toFixed(2)} ${(top - 29).toFixed(2)} cm /ImLogo Do`)
+      add('Q')
+    } else {
+      textAt('NEXUS', contentX + 14, top - 27, 23, 'F2', colors.text)
+      textAt('EOC', contentX + 104, top - 27, 23, 'F2', colors.teal)
+    }
     textAt('Exercise Transcript', contentX + contentW / 2 - 72, top - 25, 16, 'F2', colors.text)
     textAt(`Generated ${generated}`, contentX + contentW - 136, top - 24, 6.8, 'F2', colors.dim)
   }
@@ -1375,12 +1404,21 @@ async function renderTranscriptPdfV5(filename, rawText) {
     const footer = encodePdfAscii('\nendstream')
     imageObj = addObj(concatPdfChunks([header, scenarioImage.bytes, footer]))
   }
+  let logoObj = null
+  if (reportLogo) {
+    const header = encodePdfAscii(`<< /Type /XObject /Subtype /Image /Width ${reportLogo.width} /Height ${reportLogo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${reportLogo.bytes.length} >>\nstream\n`)
+    const footer = encodePdfAscii('\nendstream')
+    logoObj = addObj(concatPdfChunks([header, reportLogo.bytes, footer]))
+  }
 
   const pageObjs = []
   opsPages.forEach(pageOps => {
     const stream = pageOps.join('\n')
     const contentObj = addObj(encodePdfAscii(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`))
-    const xobjects = imageObj ? `/XObject << /Im1 ${imageObj} 0 R >>` : ''
+    const xobjectItems = []
+    if (imageObj) xobjectItems.push(`/Im1 ${imageObj} 0 R`)
+    if (logoObj) xobjectItems.push(`/ImLogo ${logoObj} 0 R`)
+    const xobjects = xobjectItems.length ? `/XObject << ${xobjectItems.join(' ')} >>` : ''
     const pageObj = addObj(encodePdfAscii(`<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 ${font1} 0 R /F2 ${font2} 0 R /F3 ${font3} 0 R >> ${xobjects} >> /Contents ${contentObj} 0 R >>`))
     pageObjs.push(pageObj)
   })
