@@ -14,6 +14,7 @@ import { LIFELINES, DEFAULT_LIFELINES, LL_COLORS } from './data/lifelines'
 import { AAR_SECTIONS } from './data/aar'
 import MissionPortal from './components/missionPortal/MissionPortal'
 import StartExercise from './components/startExercise/StartExercise'
+import NexusLogo from './components/brand/NexusLogo'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -1646,11 +1647,7 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
         <header style={{ borderBottom:`1px solid ${UI.border}`, background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))' }}>
           <div style={{ width:'min(100%, 1720px)', margin:'0 auto', padding:'18px 24px', display:'grid', gridTemplateColumns:'auto 1fr auto', gap:22, alignItems:'center', boxSizing:'border-box' }}>
             <div style={{ display:'flex', alignItems:'center', gap:14, paddingRight:18, borderRight:`1px solid ${UI.border}` }}>
-              <div style={{ width:54, height:54, border:`2px solid ${UI.text}`, borderRadius:14, display:'grid', placeItems:'center', color:UI.text, fontWeight:950, fontSize:22, boxShadow:'0 0 28px rgba(69,163,255,0.14)' }}>N</div>
-              <div>
-                <div style={{ color:UI.text, fontSize:29, fontWeight:950, letterSpacing:'0.06em', lineHeight:1 }}>NEXUS <span style={{ color:UI.teal }}>EOC</span></div>
-                <div style={{ color:UI.muted, fontSize:11, marginTop:7 }}>Simulated Emergency Operations Platform</div>
-              </div>
+              <NexusLogo size="lg" subtitle="Simulated Emergency Operations Platform" />
             </div>
 
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(140px, 1fr))', gap:0 }}>
@@ -2794,11 +2791,7 @@ export default function App() {
       }}>
         <div style={{ width:'min(100%, 1760px)', padding:'0 clamp(16px, 1.6vw, 28px)', display:'grid', gridTemplateColumns:'auto 1fr auto', gap:18, alignItems:'center', boxSizing:'border-box' }}>
           <div style={{ display:'flex', alignItems:'center', gap:13 }}>
-            <div style={{ width:42, height:42, border:`1px solid ${UI.cyan}`, borderRadius:'50%', display:'grid', placeItems:'center', color:UI.cyan, fontWeight:950, boxShadow:'0 0 24px rgba(69,163,255,0.18)' }}>N</div>
-            <div>
-              <div style={{ fontSize:19, fontWeight:950, letterSpacing:'0.12em' }}>NEXUS EOC</div>
-              <div style={{ fontSize:10, color:UI.dim, letterSpacing:'0.14em', textTransform:'uppercase' }}>Live Exercise Interface</div>
-            </div>
+            <NexusLogo size="sm" subtitle="Live Exercise Interface" compact />
           </div>
 
           <div style={{ display:'grid', gridTemplateColumns:'1.3fr .9fr .9fr .7fr', gap:10, minWidth:0 }}>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 100 100" role="img" aria-label="NEXUS EOC Command Vector mark">
+  <defs>
+    <linearGradient id="teal" x1="12" y1="78" x2="86" y2="18" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#45A3FF"/>
+      <stop offset="0.54" stop-color="#2DE2B8"/>
+      <stop offset="1" stop-color="#36E0D0"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <circle cx="50" cy="50" r="42" fill="#061522" stroke="#24445F" stroke-width="2"/>
+  <path d="M50 8 v11 M50 81 v11 M8 50 h11 M81 50 h11" stroke="#2DE2B8" stroke-width="2" stroke-linecap="round" opacity="0.78"/>
+  <path d="M23 23 A38 38 0 0 1 77 23" fill="none" stroke="#45A3FF" stroke-width="2" opacity="0.70"/>
+  <path d="M21 75 A38 38 0 0 0 79 75" fill="none" stroke="#2DE2B8" stroke-width="2" opacity="0.72"/>
+  <path d="M18 35 A30 30 0 0 1 82 35" fill="none" stroke="#36E0D0" stroke-width="1.6" opacity="0.62"/>
+  <path d="M18 65 A30 30 0 0 0 82 65" fill="none" stroke="#45A3FF" stroke-width="1.6" opacity="0.54"/>
+  <circle cx="50" cy="8" r="3" fill="#36E0D0" opacity="0.9"/>
+  <circle cx="20" cy="50" r="3" fill="#36E0D0" opacity="0.9"/>
+  <circle cx="80" cy="50" r="3" fill="#36E0D0" opacity="0.9"/>
+  <path d="M18 76 L37 24 L62 61 L82 20" fill="none" stroke="url(#teal)" stroke-width="15" stroke-linejoin="miter" stroke-linecap="square" opacity="0.95" filter="url(#shadow)"/>
+  <path d="M18 76 L37 24 L62 61 L82 20" fill="none" stroke="#F4F8FE" stroke-width="8.5" stroke-linejoin="miter" stroke-linecap="square"/>
+  <polygon points="82,20 90,8 86,29" fill="#2DE2B8"/>
+  <polygon points="18,76 10,91 25,80" fill="#45A3FF" opacity="0.95"/>
+</svg>
