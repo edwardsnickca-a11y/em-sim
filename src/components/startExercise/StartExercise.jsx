@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import NexusLogo from '../brand/NexusLogo'
 import { SCENARIOS, DIFFICULTIES } from '../../data/scenarios'
 import { JURISDICTIONS, JURISDICTION_CONTEXT } from '../../data/jurisdictions'
 import { ROLES, ROLE_GROUPS } from '../../data/roles'
@@ -194,12 +195,10 @@ export default function StartExercise({ state, update, startScenario, initLoadin
       <div style={{ minHeight:'100vh', backgroundImage:'linear-gradient(rgba(69,163,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(69,163,255,0.045) 1px, transparent 1px)', backgroundSize:'48px 48px' }}>
         <header style={{ height:76, borderBottom:`1px solid ${DS.border}`, background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))', display:'flex', alignItems:'center', justifyContent:'center', boxSizing:'border-box' }}>
           <div style={{ width:'min(100%, 1680px)', padding:'0 clamp(18px, 2vw, 34px)', display:'flex', alignItems:'center', justifyContent:'space-between', boxSizing:'border-box' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-              <div style={{ width:42, height:42, border:`1px solid ${DS.teal}`, borderRadius:'50%', display:'grid', placeItems:'center', color:DS.teal, fontWeight:900, letterSpacing:'0.04em', boxShadow:'0 0 24px rgba(69,163,255,0.14)' }}>N</div>
-              <div>
-                <div style={{ fontSize:18, fontWeight:900, letterSpacing:'0.12em' }}>NEXUS EOC</div>
-                <div style={{ fontSize:10, color:DS.dim, letterSpacing:'0.14em', textTransform:'uppercase' }}>Start Exercise</div>
-              </div>
+            <div style={{ display:'flex', alignItems:'center', gap:14, minWidth:0 }}>
+              <NexusLogo variant="primary" tone="dark" size={48} imageStyle={{ maxWidth:'min(300px, 34vw)' }} />
+              <div style={{ width:1, height:38, background:DS.border, flex:'0 0 auto' }} />
+              <div style={{ fontSize:10, color:DS.dim, letterSpacing:'0.14em', textTransform:'uppercase', fontWeight:850, whiteSpace:'nowrap' }}>Start Exercise</div>
             </div>
             <nav style={{ display:'flex', alignItems:'center', gap:10 }}>
               <button onClick={onMissionPortal} style={{ background:'rgba(3,13,23,0.72)', color:DS.text, border:`1px solid ${DS.borderStrong}`, borderRadius:4, height:40, padding:'0 16px', cursor:'pointer', fontWeight:800, letterSpacing:'0.04em' }}>Mission Portal</button>

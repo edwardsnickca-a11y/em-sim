@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import NexusLogo from '../brand/NexusLogo'
 import heroImage from '../../assets/missionPortal/hero-command-center.jpg'
 import hurricaneImage from '../../assets/missionPortal/hurricane-landfall.jpg'
 import mciImage from '../../assets/missionPortal/mass-casualty-incident.jpg'
@@ -59,11 +60,13 @@ function Header({ onStartExercise, onGuidedTour }) {
   return (
     <header style={{ height:76, display:'flex', alignItems:'center', justifyContent:'center', borderBottom:`1px solid ${DS.border}`, background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))', boxSizing:'border-box', flexShrink:0 }}>
       <div style={{ width:'min(100%, 1680px)', padding:'0 clamp(18px, 2vw, 34px)', display:'flex', alignItems:'center', justifyContent:'space-between', boxSizing:'border-box' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:18 }}>
-          <Icon type="shield" size={46} color={DS.blue2} />
-          <div style={{ fontSize:'clamp(26px, 1.7vw, 34px)', fontWeight:900, color:DS.text, letterSpacing:'0.08em', whiteSpace:'nowrap' }}>NEXUS EOC</div>
-          <div style={{ width:1, height:38, background:DS.border, margin:'0 2px' }} />
-          <div style={{ color:DS.text, fontSize:'clamp(12px, .74vw, 15px)', lineHeight:1.25 }}>Simulated Emergency<br />Operations Platform</div>
+        <div style={{ display:'flex', alignItems:'center', minWidth:0 }}>
+          <NexusLogo
+            variant="primary"
+            tone="dark"
+            size={56}
+            imageStyle={{ maxWidth:'min(360px, 34vw)' }}
+          />
         </div>
         <div style={{ display:'flex', gap:12 }}>
           <button onClick={onGuidedTour} style={{ height:42, padding:'0 18px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer' }}>
@@ -290,14 +293,10 @@ function GuidedTourModal({ onClose }) {
           borderBottom:`1px solid ${DS.border}`,
           background:'linear-gradient(90deg, rgba(46,131,255,0.18), rgba(45,226,184,0.06), transparent)'
         }}>
-          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-            <div style={{ width:46, height:46, borderRadius:12, border:`1.5px solid ${DS.blue2}`, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(2,11,19,0.52)' }}>
-              <Icon type="shield" size={28} color={DS.blue2} />
-            </div>
-            <div>
-              <div style={{ color:DS.text, fontSize:22, fontWeight:950, letterSpacing:'0.08em' }}>NEXUS EOC</div>
-              <div style={{ color:DS.blue2, fontSize:13, fontWeight:850, letterSpacing:'0.10em', textTransform:'uppercase', marginTop:3 }}>Guided Tour</div>
-            </div>
+          <div style={{ display:'flex', alignItems:'center', gap:14, minWidth:0 }}>
+            <NexusLogo variant="primary" tone="dark" size={48} imageStyle={{ maxWidth:260 }} />
+            <div style={{ width:1, height:38, background:DS.border, flex:'0 0 auto' }} />
+            <div style={{ color:DS.blue2, fontSize:13, fontWeight:850, letterSpacing:'0.10em', textTransform:'uppercase', whiteSpace:'nowrap' }}>Guided Tour</div>
           </div>
 
           <button
@@ -495,26 +494,10 @@ function AboutNexusModal({ onClose }) {
           borderBottom:'1px solid rgba(87,146,198,0.24)',
           background:'linear-gradient(90deg, rgba(46,131,255,0.18), rgba(45,226,184,0.06), transparent)'
         }}>
-          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-            <div style={{
-              width:52,
-              height:52,
-              borderRadius:14,
-              border:'1.5px solid #F4F8FE',
-              display:'grid',
-              placeItems:'center',
-              background:'rgba(2,11,19,0.52)',
-              color:'#F4F8FE',
-              fontWeight:950,
-              fontSize:26,
-              boxShadow:'0 0 28px rgba(69,163,255,0.14)'
-            }}>
-              N
-            </div>
-            <div>
-              <div style={{ color:'#F4F8FE', fontSize:24, fontWeight:950, letterSpacing:'0.08em' }}>NEXUS <span style={{ color:'#2DE2B8' }}>EOC</span></div>
-              <div style={{ color:'#2DE2B8', fontSize:13, fontWeight:850, letterSpacing:'0.12em', textTransform:'uppercase', marginTop:3 }}>About NEXUS EOC</div>
-            </div>
+          <div style={{ display:'flex', alignItems:'center', gap:14, minWidth:0 }}>
+            <NexusLogo variant="primary" tone="dark" size={50} imageStyle={{ maxWidth:280 }} />
+            <div style={{ width:1, height:40, background:'rgba(87,146,198,0.24)', flex:'0 0 auto' }} />
+            <div style={{ color:'#2DE2B8', fontSize:13, fontWeight:850, letterSpacing:'0.12em', textTransform:'uppercase', whiteSpace:'nowrap' }}>About NEXUS EOC</div>
           </div>
 
           <button
