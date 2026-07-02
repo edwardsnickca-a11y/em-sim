@@ -21,14 +21,10 @@ function NexusIconMark({ size = 44, className = '', style = {} }) {
       </defs>
 
       <circle cx="50" cy="50" r="42" fill="#061522" stroke="#24445F" strokeWidth="2" />
-      <path d="M50 8 v11 M50 81 v11 M8 50 h11 M81 50 h11" stroke="#2DE2B8" strokeWidth="2" strokeLinecap="round" opacity="0.78" />
-      <path d="M23 23 A38 38 0 0 1 77 23" fill="none" stroke="#45A3FF" strokeWidth="2" opacity="0.70" />
-      <path d="M21 75 A38 38 0 0 0 79 75" fill="none" stroke="#2DE2B8" strokeWidth="2" opacity="0.72" />
-      <path d="M18 35 A30 30 0 0 1 82 35" fill="none" stroke="#36E0D0" strokeWidth="1.6" opacity="0.62" />
-      <path d="M18 65 A30 30 0 0 0 82 65" fill="none" stroke="#45A3FF" strokeWidth="1.6" opacity="0.54" />
-      {[50, 20, 80].map((cx, index) => (
-        <circle key={`node-top-${index}`} cx={cx} cy={index === 0 ? 8 : 50} r="3" fill="#36E0D0" opacity="0.9" />
-      ))}
+      <path d="M23 23 A38 38 0 0 1 77 23" fill="none" stroke="#45A3FF" strokeWidth="1.7" opacity="0.62" />
+      <path d="M21 75 A38 38 0 0 0 79 75" fill="none" stroke="#2DE2B8" strokeWidth="1.7" opacity="0.66" />
+      <path d="M18 35 A30 30 0 0 1 82 35" fill="none" stroke="#36E0D0" strokeWidth="1.25" opacity="0.45" />
+      <path d="M18 65 A30 30 0 0 0 82 65" fill="none" stroke="#45A3FF" strokeWidth="1.25" opacity="0.40" />
 
       <path
         d="M18 76 L37 24 L62 61 L82 20"
@@ -48,8 +44,8 @@ function NexusIconMark({ size = 44, className = '', style = {} }) {
         strokeLinejoin="miter"
         strokeLinecap="square"
       />
-      <polygon points="82,20 90,8 86,29" fill="#2DE2B8" />
-      <polygon points="18,76 10,91 25,80" fill="#45A3FF" opacity="0.95" />
+      <polygon points="82,20 88,11 86,28" fill="#2DE2B8" />
+      <polygon points="18,76 12,88 25,80" fill="#45A3FF" opacity="0.88" />
     </svg>
   )
 }
