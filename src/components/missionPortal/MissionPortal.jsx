@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import NexusLogo from '../brand/NexusLogo'
+import ResourcesModal from '../resources/ResourcesModal'
 import heroImage from '../../assets/missionPortal/hero-command-center.jpg'
 import hurricaneImage from '../../assets/missionPortal/hurricane-landfall.jpg'
 import mciImage from '../../assets/missionPortal/mass-casualty-incident.jpg'
@@ -56,7 +57,7 @@ function Icon({ type, size=28, color=DS.blue2 }) {
   return <svg {...p}>{icons[type] || icons.file}</svg>
 }
 
-function Header({ onStartExercise, onGuidedTour }) {
+function Header({ onStartExercise, onGuidedTour, onResources }) {
   return (
     <header style={{ height:76, display:'flex', alignItems:'center', justifyContent:'center', borderBottom:`1px solid ${DS.border}`, background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))', boxSizing:'border-box', flexShrink:0 }}>
       <div style={{ width:'min(100%, 1680px)', padding:'0 clamp(18px, 2vw, 34px)', display:'flex', alignItems:'center', justifyContent:'space-between', boxSizing:'border-box' }}>
@@ -68,10 +69,16 @@ function Header({ onStartExercise, onGuidedTour }) {
             imageStyle={{ maxWidth:'min(360px, 34vw)' }}
           />
         </div>
-        <div style={{ display:'flex', gap:12 }}>
-          <button onClick={onGuidedTour} style={{ height:42, padding:'0 18px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer' }}>
+        <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+          <button onClick={onGuidedTour} style={{ height:42, padding:'0 16px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer' }}>
             <Icon type="play" size={19} color={DS.blue2} /> Guided Tour
           </button>
+          <a href="/NEXUS_EOC_Platform_Overview.pdf" target="_blank" rel="noreferrer" style={{ height:42, padding:'0 16px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer', textDecoration:'none' }}>
+            <Icon type="file" size={19} color={DS.green} /> Overview
+          </a>
+          <a href="/NEXUS_EOC_User_Guide.pdf" target="_blank" rel="noreferrer" style={{ height:42, padding:'0 16px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer', textDecoration:'none' }}>
+            <Icon type="file" size={19} color={DS.blue2} /> User Guide
+          </a>
           <button onClick={onStartExercise} style={{ height:42, padding:'0 20px', display:'flex', alignItems:'center', gap:10, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'linear-gradient(180deg, #1455B8, #0E3F91)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer', boxShadow:'0 0 22px rgba(46,131,255,0.16)' }}>
             Start Exercise <Icon type="arrow" size={19} color="#fff" />
           </button>
@@ -684,6 +691,7 @@ function AboutNexusModal({ onClose }) {
 export default function MissionPortal({ onStartExercise }) {
   const [showAboutNexus, setShowAboutNexus] = useState(false)
   const [showGuidedTour, setShowGuidedTour] = useState(false)
+  const [showResources, setShowResources] = useState(false)
   return (
     <div style={{ width:'100vw', minHeight:'100vh', background:`radial-gradient(circle at 22% 18%, rgba(46,131,255,0.12), transparent 34%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`, color:DS.text, fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif', overflow:'hidden' }}>
       <style>{`
@@ -691,7 +699,7 @@ export default function MissionPortal({ onStartExercise }) {
         @media (max-width: 1280px) { .nexus-scenario-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
         @media (max-width: 980px) { .nexus-scenario-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
       `}</style>
-      <Header onStartExercise={onStartExercise || (() => {})} onGuidedTour={() => setShowGuidedTour(true)} />
+      <Header onStartExercise={onStartExercise || (() => {})} onGuidedTour={() => setShowGuidedTour(true)} onResources={() => setShowResources(true)} />
       <main style={{ height:'calc(100vh - 76px)', overflowY:'auto', overflowX:'hidden', padding:'clamp(12px, 1.2vw, 20px)', boxSizing:'border-box' }}>
         <div style={{ width:'min(100%, 1680px)', margin:'0 auto', display:'flex', flexDirection:'column', gap:12 }}>
           <Hero />
@@ -700,6 +708,21 @@ export default function MissionPortal({ onStartExercise }) {
           <HowItWorks />
           <footer style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:26, color:DS.muted, fontSize:14, padding:'18px 20px 24px' }}>
         <span>© 2026 NEXUS EOC. All rights reserved.</span>
+        <button
+          onClick={() => setShowResources(true)}
+          style={{
+            background:'transparent',
+            border:'none',
+            color:DS.blue2,
+            fontSize:14,
+            fontWeight:800,
+            cursor:'pointer',
+            textDecoration:'none',
+            padding:0,
+          }}
+        >
+          Resources
+        </button>
         <button
           onClick={() => setShowAboutNexus(true)}
           style={{
@@ -719,6 +742,7 @@ export default function MissionPortal({ onStartExercise }) {
       </main>
           {showGuidedTour && <GuidedTourModal onClose={() => setShowGuidedTour(false)} />}
       {showAboutNexus && <AboutNexusModal onClose={() => setShowAboutNexus(false)} />}
+      {showResources && <ResourcesModal onClose={() => setShowResources(false)} />}
     </div>
   )
 }

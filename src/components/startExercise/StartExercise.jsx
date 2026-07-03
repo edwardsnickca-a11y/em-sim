@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import NexusLogo from '../brand/NexusLogo'
+import ResourcesModal from '../resources/ResourcesModal'
 import { SCENARIOS, DIFFICULTIES } from '../../data/scenarios'
 import { JURISDICTIONS, JURISDICTION_CONTEXT } from '../../data/jurisdictions'
 import { ROLES, ROLE_GROUPS } from '../../data/roles'
@@ -166,6 +167,7 @@ function ScenarioCard({ scenarioKey, scenario, visual, selected, onSelect }) {
 export default function StartExercise({ state, update, startScenario, initLoading=false, onMissionPortal }) {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('All')
+  const [showResources, setShowResources] = useState(false)
 
   const scenarioEntries = useMemo(() => Object.entries(SCENARIOS).filter(([key]) => Boolean(SCENARIO_VISUALS[key])), [])
   const scenarioTypes = ['All', 'Natural Hazard', 'Infrastructure', 'Security / CBRN', 'HazMat', 'MCI', 'MCI / HazMat']
@@ -202,6 +204,9 @@ export default function StartExercise({ state, update, startScenario, initLoadin
             </div>
             <nav style={{ display:'flex', alignItems:'center', gap:10 }}>
               <button onClick={onMissionPortal} style={{ background:'rgba(3,13,23,0.72)', color:DS.text, border:`1px solid ${DS.borderStrong}`, borderRadius:4, height:40, padding:'0 16px', cursor:'pointer', fontWeight:800, letterSpacing:'0.04em' }}>Mission Portal</button>
+              <a href="/NEXUS_EOC_User_Guide.pdf" target="_blank" rel="noreferrer" style={{ background:'rgba(3,13,23,0.72)', color:DS.text, border:`1px solid ${DS.borderStrong}`, borderRadius:4, height:40, padding:'0 16px', cursor:'pointer', fontWeight:800, letterSpacing:'0.04em', display:'inline-flex', alignItems:'center', textDecoration:'none', boxSizing:'border-box' }}>User Guide</a>
+              <a href="/NEXUS_EOC_Reference_List.pdf" target="_blank" rel="noreferrer" style={{ background:'rgba(3,13,23,0.72)', color:DS.text, border:`1px solid ${DS.borderStrong}`, borderRadius:4, height:40, padding:'0 16px', cursor:'pointer', fontWeight:800, letterSpacing:'0.04em', display:'inline-flex', alignItems:'center', textDecoration:'none', boxSizing:'border-box' }}>Reference List</a>
+              <button onClick={() => setShowResources(true)} style={{ background:'rgba(3,13,23,0.72)', color:DS.text, border:`1px solid ${DS.borderStrong}`, borderRadius:4, height:40, padding:'0 16px', cursor:'pointer', fontWeight:800, letterSpacing:'0.04em' }}>Resources</button>
             </nav>
           </div>
         </header>
@@ -325,6 +330,7 @@ export default function StartExercise({ state, update, startScenario, initLoadin
             </aside>
           </div>
         </main>
+        {showResources && <ResourcesModal onClose={() => setShowResources(false)} />}
       </div>
     </div>
   )
