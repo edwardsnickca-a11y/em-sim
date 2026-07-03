@@ -5,6 +5,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { PIN_COLORS } from './data/mapConfig'
 import { JURISDICTION_CONTEXT, JURISDICTIONS } from './data/jurisdictions'
+import { selectScenarioLocation, rememberScenarioLocation, normalizeJurisdictionType } from './data/locationBank'
 import { SCENARIO_REFS } from './data/references'
 import { ESFS } from './data/esfs'
 import { PANEL_INFO } from './data/panelInfo'
@@ -82,60 +83,82 @@ const SETTINGS_KEY = 'em_sim_settings'
 const ONBOARDING_KEY = 'nexus_onboarding_seen'
 
 // ─── WORLD INIT PROMPT ────────────────────────────────────────────────────────
-function buildWorldInitPrompt(scenario, jurisdiction) {
+function buildWorldInitPrompt(scenario, jurisdiction, selectedLocation) {
   const sc  = SCENARIOS[scenario]
-  const jc  = JURISDICTION_CONTEXT[jurisdiction]
+  const normalizedJurisdiction = normalizeJurisdictionType(jurisdiction)
+  const jc  = JURISDICTION_CONTEXT[normalizedJurisdiction] || JURISDICTION_CONTEXT['Mid-Size City']
+  const loc = selectedLocation || selectScenarioLocation(scenario, normalizedJurisdiction)
+  const center = loc?.center || [39.8283, -98.5795]
+  const radiusMiles = loc?.radiusMiles || (normalizedJurisdiction.includes('County') ? 25 : 8)
 
   const scenarioNotes = {
-    hurricane:  'Place the scenario on a plausible coastline or near-coast area for this jurisdiction type. Hurricane landfall requires coastal geography.',
-    mci:        'The explosion should be at a plausible crowded venue (stadium, fairground, transit hub, festival) appropriate for the jurisdiction size and type.',
-    hazmat:     'Rail line or highway corridor must be geographically plausible for this jurisdiction. Tribal land rail corridors exist — BNSF and UP cross Navajo Nation and other tribal lands.',
-    cyber:      'Locate critical infrastructure (water treatment, power substations) plausibly for this jurisdiction size. Rural counties may have co-ops and small municipal water systems.',
-    earthquake: 'Place in a seismically active region plausible for this jurisdiction type. Not all jurisdictions are near fault lines — if the match is implausible, pick the closest realistic seismic risk area.',
-    flood:      'Dam failure or flash flood must have realistic watershed geography for this jurisdiction. Rural counties often have small earthen dams. Tribal nations in the Southwest have arroyo flash flood risk.',
-    wildfire:   'Place in a fire-prone region appropriate for jurisdiction type. Tribal nations in the West have significant wildfire exposure. Rural counties in the Southeast have prescribed burn risk.',
-    winter:     'Severe winter storm must be climatically plausible for this jurisdiction. Do not place a blizzard in South Florida — relocate to a plausible cold-climate jurisdiction matching the type.',
-    rdd:        'An RDD can occur anywhere but federal response assets are concentrated near major cities. A rural or tribal jurisdiction RDD creates unique federal coordination gaps — lean into that.',
-    train:      'Rail lines cross rural, urban, tribal, and corridor jurisdictions. BNSF, UP, CSX, and NS all have routes through tribal lands, rural counties, and interstate corridors. Be specific.',
+    hurricane:  'Use coastal or near-coastal impacts appropriate to the selected location. If the location is inland but still plausible for remnants, focus on inland flooding, wind damage, sheltering, and lifeline impacts rather than landfall.',
+    mci:        'The mass casualty trigger should occur at a plausible crowded venue, transit hub, school event, festival, industrial site, or public gathering appropriate to the selected location and jurisdiction type.',
+    hazmat:     'Use a plausible fixed facility, highway corridor, rail corridor, port area, warehouse, agricultural supply site, or industrial area tied to the selected location.',
+    cyber:      'Use plausible local government, utility, public safety, healthcare, water/wastewater, or public information impacts. Avoid unsupported claims about exact systems unless provided.',
+    earthquake: 'Use seismic effects only where plausible. If the selected location has lower seismic risk, frame the incident as a rare but plausible regional earthquake or infrastructure consequence.',
+    flood:      'Use realistic watershed, flash flood, riverine, storm surge, dam, drainage, or urban flooding pressure appropriate to the selected location.',
+    wildfire:   'Use wildfire, wildland-urban interface, smoke, evacuation, utility, animal sheltering, and mutual aid pressures appropriate to the selected location.',
+    winter:     'Use winter storm impacts only where climatically plausible. If the selected location has milder winters, emphasize ice, cold-weather infrastructure stress, shelters, power, and public messaging rather than an implausible blizzard.',
+    rdd:        'An RDD can occur anywhere. Keep the focus on consequence management, public information, public health, federal coordination, access control, and community confidence.',
+    train:      'Use a plausible rail, highway, port, industrial, or logistics corridor tied to the selected location. Combine MCI, hazmat, transportation, sheltering, and public information pressure as appropriate.',
   }
 
   return `You are generating the opening world state for an emergency management training simulator.
 
 SCENARIO TYPE: ${sc.name}
 SCENARIO SUMMARY: ${sc.desc}
-JURISDICTION TYPE: ${jurisdiction}
+JURISDICTION TYPE: ${normalizedJurisdiction}
 JURISDICTION DESCRIPTION: ${jc.desc}
 JURISDICTION CONSTRAINTS: ${jc.constraints}
-EXAMPLE LOCATIONS: ${jc.examples}
+
+SELECTED REAL LOCATION FROM PLATFORM:
+Location Label: ${loc.label}
+Location Name: ${loc.name}
+State / Territory / Tribal Area: ${loc.state}
+Region: ${loc.region}
+Map Center: ${center[0]}, ${center[1]}
+Operating Radius: approximately ${radiusMiles} miles
+Location Notes: ${loc.notes || 'No additional notes provided.'}
+
 SCENARIO PLACEMENT NOTES: ${scenarioNotes[scenario] || ''}
 
+STRICT LOCATION RULES:
+Use the selected real location above as the exercise setting.
+Do not choose, substitute, or invent another city, county, tribal nation, territory, agency, or jurisdiction.
+Do not use Pueblo, Dayton, Springfield, Spokane, Fresno, or any other familiar default city unless that exact location is provided above by the platform.
+Do not say the location was randomly selected.
+If you do not know exact local agency names, use generic but realistic labels such as City Emergency Management, County Emergency Management, Public Works, Local Law Enforcement, Local Fire Department, Regional Healthcare Coalition, Utility Provider, Mayor's Office, County Executive's Office, or Tribal Emergency Management Office.
+Avoid unsupported claims about exact local capabilities, elected officials, facility names, local plans, or agency structures unless the platform provided them.
+
 YOUR TASK:
-Generate a specific, realistic, geographically accurate opening world state for this exact combination of scenario and jurisdiction. Pick a DIFFERENT city every time — do not default to the same locations repeatedly. Prioritize geographic diversity across the US.
+Generate a specific, realistic, geographically accurate opening world state for the selected location and jurisdiction type.
 
-Generate 4-7 initial map pins representing key infrastructure for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically accurate and within ~5 miles of your chosen center point. For named highways, interchanges, airports, hospitals, schools, shelters, and public facilities, place the pin on or very near the named feature.
+Generate 4-7 initial map pins representing key infrastructure for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible and generally within the operating radius of the selected center point. For named highways, interchanges, airports, hospitals, schools, shelters, and public facilities, place the pin on or very near the named feature when you are confident. If you are not confident, use generic labels and plausible nearby coordinates.
 
-Generate 4-6 opening dispatch items that reflect the specific local conditions, named local agencies, and realistic resource constraints for this jurisdiction. A tribal nation dispatch sounds different from a large urban metro dispatch — use the right terminology, the right agency names, the right resource gaps.
+Generate 4-6 opening dispatch items that reflect the selected location, jurisdiction type, realistic resource constraints, and EOC-level emergency management concerns. Keep the player at the EOC level, not the field Incident Commander level.
 
-Generate an opening narrative (2-3 sentences) that establishes the specific location, the incident conditions, and the most immediate challenge facing the player given this jurisdiction's capabilities and constraints.
+Generate an opening narrative (2-3 sentences) that establishes the selected location, the incident conditions, and the most immediate EOC-level challenge facing the player.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 {
-  "location": "Specific named location — e.g. Shiprock, NM (Navajo Nation) or Galveston County, TX (Coastal) or Boise, ID",
-  "center": [latitude, longitude],
+  "location": "${loc.label}",
+  "center": [${center[0]}, ${center[1]}],
   "pins": [
-    { "id": "eoc", "label": "Name of EOC", "type": "EOC", "lat": 0.000, "lng": 0.000, "note": "One sentence status note specific to this jurisdiction" }
+    { "id": "eoc", "label": "Name of EOC or generic EOC label", "type": "EOC", "lat": 0.000, "lng": 0.000, "note": "One sentence status note specific to this jurisdiction" }
   ],
   "dispatches": [
     "Dispatch item specific to this location and jurisdiction"
   ],
-  "openingNarrative": "2-3 sentence opening that names the location, describes the incident, and flags the key constraint for this jurisdiction type."
+  "openingNarrative": "2-3 sentence opening that names the selected location, describes the incident, and flags the key EOC-level constraint for this jurisdiction type."
 }`
 }
 
 // ─── MAIN SYSTEM PROMPT ───────────────────────────────────────────────────────
 function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playerName, role) {
   const sc = SCENARIOS[scenario]
-  const jc = JURISDICTION_CONTEXT[jurisdiction]
+  const normalizedJurisdiction = normalizeJurisdictionType(jurisdiction)
+  const jc = JURISDICTION_CONTEXT[normalizedJurisdiction] || JURISDICTION_CONTEXT['Mid-Size City']
   const diffMap = {
     Basic:    'Evaluate actions generously. Surface one complication per turn.',
     Moderate: 'Evaluate with moderate rigor. Surface two complications per turn.',
@@ -155,13 +178,13 @@ function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playe
     ? `LOCATION: ${worldState.location}
 MAP CENTER: lat ${worldState.center[0]}, lng ${worldState.center[1]}
 All coordinates must be geographically plausible within ~5 miles of this center point. For named highways, interchanges, airports, hospitals, schools, shelters, and public facilities, place the pin on or very near the named feature.`
-    : `JURISDICTION: ${jurisdiction}`
+    : `JURISDICTION: ${normalizedJurisdiction}`
 
   return `CURRENT EXERCISE CONFIGURATION
 
 SCENARIO: ${sc.name}
 ${locationBlock}
-JURISDICTION TYPE: ${jurisdiction} — ${jc.desc}
+JURISDICTION TYPE: ${normalizedJurisdiction} — ${jc.desc}
 KEY CONSTRAINTS FOR THIS JURISDICTION: ${jc.constraints}
 DIFFICULTY: ${difficulty} — ${diffMap[difficulty]}
 ${scenarioSpecific[scenario] ? `SCENARIO NOTES: ${scenarioSpecific[scenario]}` : ''}
@@ -2880,12 +2903,12 @@ export default function App() {
   const ac = settings.accentColor
   const al = settings.alertColor
 
-  async function initWorld(scenarioKey, jurisdiction) {
+  async function initWorld(scenarioKey, jurisdiction, selectedLocation) {
     const res = await fetch('/api/chat', {
       method:'POST', headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({
         system: 'You are a world-building engine for an emergency management training simulator. Respond only in the exact JSON format requested. No preamble, no markdown fences.',
-        messages: [{ role:'user', content: buildWorldInitPrompt(scenarioKey, jurisdiction) }],
+        messages: [{ role:'user', content: buildWorldInitPrompt(scenarioKey, jurisdiction, selectedLocation) }],
       }),
     })
     const data = await res.json()
@@ -2895,19 +2918,21 @@ export default function App() {
 
   async function startScenario(scenarioKey) {
     const sc = SCENARIOS[scenarioKey]
-    const jurisdiction = state.jurisdiction
+    const jurisdiction = normalizeJurisdictionType(state.jurisdiction)
+    const selectedLocation = selectScenarioLocation(scenarioKey, jurisdiction)
+    rememberScenarioLocation(selectedLocation)
     setActiveESFs({})
     setInitLoading(true)
     if (typeof window !== 'undefined' && window.posthog) {
-      window.posthog.capture('scenario_launched', { scenario: scenarioKey, jurisdiction: state.jurisdiction, difficulty: state.difficulty })
+      window.posthog.capture('scenario_launched', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, location: selectedLocation?.label })
     }
-    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, role: state.role, ...(state.playerName ? { player: state.playerName } : {}) })
+    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, role: state.role, location: selectedLocation?.label, ...(state.playerName ? { player: state.playerName } : {}) })
 
     update({
       screen:'game', scenario:scenarioKey,
       dispatches:[], terminal:[
         { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${state.difficulty}` },
-        { type:'system', text:'Generating scenario world...' },
+        { type:'system', text:`Generating scenario world for ${selectedLocation?.label || jurisdiction}...` },
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
       notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
@@ -2915,7 +2940,7 @@ export default function App() {
     })
 
     try {
-      const world = await initWorld(scenarioKey, jurisdiction)
+      const world = await initWorld(scenarioKey, jurisdiction, selectedLocation)
       const initDispatches = (world.dispatches || []).map((text, i) => ({ id:i, text, turn:0 }))
       const initPins = (world.pins || []).map((p, i) => ({ ...p, id: `init-${i}` }))
       update({
@@ -2948,7 +2973,7 @@ export default function App() {
         exerciseTranscript: [{
           type:'opening',
           time:'H+0:00',
-          location: jurisdiction,
+          location: selectedLocation?.label || jurisdiction,
           narrative: sc.desc + ' Your EOC is activating. What is your first action?',
           dispatches: [{ id:0, text:`${sc.name} confirmed. EOC activation underway. Resources status unknown.`, turn:0 }],
           pins: [],
