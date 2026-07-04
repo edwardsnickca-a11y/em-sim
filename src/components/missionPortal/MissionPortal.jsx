@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import NexusLogo from '../brand/NexusLogo'
 import ResourcesModal from '../resources/ResourcesModal'
+import { DIFFICULTIES } from '../../data/scenarios'
+import { ROLE_GROUPS } from '../../data/roles'
 import heroImage from '../../assets/missionPortal/hero-command-center.jpg'
 import hurricaneImage from '../../assets/missionPortal/hurricane-landfall.jpg'
 import mciImage from '../../assets/missionPortal/mass-casualty-incident.jpg'
@@ -142,7 +144,315 @@ function ScenarioCard({ card }) {
   )
 }
 
-function FeaturedScenarios() {
+
+const TRAINING_FOCUS_OPTIONS = [
+  'Community Lifelines',
+  'Resource Coordination',
+  'Interagency Coordination',
+  'Public Information',
+  'Leadership Support',
+  'Continuity / COOP',
+  'Recovery Transition',
+]
+
+const AMBIGUOUS_LOCATIONS = ['springfield', 'washington', 'greenville', 'portland', 'orange county', 'jefferson county']
+
+const CUSTOM_FORM_DEFAULT = {
+  location:'',
+  eventHazard:'',
+  situationDescription:'',
+  role:'EOC Director',
+  difficulty:'Adaptive',
+  trainingFocus:TRAINING_FOCUS_OPTIONS,
+}
+
+function isLocationAmbiguous(value='') {
+  const clean = value.trim().toLowerCase()
+  return AMBIGUOUS_LOCATIONS.includes(clean)
+}
+
+function isLocationSpecificEnough(value='') {
+  const clean = value.trim()
+  if (!clean) return false
+  if (/\b(dc|d\.c\.)\b/i.test(clean)) return true
+  if (/\b(nation|tribe|tribal|territory|county|parish|borough)\b/i.test(clean)) return true
+  if (/\b(puerto rico|guam|american samoa|u\.s\. virgin islands|northern mariana islands)\b/i.test(clean)) return true
+  return clean.includes(',') && clean.length >= 6
+}
+
+function buildCustomPreviewPrompt(form) {
+  return `You are NEXUS EOC generating an Exercise Preview for the Build Custom Scenario feature.
+
+The user has provided a real-world location or jurisdiction, event or hazard, situation description, selected exercise position/function, difficulty, and training focus areas.
+
+Your job is to convert the user's plain-language briefing into a concise EOC-focused exercise preview.
+
+Do not start the exercise yet.
+Do not generate injects yet.
+Do not generate the AAR yet.
+Do not reveal hidden complications, scoring logic, or future consequences.
+
+PRIMARY VOICE
+Use the NEXUS Deputy Emergency Manager voice: professional, operational, plain language, conversational, consequence-based, realistic, and EOC-focused.
+
+LOCATION RULES
+Use the validated location exactly as provided. Do not invent, replace, or independently change the location.
+Do not make unsupported claims about exact local capabilities, elected officials, facility names, agency names, emergency plans, security plans, infrastructure, or local procedures unless provided by verified platform data.
+If exact local agency names are not verified, use generic but realistic labels such as City Emergency Management, County Emergency Management, City Public Works, County Public Health, State Emergency Management Duty Officer, Regional Healthcare Coalition, Local Law Enforcement, Local Fire Department, Emergency Communications Center, Mayor's Office, County Executive's Office, Tribal Emergency Management Office, Utility Provider, School District, Transit Agency, or Joint Information Center.
+
+EOC FOCUS RULES
+This is an EOC exercise. The user is not the Incident Commander.
+Do not turn the scenario into tactical incident command.
+Do not ask the user to command field units, assign individual crews, direct police movements, direct EMS treatment, select tactical suppression actions, track suspects, plan security routes, control tactical perimeters, choose tactical law enforcement formations, or direct tactical rescue operations.
+
+LAW ENFORCEMENT / SECURITY GUARDRAIL
+For special events, civil unrest, threats, suspicious activity, complex attacks, VIP presence, or security-sensitive scenarios, keep the exercise focused on consequence management and emergency coordination. Avoid tactical police deployment, suspect tracking, security route planning, protective detail planning, checkpoint placement, sniper/counter-sniper details, tactical unit locations, surveillance plans, apprehension plans, crowd-control tactics, or operational security details.
+
+TRAINING FOCUS CONVERSION
+Convert selected Training Focus areas into exercise pressure.
+Community Lifelines: emphasize safety and security, health and medical, communications, transportation, energy, food/water/shelter, hazardous materials, and cascading impacts to critical services.
+Resource Coordination: emphasize scarce resources, mutual aid timing, competing requests, logistics constraints, staging and prioritization at the EOC level, vendor or contract limitations, and resource tracking gaps.
+Interagency Coordination: emphasize conflicting agency priorities, federal/state/local coordination, private sector coordination, nonprofit and community partner coordination, unified messaging, information-sharing gaps, and authority seams.
+Public Information: emphasize rumors, conflicting reports, media pressure, social media amplification, accessibility and language access, public warning decisions, public confidence, Joint Information Center coordination, and leadership talking points.
+Leadership Support: emphasize executive briefings, policy-level decisions, elected official concerns, senior leader information needs, political pressure, risk framing, options and consequences, and decision memos or talking points.
+Continuity / COOP: emphasize essential functions, alternate worksites, staffing continuity, communications continuity, degraded systems, succession and delegation, continuity of government concerns, and departmental continuity plans.
+Recovery Transition: emphasize damage assessment, documentation, debris or cleanup implications, assistance programs, reimbursement considerations, long-term sheltering, community impacts, after-action issues, and transition from response to recovery.
+
+DIFFICULTY CONVERSION
+Difficulty should shape tempo, ambiguity, friction, information gaps, resource constraints, media pressure, leadership pressure, and consequence severity without changing the user's selected role or location.
+
+USER SETUP DATA
+Location / Jurisdiction: ${form.location}
+Event or Hazard: ${form.eventHazard}
+Situation Description: ${form.situationDescription}
+Exercise Position / Function: ${form.role}
+Difficulty: ${form.difficulty}
+Training Focus: ${form.trainingFocus.join('; ')}
+
+PREVIEW OUTPUT FORMAT
+Use this exact structure in plain text:
+
+Exercise Preview
+Location / Jurisdiction:
+[Validated real location]
+Event or Hazard:
+[User-provided event or hazard, cleaned up if needed]
+Exercise Position / Function:
+[Selected role/function]
+Difficulty:
+[Selected difficulty]
+Training Focus:
+[List selected focus areas]
+Scenario Summary:
+[Short plain-language summary of the custom exercise NEXUS will run.]
+This Exercise Will Emphasize:
+[Plain-language explanation of the pressures the exercise will apply based on the selected Training Focus.]
+This Exercise Will Avoid:
+[Clear statement that the exercise will avoid tactical incident command, tactical law enforcement control, suspect tracking, security route planning, tactical unit placement, and field-level command decisions as applicable.]
+Ready to Launch:
+[One sentence indicating that the scenario is ready for the user to start if the preview looks right.]`
+}
+
+function Field({ label, helper, children }) {
+  return (
+    <label style={{ display:'block' }}>
+      <div style={{ color:DS.muted, fontSize:10, fontWeight:900, letterSpacing:'0.13em', textTransform:'uppercase', marginBottom:7 }}>{label}</div>
+      {children}
+      {helper && <div style={{ color:DS.dim, fontSize:11.5, lineHeight:1.45, marginTop:6 }}>{helper}</div>}
+    </label>
+  )
+}
+
+function inputStyle(multiline=false) {
+  return {
+    width:'100%',
+    minHeight:multiline ? 104 : 42,
+    background:'#071421',
+    color:DS.text,
+    border:`1px solid ${DS.border}`,
+    borderRadius:5,
+    padding:multiline ? '11px 12px' : '0 12px',
+    boxSizing:'border-box',
+    fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+    fontSize:13,
+    lineHeight:1.5,
+    outline:'none',
+    resize:multiline ? 'vertical' : 'none',
+  }
+}
+
+function CustomScenarioCard({ onClick }) {
+  return (
+    <button onClick={onClick} style={{ border:`1px solid ${DS.borderStrong}`, borderRadius:4, overflow:'hidden', background:'linear-gradient(180deg, rgba(46,131,255,0.16), rgba(3,14,24,0.88))', minWidth:0, display:'flex', flexDirection:'column', color:DS.text, cursor:'pointer', padding:0, textAlign:'left', boxShadow:'0 0 34px rgba(69,163,255,0.10)' }}>
+      <div style={{ aspectRatio:'16 / 8', position:'relative', overflow:'hidden', background:'radial-gradient(circle at 42% 44%, rgba(45,226,184,0.22), transparent 18%), radial-gradient(circle at 62% 36%, rgba(69,163,255,0.28), transparent 22%), linear-gradient(135deg, #061522, #020B13)' }}>
+        <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(69,163,255,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(69,163,255,0.10) 1px, transparent 1px)', backgroundSize:'26px 26px', opacity:0.82 }} />
+        <div style={{ position:'absolute', left:'50%', top:'50%', transform:'translate(-50%, -50%)', width:72, height:72, borderRadius:'50%', border:`1.8px solid ${DS.blue2}`, display:'grid', placeItems:'center', background:'rgba(2,11,19,0.62)', boxShadow:'0 0 30px rgba(69,163,255,0.28)' }}>
+          <div style={{ position:'absolute', width:28, height:28, borderRadius:'50%', background:DS.blue2, color:'#04101B', display:'grid', placeItems:'center', fontSize:26, fontWeight:950, right:-5, top:-5 }}>+</div>
+          <Icon type="map" size={42} color={DS.green} />
+        </div>
+        <div style={{ position:'absolute', top:9, left:9, fontSize:10, color:'#04101B', background:DS.green, borderRadius:999, padding:'4px 8px', fontWeight:950, letterSpacing:'0.08em' }}>CUSTOM EXERCISE</div>
+      </div>
+      <div style={{ padding:'11px 12px 13px', flex:1 }}>
+        <div style={{ color:DS.text, fontSize:'clamp(14px, .82vw, 17px)', fontWeight:900, marginBottom:8, lineHeight:1.12 }}>Build Custom Scenario</div>
+        <div style={{ color:DS.text, fontSize:'clamp(11.5px, .68vw, 13.5px)', lineHeight:1.36 }}>Create a guided EOC exercise using your own real-world location, event, and training focus.</div>
+      </div>
+    </button>
+  )
+}
+
+function CustomScenarioSetupModal({ onClose, onStartCustomScenario }) {
+  const [form, setForm] = useState(CUSTOM_FORM_DEFAULT)
+  const [preview, setPreview] = useState('')
+  const [step, setStep] = useState('setup')
+  const [loadingPreview, setLoadingPreview] = useState(false)
+  const [error, setError] = useState('')
+
+  const updateForm = patch => setForm(prev => ({ ...prev, ...patch }))
+  const toggleFocus = value => setForm(prev => {
+    const has = prev.trainingFocus.includes(value)
+    const next = has ? prev.trainingFocus.filter(x => x !== value) : [...prev.trainingFocus, value]
+    return { ...prev, trainingFocus: next.length ? next : prev.trainingFocus }
+  })
+
+  async function generatePreview() {
+    setError('')
+    if (!isLocationSpecificEnough(form.location)) {
+      setError('I can build this, but I need a real, specific jurisdiction first. Please enter a city and state, county and state, tribal jurisdiction, U.S. territory, or other real jurisdiction.')
+      return
+    }
+    if (isLocationAmbiguous(form.location)) {
+      setError(`I need one quick clarification before building the exercise preview: which ${form.location.trim()} do you mean? Add the state, territory, or full jurisdiction name.`)
+      return
+    }
+    if (!form.eventHazard.trim() || !form.situationDescription.trim()) {
+      setError('Add the event or hazard and a short situation description before generating the preview.')
+      return
+    }
+    setLoadingPreview(true)
+    try {
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          system:'You are NEXUS EOC. Generate only the requested Exercise Preview text. Do not start the exercise.',
+          messages:[{ role:'user', content:buildCustomPreviewPrompt(form) }],
+        }),
+      })
+      const data = await res.json()
+      const text = data.content?.[0]?.text || ''
+      setPreview(text.trim() || 'Exercise Preview could not be generated. Revise the setup and try again.')
+      setStep('preview')
+    } catch(e) {
+      setError(`Preview generation failed: ${e.message}`)
+    }
+    setLoadingPreview(false)
+  }
+
+  return (
+    <div role="dialog" aria-modal="true" aria-label="Custom Scenario Setup" style={{ position:'fixed', inset:0, zIndex:9500, display:'flex', alignItems:'center', justifyContent:'center', padding:'clamp(14px, 2.4vw, 30px)', background:'rgba(1, 7, 13, 0.78)', backdropFilter:'blur(7px)', WebkitBackdropFilter:'blur(7px)', boxSizing:'border-box' }}>
+      <div style={{ width:'min(1040px, 96vw)', maxHeight:'92vh', overflow:'hidden', border:`1px solid ${DS.borderStrong}`, borderRadius:10, background:'linear-gradient(135deg, rgba(4,17,29,0.98), rgba(2,9,16,0.98) 60%, rgba(3,13,23,0.98))', boxShadow:'0 28px 90px rgba(0,0,0,0.62), 0 0 42px rgba(46,131,255,0.13)', color:DS.text }}>
+        <div style={{ minHeight:76, padding:'18px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:18, borderBottom:`1px solid ${DS.border}`, background:'linear-gradient(90deg, rgba(46,131,255,0.18), rgba(45,226,184,0.06), transparent)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:14, minWidth:0 }}>
+            <NexusLogo variant="primary" tone="dark" size={48} imageStyle={{ maxWidth:260 }} />
+            <div style={{ width:1, height:38, background:DS.border, flex:'0 0 auto' }} />
+            <div>
+              <div style={{ color:DS.green, fontSize:12, fontWeight:900, letterSpacing:'0.13em', textTransform:'uppercase' }}>Build Custom Scenario</div>
+              <div style={{ color:DS.muted, fontSize:13, marginTop:5 }}>Setup → Preview → Start</div>
+            </div>
+          </div>
+          <button onClick={onClose} aria-label="Close custom scenario setup" style={{ width:38, height:38, borderRadius:8, border:`1px solid ${DS.border}`, background:'rgba(2,11,19,0.58)', color:DS.text, cursor:'pointer', fontSize:22, lineHeight:1, display:'grid', placeItems:'center' }}>×</button>
+        </div>
+
+        <div style={{ padding:'24px 26px', overflowY:'auto', maxHeight:'calc(92vh - 154px)', boxSizing:'border-box' }}>
+          {step === 'setup' ? (
+            <div style={{ display:'grid', gridTemplateColumns:'1.04fr 0.96fr', gap:22, alignItems:'start' }}>
+              <div style={{ display:'grid', gap:16 }}>
+                <div>
+                  <h2 style={{ margin:'0 0 8px', color:DS.text, fontSize:30, lineHeight:1.1, fontWeight:950 }}>Custom Scenario Setup</h2>
+                  <p style={{ margin:0, color:DS.muted, fontSize:14, lineHeight:1.6 }}>Brief NEXUS on the location, event, role, and training focus. NEXUS will turn your inputs into an EOC-focused exercise.</p>
+                </div>
+                <Field label="Location / Jurisdiction" helper="Use a real location. NEXUS EOC does not create fictional jurisdictions.">
+                  <input value={form.location} onChange={e => updateForm({ location:e.target.value })} placeholder="Philadelphia, PA" style={inputStyle()} />
+                </Field>
+                <Field label="Event or Hazard" helper="Describe the planned event, hazard, or incident you want to train against.">
+                  <input value={form.eventHazard} onChange={e => updateForm({ eventHazard:e.target.value })} placeholder="America's 250th celebration" style={inputStyle()} />
+                </Field>
+                <Field label="Situation Description" helper="Write this in plain language. NEXUS will convert it into a structured EOC exercise.">
+                  <textarea value={form.situationDescription} onChange={e => updateForm({ situationDescription:e.target.value })} placeholder="Large national celebration with major crowds, federal and local coordination, VIP presence, transportation disruption, high media attention, and extreme heat risk." style={inputStyle(true)} />
+                </Field>
+              </div>
+
+              <div style={{ display:'grid', gap:16, border:`1px solid ${DS.border}`, borderRadius:6, background:'rgba(2,11,19,0.40)', padding:18 }}>
+                <Field label="Select Exercise Position / Function" helper="Role = who the user is playing.">
+                  <select value={form.role} onChange={e => updateForm({ role:e.target.value })} style={inputStyle()}>
+                    {Object.entries(ROLE_GROUPS).map(([group, roles]) => (
+                      <optgroup key={group} label={group}>
+                        {roles.map(r => <option key={r} value={r}>{r}</option>)}
+                      </optgroup>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Select Difficulty" helper="Difficulty controls tempo, ambiguity, friction, and consequence severity.">
+                  <select value={form.difficulty} onChange={e => updateForm({ difficulty:e.target.value })} style={inputStyle()}>
+                    {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </Field>
+                <div>
+                  <div style={{ color:DS.muted, fontSize:10, fontWeight:900, letterSpacing:'0.13em', textTransform:'uppercase', marginBottom:7 }}>Training Focus</div>
+                  <div style={{ color:DS.dim, fontSize:11.5, lineHeight:1.45, marginBottom:10 }}>Selected areas drive more injects, friction, decision points, and AAR feedback.</div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                    {TRAINING_FOCUS_OPTIONS.map(opt => {
+                      const checked = form.trainingFocus.includes(opt)
+                      return (
+                        <button key={opt} type="button" onClick={() => toggleFocus(opt)} style={{ textAlign:'left', minHeight:38, borderRadius:5, border:`1px solid ${checked ? DS.borderStrong : DS.border}`, background:checked ? 'rgba(69,163,255,0.16)' : 'rgba(7,20,33,0.72)', color:checked ? DS.text : DS.muted, cursor:'pointer', padding:'8px 10px', fontSize:12, fontWeight:checked ? 850 : 650 }}>
+                          <span style={{ color:checked ? DS.green : DS.dim, marginRight:7 }}>{checked ? '✓' : '○'}</span>{opt}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+                {error && <div style={{ border:`1px solid rgba(245,155,34,0.55)`, borderRadius:5, background:'rgba(245,155,34,0.10)', color:'#FFD7A1', padding:12, fontSize:13, lineHeight:1.5 }}>{error}</div>}
+              </div>
+            </div>
+          ) : (
+            <div style={{ display:'grid', gridTemplateColumns:'minmax(0, 1fr) 300px', gap:22, alignItems:'start' }}>
+              <div>
+                <h2 style={{ margin:'0 0 12px', color:DS.text, fontSize:30, lineHeight:1.1, fontWeight:950 }}>Exercise Preview</h2>
+                <div style={{ whiteSpace:'pre-wrap', border:`1px solid ${DS.border}`, borderRadius:6, background:'rgba(2,11,19,0.44)', padding:18, color:DS.text, fontSize:14, lineHeight:1.65 }}>{preview}</div>
+              </div>
+              <aside style={{ border:`1px solid ${DS.border}`, borderRadius:6, background:'rgba(2,11,19,0.48)', padding:16 }}>
+                <div style={{ color:DS.green, fontSize:11, fontWeight:900, letterSpacing:'0.13em', textTransform:'uppercase', marginBottom:12 }}>Selected Setup</div>
+                {[
+                  ['Location', form.location],
+                  ['Event / Hazard', form.eventHazard],
+                  ['Role', form.role],
+                  ['Difficulty', form.difficulty],
+                  ['Training Focus', form.trainingFocus.join('; ')],
+                ].map(([label, value]) => (
+                  <div key={label} style={{ padding:'10px 0', borderBottom:`1px solid ${DS.border}` }}>
+                    <div style={{ color:DS.dim, fontSize:10, textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:4 }}>{label}</div>
+                    <div style={{ color:DS.text, fontSize:12.5, lineHeight:1.45 }}>{value}</div>
+                  </div>
+                ))}
+              </aside>
+            </div>
+          )}
+        </div>
+
+        <div style={{ padding:'16px 22px', borderTop:`1px solid ${DS.border}`, display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, background:'rgba(2,11,19,0.56)' }}>
+          <button onClick={step === 'preview' ? () => setStep('setup') : onClose} style={{ height:42, minWidth:128, borderRadius:5, border:`1px solid ${DS.border}`, background:'rgba(3,13,23,0.72)', color:DS.text, fontWeight:850, cursor:'pointer' }}>{step === 'preview' ? 'Revise Setup' : 'Cancel'}</button>
+          {step === 'setup' ? (
+            <button onClick={generatePreview} disabled={loadingPreview} style={{ height:42, minWidth:210, borderRadius:5, border:`1px solid ${DS.borderStrong}`, background:loadingPreview ? 'rgba(87,146,198,0.16)' : 'linear-gradient(180deg, #1455B8, #0E3F91)', color:'#fff', fontWeight:900, cursor:loadingPreview ? 'not-allowed' : 'pointer', boxShadow:'0 0 22px rgba(46,131,255,0.16)' }}>{loadingPreview ? 'Generating Preview...' : 'Generate Exercise Preview'}</button>
+          ) : (
+            <button onClick={() => onStartCustomScenario?.({ ...form, preview })} style={{ height:42, minWidth:170, borderRadius:5, border:`1px solid ${DS.green}`, background:'linear-gradient(180deg, #168B55, #0D633D)', color:'#fff', fontWeight:900, cursor:'pointer', boxShadow:'0 0 22px rgba(45,226,110,0.14)' }}>Start Exercise</button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FeaturedScenarios({ onBuildCustomScenario }) {
   return (
     <section style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:'rgba(3,13,23,0.50)', padding:'12px 14px 14px' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
@@ -150,6 +460,7 @@ function FeaturedScenarios() {
       </div>
       <div className="nexus-scenario-grid" style={{ display:'grid', gap:'clamp(10px, .85vw, 14px)' }}>
         {scenarioCards.map(card => <ScenarioCard key={card.title} card={card} />)}
+        <CustomScenarioCard onClick={onBuildCustomScenario} />
       </div>
     </section>
   )
@@ -688,10 +999,11 @@ function AboutNexusModal({ onClose }) {
 }
 
 
-export default function MissionPortal({ onStartExercise }) {
+export default function MissionPortal({ onStartExercise, onStartCustomScenario }) {
   const [showAboutNexus, setShowAboutNexus] = useState(false)
   const [showGuidedTour, setShowGuidedTour] = useState(false)
   const [showResources, setShowResources] = useState(false)
+  const [showCustomScenario, setShowCustomScenario] = useState(false)
   return (
     <div style={{ width:'100vw', minHeight:'100vh', background:`radial-gradient(circle at 22% 18%, rgba(46,131,255,0.12), transparent 34%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`, color:DS.text, fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif', overflow:'hidden' }}>
       <style>{`
@@ -704,7 +1016,7 @@ export default function MissionPortal({ onStartExercise }) {
         <div style={{ width:'min(100%, 1680px)', margin:'0 auto', display:'flex', flexDirection:'column', gap:12 }}>
           <Hero />
           <CapabilityBand />
-          <FeaturedScenarios />
+          <FeaturedScenarios onBuildCustomScenario={() => setShowCustomScenario(true)} />
           <HowItWorks />
           <footer style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:26, color:DS.muted, fontSize:14, padding:'18px 20px 24px' }}>
         <span>© 2026 NEXUS EOC. All rights reserved.</span>
@@ -743,6 +1055,7 @@ export default function MissionPortal({ onStartExercise }) {
           {showGuidedTour && <GuidedTourModal onClose={() => setShowGuidedTour(false)} />}
       {showAboutNexus && <AboutNexusModal onClose={() => setShowAboutNexus(false)} />}
       {showResources && <ResourcesModal onClose={() => setShowResources(false)} />}
+      {showCustomScenario && <CustomScenarioSetupModal onClose={() => setShowCustomScenario(false)} onStartCustomScenario={(payload) => { setShowCustomScenario(false); onStartCustomScenario?.(payload) }} />}
     </div>
   )
 }

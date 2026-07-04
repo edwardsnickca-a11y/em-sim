@@ -82,6 +82,104 @@ const DEFAULT_SETTINGS = { fontSize:12, accentColor:'#45A3FF', alertColor:'#F59B
 const SETTINGS_KEY = 'em_sim_settings'
 const ONBOARDING_KEY = 'nexus_onboarding_seen'
 
+
+function slugifyCustomScenario(value = '') {
+  return String(value || 'Custom Scenario')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'custom-scenario'
+}
+
+function customScenarioTitle(customScenario) {
+  return customScenario?.eventHazard?.trim()
+    ? `Custom Scenario — ${customScenario.eventHazard.trim()}`
+    : 'Build Custom Scenario'
+}
+
+function customScenarioSummary(customScenario) {
+  return customScenario?.situationDescription?.trim()
+    || 'User-defined EOC-focused emergency management exercise.'
+}
+
+function buildCustomWorldInitPrompt(customScenario) {
+  const title = customScenarioTitle(customScenario)
+  return `You are generating the opening world state for a custom emergency management training simulator exercise.
+
+CUSTOM SCENARIO TITLE: ${title}
+VALIDATED REAL LOCATION / JURISDICTION: ${customScenario.location}
+EVENT OR HAZARD: ${customScenario.eventHazard}
+SITUATION DESCRIPTION: ${customScenario.situationDescription}
+EXERCISE POSITION / FUNCTION: ${customScenario.role || 'EOC Director'}
+DIFFICULTY: ${customScenario.difficulty || 'Adaptive'}
+TRAINING FOCUS: ${(customScenario.trainingFocus || []).join('; ')}
+APPROVED EXERCISE PREVIEW:
+${customScenario.preview || 'No preview text provided.'}
+
+STRICT LOCATION RULES:
+Use the validated real location above exactly as the exercise setting.
+Do not choose, substitute, or invent another city, county, tribal nation, territory, agency, or jurisdiction.
+Do not say the location was randomly selected.
+If you do not know exact local agency names, use generic but realistic labels such as City Emergency Management, County Emergency Management, Public Works, Local Law Enforcement, Local Fire Department, Regional Healthcare Coalition, Utility Provider, Mayor's Office, County Executive's Office, Tribal Emergency Management Office, Transit Agency, Joint Information Center, or School District.
+Avoid unsupported claims about exact local capabilities, elected officials, facility names, local plans, security plans, or agency structures unless the platform provided them.
+
+EOC FOCUS RULES:
+This is an EOC exercise. The user is not the Incident Commander.
+Keep the opening focused on consequence management, public information, resource coordination, leadership support, continuity/recovery, Community Lifelines, and partner coordination.
+Do not create tactical incident command tasks, tactical law enforcement control, suspect tracking, security route planning, tactical unit placement, tactical suppression decisions, EMS treatment direction, or detailed protective security planning.
+
+TRAINING FOCUS:
+Selected focus areas should influence the opening operating picture and first pressure, but do not reveal future injects or hidden complications.
+
+YOUR TASK:
+Generate a specific, realistic opening world state for the approved custom scenario.
+Generate 4-7 initial map pins representing EOC-relevant locations or impacts. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible for the real location. If you are not confident about exact facilities, use generic labels and plausible coordinates near the jurisdiction center.
+Generate 4-6 opening dispatch items that reflect the selected location, event/hazard, training focus, and EOC-level emergency management concerns.
+Generate an opening narrative in Deputy Emergency Manager voice that establishes STARTEX, current uncertainty, EOC posture, and the immediate EOC-level decision pressure.
+
+RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
+{
+  "location": "${customScenario.location}",
+  "center": [latitude, longitude],
+  "pins": [
+    { "id": "eoc", "label": "Name of EOC or generic EOC label", "type": "EOC", "lat": 0.000, "lng": 0.000, "note": "One sentence status note specific to this custom scenario" }
+  ],
+  "dispatches": [
+    "Dispatch item specific to this location, event/hazard, and EOC-level coordination problem"
+  ],
+  "openingNarrative": "Deputy EM opening that names the selected location, describes STARTEX conditions, and puts the first EOC-level pressure in front of the player."
+}`
+}
+
+function buildCustomScenarioAddOn(customScenario) {
+  if (!customScenario) return ''
+  return `
+
+CUSTOM SCENARIO CARRYOVER
+This is a Build Custom Scenario exercise. Preserve the approved custom scenario setup throughout live play and the AAR.
+
+Validated real location: ${customScenario.location}
+Event or Hazard: ${customScenario.eventHazard}
+Situation Description: ${customScenario.situationDescription}
+Selected Role / Function: ${customScenario.role || 'EOC Director'}
+Selected Difficulty: ${customScenario.difficulty || 'Adaptive'}
+Selected Training Focus: ${(customScenario.trainingFocus || []).join('; ')}
+Approved Exercise Preview:
+${customScenario.preview || 'No approved preview text provided.'}
+
+ONGOING CUSTOM SCENARIO BEHAVIOR
+The scenario must remain EOC-focused throughout play. The user's selected role/function should shape the type of information they receive and the decisions they are asked to make.
+Selected Training Focus areas should shape injects, consequences, media pressure, map pins, lifelines, and AAR feedback.
+Map pins must remain EOC-relevant: incident area, shelter/cooling/warming center, hospital/healthcare impact area, transportation disruption, utility outage area, public information concern, resource staging area, Community Lifeline impact, damage assessment area, access issue, or partner coordination point.
+Avoid tactical map pins representing suspect locations, tactical unit placement, security routes, sniper/counter-sniper positions, police formations, tactical perimeters, tactical assault locations, or interdiction locations.
+Media injects should test public information judgment, not reward speed over accuracy.
+Community Lifeline impacts should emerge from the custom event/hazard and selected training focus, not appear as random failures.
+
+CUSTOM SCENARIO AAR EXPECTATIONS
+The AAR must evaluate the user against the selected role/function, selected training focus areas, difficulty level, stated situation description, and EOC-level emergency management performance.
+Do not evaluate the user as if they were the Incident Commander. Do not reward tactical command behavior.
+Tie AAR feedback to consequence management, coordination effectiveness, public information, leadership support, Community Lifelines, continuity/recovery awareness, and judgment under uncertainty.`
+}
+
 // ─── WORLD INIT PROMPT ────────────────────────────────────────────────────────
 function buildWorldInitPrompt(scenario, jurisdiction, selectedLocation) {
   const sc  = SCENARIOS[scenario]
@@ -155,8 +253,8 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 }
 
 // ─── MAIN SYSTEM PROMPT ───────────────────────────────────────────────────────
-function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playerName, role) {
-  const sc = SCENARIOS[scenario]
+function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playerName, role, customScenario=null) {
+  const sc = SCENARIOS[scenario] || { name: customScenarioTitle(customScenario), desc: customScenarioSummary(customScenario) }
   const normalizedJurisdiction = normalizeJurisdictionType(jurisdiction)
   const jc = JURISDICTION_CONTEXT[normalizedJurisdiction] || JURISDICTION_CONTEXT['Mid-Size City']
   const diffMap = {
@@ -789,6 +887,8 @@ Do not make the player fail automatically.
 
 Make the simulation feel like a real EOC under pressure, with a capable Deputy Emergency Manager sitting next to the player and talking them through the evolving problem.
 
+${buildCustomScenarioAddOn(customScenario)}
+
 OUTPUT REQUIREMENTS
 
 The app requires valid JSON. Respond only with valid JSON. Do not use markdown fences, preambles, bullets outside JSON, or explanatory text outside JSON.
@@ -868,7 +968,7 @@ const defaultState = {
   screen:'portal', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'', role:'EOC Director',
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[],
-  dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[],
+  dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[], customScenario:null,
 }
 
 
@@ -2916,6 +3016,20 @@ export default function App() {
     return JSON.parse(raw.replace(/```json|```/g,'').trim())
   }
 
+
+async function initCustomWorld(customScenario) {
+  const res = await fetch('/api/chat', {
+    method:'POST', headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({
+      system: 'You are a world-building engine for a custom emergency management training simulator. Respond only in the exact JSON format requested. No preamble, no markdown fences.',
+      messages: [{ role:'user', content: buildCustomWorldInitPrompt(customScenario) }],
+    }),
+  })
+  const data = await res.json()
+  const raw  = data.content?.[0]?.text || ''
+  return JSON.parse(raw.replace(/```json|```/g,'').trim())
+}
+
   async function startScenario(scenarioKey) {
     const sc = SCENARIOS[scenarioKey]
     const jurisdiction = normalizeJurisdictionType(state.jurisdiction)
@@ -2936,7 +3050,7 @@ export default function App() {
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
       notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
-      worldState:null, aar:null, exerciseTranscript:[],
+      worldState:null, aar:null, exerciseTranscript:[], customScenario:null,
     })
 
     try {
@@ -2986,6 +3100,86 @@ export default function App() {
     setTimeout(() => inputRef.current?.focus(), 100)
   }
 
+
+async function startCustomScenario(customScenario) {
+  const scenarioKey = 'custom'
+  const scenarioName = customScenarioTitle(customScenario)
+  const role = customScenario.role || state.role || 'EOC Director'
+  const difficulty = customScenario.difficulty || state.difficulty || 'Adaptive'
+
+  setActiveESFs({})
+  setInitLoading(true)
+
+  posthog.capture('custom_scenario_started', {
+    location: customScenario.location,
+    eventHazard: customScenario.eventHazard,
+    difficulty,
+    role,
+    trainingFocus: customScenario.trainingFocus,
+    ...(state.playerName ? { player: state.playerName } : {}),
+  })
+
+  update({
+    screen:'game', scenario:scenarioKey, customScenario,
+    jurisdiction:customScenario.location,
+    difficulty,
+    role,
+    dispatches:[], terminal:[
+      { type:'header', text:`▶ ${scenarioName.toUpperCase()} — ${customScenario.location} — ${difficulty}` },
+      { type:'system', text:`Generating custom scenario world for ${customScenario.location}...` },
+    ],
+    history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
+    notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
+    worldState:null, aar:null, exerciseTranscript:[],
+  })
+
+  try {
+    const world = await initCustomWorld(customScenario)
+    const initDispatches = (world.dispatches || []).map((text, i) => ({ id:i, text, turn:0 }))
+    const initPins = (world.pins || []).map((p, i) => ({ ...p, id: `init-${i}` }))
+    update({
+      worldState: world,
+      dispatches: initDispatches,
+      terminal: [
+        { type:'header', text:`▶ ${scenarioName.toUpperCase()} — ${world.location || customScenario.location} — ${difficulty} — ${role.toUpperCase()}${state.playerName ? ` — ${state.playerName.toUpperCase()}` : ''}` },
+        { type:'divider' },
+        { type:'narrator', text:world.openingNarrative || `Okay, we are at STARTEX in ${customScenario.location}. ${customScenarioSummary(customScenario)} The first issue is building a usable operating picture and deciding what EOC-level support is needed now.` },
+      ],
+      dynamicPins: initPins,
+      exerciseTranscript: [{
+        type:'opening',
+        time:'H+0:00',
+        location: world.location || customScenario.location,
+        narrative: world.openingNarrative || customScenarioSummary(customScenario),
+        dispatches: initDispatches,
+        pins: initPins,
+        lifelines: INITIAL_LIFELINES_UNKNOWN,
+      }],
+    })
+  } catch(e) {
+    update({
+      terminal: [
+        { type:'header', text:`▶ ${scenarioName.toUpperCase()} — ${customScenario.location} — ${difficulty}` },
+        { type:'divider' },
+        { type:'narrator', text:`Okay, we are at STARTEX in ${customScenario.location}. ${customScenarioSummary(customScenario)} Your EOC is activated. The first issue is building a shared operating picture and deciding what EOC-level support is needed now.` },
+      ],
+      dispatches: [{ id:0, text:`Custom scenario started for ${customScenario.location}. EOC activation underway. Information is incomplete.`, turn:0 }],
+      exerciseTranscript: [{
+        type:'opening',
+        time:'H+0:00',
+        location: customScenario.location,
+        narrative: customScenarioSummary(customScenario),
+        dispatches: [{ id:0, text:`Custom scenario started for ${customScenario.location}. EOC activation underway. Information is incomplete.`, turn:0 }],
+        pins: [],
+        lifelines: INITIAL_LIFELINES_UNKNOWN,
+      }],
+    })
+  }
+
+  setInitLoading(false)
+  setTimeout(() => inputRef.current?.focus(), 100)
+}
+
   async function sendAction() {
     if (!input.trim() || loading || !state) return
     const action = input.trim()
@@ -3006,7 +3200,7 @@ export default function App() {
       const res  = await fetch('/api/chat', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({
-          system: buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, state.playerName, state.role),
+          system: buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, state.playerName, state.role, state.customScenario),
           messages: msgs,
         }),
       })
@@ -3091,7 +3285,7 @@ export default function App() {
 
   function downloadCurrentTranscript() {
     if (!state) return
-    const scenarioName = SCENARIOS[state.scenario]?.name || state.scenario || 'Scenario'
+    const scenarioName = SCENARIOS[state.scenario]?.name || customScenarioTitle(state.customScenario) || state.scenario || 'Scenario'
     const date = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
     const text = formatExerciseTranscript({
       scenario: state.scenario,
@@ -3116,6 +3310,7 @@ export default function App() {
       <MissionPortal
         state={state}
         onStartExercise={() => update({ screen:'setup' })}
+        onStartCustomScenario={startCustomScenario}
         showGuidedTour={showOnboarding}
         onCloseGuidedTour={closeOnboarding}
       />
@@ -3154,7 +3349,7 @@ export default function App() {
         lifelines={state.lifelines}
         situation={state.situation}
         onReset={reset}
-        onRestart={() => startScenario(state.scenario)}
+        onRestart={() => state.customScenario ? startCustomScenario(state.customScenario) : startScenario(state.scenario)}
         onMissionPortal={() => update({ screen:'portal' })}
         fs={fs}
         ac={ac}
@@ -3249,7 +3444,7 @@ export default function App() {
   const initPins    = dynamicPins.filter(p => p.id?.startsWith('init-'))
   const turnPins    = dynamicPins.filter(p => !p.id?.startsWith('init-'))
   const isEndex     = state.situation === 'ENDEX'
-  const scenarioName = SCENARIOS[state.scenario]?.name || state.scenario || 'Active Exercise'
+  const scenarioName = SCENARIOS[state.scenario]?.name || customScenarioTitle(state.customScenario) || state.scenario || 'Active Exercise'
   const roleLabel = state.role || 'EOC Director'
   const notepadTitle = state.playerName
     ? `${state.playerName}'s Notepad`
