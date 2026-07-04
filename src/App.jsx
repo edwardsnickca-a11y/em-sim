@@ -3326,6 +3326,7 @@ async function startCustomScenario(customScenario) {
         startScenario={startScenario}
         initLoading={initLoading}
         onMissionPortal={() => update({ screen:'portal' })}
+        onStartCustomScenario={startCustomScenario}
       />
     )
   }
