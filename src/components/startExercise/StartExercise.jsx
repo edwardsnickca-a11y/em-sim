@@ -15,6 +15,7 @@ import wildfireImage from '../../assets/missionPortal/urban-wildfire.jpg'
 import winterImage from '../../assets/missionPortal/winter-storm-cascade.jpg'
 import rddImage from '../../assets/missionPortal/radiological-dispersal-device.jpg'
 import trainImage from '../../assets/missionPortal/train-derailment-mci-hazmat.jpg'
+import customScenarioImage from '../../assets/missionPortal/build-custom-scenario.jpg'
 
 const DS = {
   bg:'#020B13',
@@ -308,24 +309,20 @@ function CustomScenarioCard({ onClick }) {
         textAlign:'left',
         borderRadius:4,
         overflow:'hidden',
-        border:`1px solid ${DS.borderStrong}`,
-        background:'linear-gradient(180deg, rgba(46,131,255,0.18), rgba(3,14,24,0.92))',
+        border:`1px solid ${DS.border}`,
+        background:'rgba(3,14,24,0.84)',
         color:DS.text,
         cursor:'pointer',
         padding:0,
         minWidth:0,
-        boxShadow:'0 0 0 1px rgba(69,163,255,0.22), 0 0 28px rgba(46,131,255,0.16)',
+        boxShadow:'0 16px 34px rgba(0,0,0,0.16)',
         display:'flex',
         flexDirection:'column',
       }}
     >
-      <div style={{ position:'relative', aspectRatio:'16 / 8', background:'radial-gradient(circle at 42% 44%, rgba(45,226,184,0.22), transparent 18%), radial-gradient(circle at 62% 36%, rgba(69,163,255,0.28), transparent 22%), linear-gradient(135deg, #061522, #020B13)', overflow:'hidden' }}>
-        <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(69,163,255,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(69,163,255,0.10) 1px, transparent 1px)', backgroundSize:'26px 26px', opacity:0.82 }} />
-        <div style={{ position:'absolute', left:'50%', top:'50%', transform:'translate(-50%, -50%)', width:74, height:74, borderRadius:'50%', border:`1.8px solid ${DS.teal}`, display:'grid', placeItems:'center', background:'rgba(2,11,19,0.62)', boxShadow:'0 0 30px rgba(69,163,255,0.28)' }}>
-          <div style={{ position:'absolute', width:29, height:29, borderRadius:'50%', background:DS.teal2, color:'#04101B', display:'grid', placeItems:'center', fontSize:26, fontWeight:950, right:-5, top:-5 }}>+</div>
-          <div style={{ width:34, height:34, border:`2px solid ${DS.teal2}`, borderRadius:'50%', display:'grid', placeItems:'center', color:DS.teal2, fontSize:22, fontWeight:950 }}>⌖</div>
-        </div>
-        <div style={{ position:'absolute', top:9, left:9, fontSize:10, color:'#04101B', background:DS.teal2, borderRadius:999, padding:'4px 8px', fontWeight:950, letterSpacing:'0.08em' }}>CUSTOM EXERCISE</div>
+      <div style={{ position:'relative', aspectRatio:'16 / 8', background:'#061522', overflow:'hidden' }}>
+        <img src={customScenarioImage} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+        <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg, rgba(2,9,16,0.03), rgba(2,9,16,0.44))' }} />
       </div>
       <div style={{ padding:'11px 12px 13px', flex:1 }}>
         <div style={{ color:DS.text, fontSize:15, fontWeight:900, marginBottom:7, lineHeight:1.14 }}>Build Custom Scenario</div>
