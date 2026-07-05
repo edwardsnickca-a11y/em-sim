@@ -181,13 +181,19 @@ Tie AAR feedback to consequence management, coordination effectiveness, public i
 }
 
 // ─── WORLD INIT PROMPT ────────────────────────────────────────────────────────
-function buildWorldInitPrompt(scenario, jurisdiction, selectedLocation) {
+function buildWorldInitPrompt(scenario, jurisdiction, selectedLocation, localization=null) {
   const sc  = SCENARIOS[scenario]
   const normalizedJurisdiction = normalizeJurisdictionType(jurisdiction)
   const jc  = JURISDICTION_CONTEXT[normalizedJurisdiction] || JURISDICTION_CONTEXT['Mid-Size City']
   const loc = selectedLocation || selectScenarioLocation(scenario, normalizedJurisdiction)
-  const center = loc?.center || [39.8283, -98.5795]
+  const isLocalized = Boolean(localization?.specificJurisdiction || loc?.isUserProvided)
+  const hasKnownCenter = Array.isArray(loc?.center) && loc.center.length === 2
+  const center = hasKnownCenter ? loc.center : [39.8283, -98.5795]
   const radiusMiles = loc?.radiusMiles || (normalizedJurisdiction.includes('County') ? 25 : 8)
+  const locationMode = isLocalized ? 'USER-SPECIFIED REAL JURISDICTION' : 'PLATFORM-SELECTED REAL LOCATION'
+  const locationCenterInstruction = hasKnownCenter
+    ? `Map Center: ${center[0]}, ${center[1]}`
+    : `Map Center: determine an approximate latitude and longitude for ${loc.label}. Replace any placeholder coordinates in the JSON response with that real approximate center.`
 
   const scenarioNotes = {
     hurricane:  'Use coastal or near-coastal impacts appropriate to the selected location. If the location is inland but still plausible for remnants, focus on inland flooding, wind damage, sheltering, and lifeline impacts rather than landfall.',
@@ -210,27 +216,37 @@ JURISDICTION TYPE: ${normalizedJurisdiction}
 JURISDICTION DESCRIPTION: ${jc.desc}
 JURISDICTION CONSTRAINTS: ${jc.constraints}
 
-SELECTED REAL LOCATION FROM PLATFORM:
+LOCATION MODE: ${locationMode}
 Location Label: ${loc.label}
-Location Name: ${loc.name}
-State / Territory / Tribal Area: ${loc.state}
-Region: ${loc.region}
-Map Center: ${center[0]}, ${center[1]}
+Location Name: ${loc.name || loc.label}
+State / Territory / Tribal Area: ${loc.state || 'User-specified / determine broadly from location'}
+Region: ${loc.region || 'User-specified localized scenario setting'}
+${locationCenterInstruction}
 Operating Radius: approximately ${radiusMiles} miles
 Location Notes: ${loc.notes || 'No additional notes provided.'}
+
+${isLocalized ? `LOCALIZATION BRIEF:
+Base Scenario: ${sc.name}
+Specific Jurisdiction: ${loc.label}
+Jurisdiction Type: ${normalizedJurisdiction}
+Exercise Position / Function: localization is applied to the selected user role at launch
+Difficulty: localization is applied to the selected difficulty at launch
+Broad Local Context: Use broad, cautious context for ${loc.label}. Do not invent local plans, named officials, exact facilities, exact routes, local SOPs, or specific agency capabilities.
+Boundaries: Preserve the selected base scenario. Localize only the setting, coordination environment, lifeline impacts, public information pressure, leadership concerns, role-specific injects, media injects, map context, and AAR observations. Do not rewrite the exercise into a different scenario.` : ''}
 
 SCENARIO PLACEMENT NOTES: ${scenarioNotes[scenario] || ''}
 
 STRICT LOCATION RULES:
-Use the selected real location above as the exercise setting.
+Use the real location above as the exercise setting.
 Do not choose, substitute, or invent another city, county, tribal nation, territory, agency, or jurisdiction.
-Do not use Pueblo, Dayton, Springfield, Spokane, Fresno, or any other familiar default city unless that exact location is provided above by the platform.
+Do not use Pueblo, Dayton, Springfield, Spokane, Fresno, or any other familiar default city unless that exact location is provided above by the platform or user.
 Do not say the location was randomly selected.
-If you do not know exact local agency names, use generic but realistic labels such as City Emergency Management, County Emergency Management, Public Works, Local Law Enforcement, Local Fire Department, Regional Healthcare Coalition, Utility Provider, Mayor's Office, County Executive's Office, or Tribal Emergency Management Office.
-Avoid unsupported claims about exact local capabilities, elected officials, facility names, local plans, or agency structures unless the platform provided them.
+If you do not know exact local agency names, use generic but realistic labels such as City Emergency Management, County Emergency Management, Public Works, Local Law Enforcement, Local Fire Department, Regional Healthcare Coalition, Utility Provider, Mayor's Office, County Executive's Office, Tribal Emergency Management Office, Port Authority, Campus Emergency Management, Transit Agency, or Joint Information Center.
+Avoid unsupported claims about exact local capabilities, elected officials, facility names, local plans, security plans, evacuation routes, tactical details, or agency structures unless the platform provided them.
+For RDD, CBRN, security-sensitive, special event, suspicious activity, civil unrest, or terrorism-related scenarios, stay focused on consequence management, public protective messaging, rumor control, medical/public health coordination, leadership support, state/federal coordination, Community Lifelines, continuity, and recovery. Do not create tactical law enforcement tasks, suspect tracking, security route planning, tactical unit placement, tactical CBRN response, or field-unit command decisions.
 
 YOUR TASK:
-Generate a specific, realistic, geographically accurate opening world state for the selected location and jurisdiction type.
+Generate a specific, realistic, geographically accurate opening world state for the selected scenario, location, and jurisdiction type. Preserve the selected base scenario; do not rewrite it into a different hazard or event.
 
 Generate 4-7 initial map pins representing key infrastructure for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible and generally within the operating radius of the selected center point. For named highways, interchanges, airports, hospitals, schools, shelters, and public facilities, place the pin on or very near the named feature when you are confident. If you are not confident, use generic labels and plausible nearby coordinates.
 
@@ -241,7 +257,7 @@ Generate an opening narrative (2-3 sentences) that establishes the selected loca
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 {
   "location": "${loc.label}",
-  "center": [${center[0]}, ${center[1]}],
+  "center": ${hasKnownCenter ? `[${center[0]}, ${center[1]}]` : '[0.000, 0.000]'},
   "pins": [
     { "id": "eoc", "label": "Name of EOC or generic EOC label", "type": "EOC", "lat": 0.000, "lng": 0.000, "note": "One sentence status note specific to this jurisdiction" }
   ],
@@ -291,6 +307,10 @@ ROLE: ${role || 'EOC Director'} — ${ROLES[role] || ROLES['EOC Director']}
 Evaluate all decisions from the perspective of this role.
 
 The platform has already selected the scenario, jurisdiction type, difficulty, and location context above. Use those values. Do not independently change the location.
+${worldState?.localizedJurisdiction ? `
+LOCALIZED SCENARIO RULES:
+This is a prebuilt scenario localized to ${worldState.localizedJurisdiction}. The selected scenario remains the authoritative base scenario. Use ${worldState.localizedJurisdiction} to shape broad geographic context, jurisdiction scale, coordination environment, lifeline impacts, public information pressure, leadership concerns, role-specific injects, media injects, map context, and AAR observations. Do not rewrite the exercise into a different hazard or event. Do not invent local SOPs, named officials, exact evacuation routes, facility layouts, sensitive security details, or specific agency capabilities. Keep the user in the EOC coordination lane.
+` : ''}
 
 NEXUS EOC SIMULATION CONTROLLER PROMPT
 
@@ -968,7 +988,7 @@ const defaultState = {
   screen:'portal', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'', role:'EOC Director',
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[],
-  dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[], customScenario:null,
+  dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:null,
 }
 
 
@@ -3003,12 +3023,12 @@ export default function App() {
   const ac = settings.accentColor
   const al = settings.alertColor
 
-  async function initWorld(scenarioKey, jurisdiction, selectedLocation) {
+  async function initWorld(scenarioKey, jurisdiction, selectedLocation, localization=null) {
     const res = await fetch('/api/chat', {
       method:'POST', headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({
         system: 'You are a world-building engine for an emergency management training simulator. Respond only in the exact JSON format requested. No preamble, no markdown fences.',
-        messages: [{ role:'user', content: buildWorldInitPrompt(scenarioKey, jurisdiction, selectedLocation) }],
+        messages: [{ role:'user', content: buildWorldInitPrompt(scenarioKey, jurisdiction, selectedLocation, localization) }],
       }),
     })
     const data = await res.json()
@@ -3030,31 +3050,46 @@ async function initCustomWorld(customScenario) {
   return JSON.parse(raw.replace(/```json|```/g,'').trim())
 }
 
-  async function startScenario(scenarioKey) {
+  async function startScenario(scenarioKey, launchOptions={}) {
     const sc = SCENARIOS[scenarioKey]
     const jurisdiction = normalizeJurisdictionType(state.jurisdiction)
-    const selectedLocation = selectScenarioLocation(scenarioKey, jurisdiction)
-    rememberScenarioLocation(selectedLocation)
+    const specificJurisdiction = String(launchOptions?.specificJurisdiction || '').trim()
+    const isLocalizedScenario = Boolean(specificJurisdiction)
+    const selectedLocation = isLocalizedScenario
+      ? {
+          label: specificJurisdiction,
+          name: specificJurisdiction,
+          state: 'User-specified real jurisdiction',
+          region: 'Localized scenario setting',
+          center: null,
+          radiusMiles: jurisdiction.includes('County') ? 25 : 10,
+          notes: `User requested that the selected prebuilt scenario be localized to ${specificJurisdiction}. Preserve the base scenario and localize only the context.`,
+          isUserProvided: true,
+        }
+      : selectScenarioLocation(scenarioKey, jurisdiction)
+    if (!isLocalizedScenario) rememberScenarioLocation(selectedLocation)
+    const localization = isLocalizedScenario ? { specificJurisdiction } : null
     setActiveESFs({})
     setInitLoading(true)
     if (typeof window !== 'undefined' && window.posthog) {
-      window.posthog.capture('scenario_launched', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, location: selectedLocation?.label })
+      window.posthog.capture('scenario_launched', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, location: selectedLocation?.label, localized: isLocalizedScenario })
     }
-    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, role: state.role, location: selectedLocation?.label, ...(state.playerName ? { player: state.playerName } : {}) })
+    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, role: state.role, location: selectedLocation?.label, localized: isLocalizedScenario, ...(state.playerName ? { player: state.playerName } : {}) })
 
     update({
       screen:'game', scenario:scenarioKey,
       dispatches:[], terminal:[
-        { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${state.difficulty}` },
+        { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${selectedLocation?.label || jurisdiction} — ${state.difficulty}` },
         { type:'system', text:`Generating scenario world for ${selectedLocation?.label || jurisdiction}...` },
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
       notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
-      worldState:null, aar:null, exerciseTranscript:[], customScenario:null,
+      worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:isLocalizedScenario ? specificJurisdiction : null,
     })
 
     try {
-      const world = await initWorld(scenarioKey, jurisdiction, selectedLocation)
+      const world = await initWorld(scenarioKey, jurisdiction, selectedLocation, localization)
+      if (isLocalizedScenario) world.localizedJurisdiction = specificJurisdiction
       const initDispatches = (world.dispatches || []).map((text, i) => ({ id:i, text, turn:0 }))
       const initPins = (world.pins || []).map((p, i) => ({ ...p, id: `init-${i}` }))
       update({
@@ -3088,6 +3123,7 @@ async function initCustomWorld(customScenario) {
           type:'opening',
           time:'H+0:00',
           location: selectedLocation?.label || jurisdiction,
+          localizedJurisdiction: isLocalizedScenario ? specificJurisdiction : null,
           narrative: sc.desc + ' Your EOC is activating. What is your first action?',
           dispatches: [{ id:0, text:`${sc.name} confirmed. EOC activation underway. Resources status unknown.`, turn:0 }],
           pins: [],

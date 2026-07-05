@@ -195,7 +195,7 @@ function isLocationSpecificEnough(value='') {
   const clean = value.trim()
   if (!clean) return false
   if (/\b(dc|d\.c\.)\b/i.test(clean)) return true
-  if (/\b(nation|tribe|tribal|territory|county|parish|borough)\b/i.test(clean)) return true
+  if (/\b(nation|tribe|tribal|territory|county|parish|borough|university|college|campus|port|airport|installation|base|station|district|authority)\b/i.test(clean)) return true
   if (/\b(puerto rico|guam|american samoa|u\.s\. virgin islands|northern mariana islands)\b/i.test(clean)) return true
   return clean.includes(',') && clean.length >= 6
 }
@@ -492,6 +492,9 @@ export default function StartExercise({ state, update, startScenario, initLoadin
   const [filter, setFilter] = useState('All')
   const [showResources, setShowResources] = useState(false)
   const [showCustomScenario, setShowCustomScenario] = useState(false)
+  const [useSpecificJurisdiction, setUseSpecificJurisdiction] = useState(false)
+  const [specificJurisdiction, setSpecificJurisdiction] = useState('')
+  const [localizedLaunchError, setLocalizedLaunchError] = useState('')
 
   const scenarioEntries = useMemo(() => Object.entries(SCENARIOS).filter(([key]) => Boolean(SCENARIO_VISUALS[key])), [])
   const scenarioTypes = ['All', 'Natural Hazard', 'Infrastructure', 'Security / CBRN', 'HazMat', 'MCI', 'MCI / HazMat']
@@ -514,7 +517,28 @@ export default function StartExercise({ state, update, startScenario, initLoadin
   const selectedVisual = state.scenario ? SCENARIO_VISUALS[state.scenario] : null
   const jurisdiction = JURISDICTION_CONTEXT[state.jurisdiction]
   const selectedRole = state.role || 'EOC Director'
+  const cleanedSpecificJurisdiction = specificJurisdiction.trim()
+  const isLocalizedScenario = useSpecificJurisdiction && Boolean(cleanedSpecificJurisdiction)
+  const localizedJurisdictionError = useSpecificJurisdiction
+    ? !cleanedSpecificJurisdiction
+      ? 'Enter a real, specific jurisdiction or turn off Use Specific Jurisdiction.'
+      : isLocationAmbiguous(cleanedSpecificJurisdiction)
+        ? `I need one quick clarification before localizing the scenario: which ${cleanedSpecificJurisdiction} do you mean? Add the state, territory, or full jurisdiction name.`
+        : !isLocationSpecificEnough(cleanedSpecificJurisdiction)
+          ? 'Please enter a real, specific jurisdiction, such as a city and state, county and state, tribal jurisdiction, campus, port, airport, U.S. territory, or other real jurisdiction.'
+          : ''
+    : ''
   const canLaunch = Boolean(state.scenario) && !initLoading
+
+  function handleStartExercise() {
+    setLocalizedLaunchError('')
+    if (!canLaunch) return
+    if (localizedJurisdictionError) {
+      setLocalizedLaunchError(localizedJurisdictionError)
+      return
+    }
+    startScenario(state.scenario, isLocalizedScenario ? { specificJurisdiction: cleanedSpecificJurisdiction } : {})
+  }
 
   return (
     <div style={{ minHeight:'100vh', background:`radial-gradient(circle at 72% 8%, rgba(46,131,255,0.14), transparent 30%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`, color:DS.text, fontFamily:'Inter, system-ui, sans-serif' }}>
@@ -595,9 +619,9 @@ export default function StartExercise({ state, update, startScenario, initLoadin
                   </div>
                 </div>
 
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18, marginBottom:22 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18, marginBottom:18 }}>
                   <div>
-                    <FieldLabel>Select Jurisdiction</FieldLabel>
+                    <FieldLabel>Select Jurisdiction Type</FieldLabel>
                     <SelectField value={state.jurisdiction} onChange={e => update({ jurisdiction:e.target.value })}>
                       {JURISDICTIONS.map(j => <option key={j} value={j}>{j}</option>)}
                     </SelectField>
@@ -610,7 +634,44 @@ export default function StartExercise({ state, update, startScenario, initLoadin
                   </div>
                 </div>
 
-                <button onClick={() => canLaunch && startScenario(state.scenario)} disabled={!canLaunch} style={{ width:'100%', height:52, border:'none', borderRadius:5, background:canLaunch ? `linear-gradient(180deg, #2E83FF, #1455B8)` : 'rgba(87,146,198,0.16)', color:canLaunch ? '#fff' : DS.dim, cursor:canLaunch ? 'pointer' : 'not-allowed', fontWeight:950, letterSpacing:'0.12em', textTransform:'uppercase', boxShadow:canLaunch ? '0 18px 44px rgba(46,131,255,0.22)' : 'none' }}>
+                <div style={{ border:`1px solid ${useSpecificJurisdiction ? DS.borderStrong : DS.borderSoft}`, background:useSpecificJurisdiction ? 'rgba(46,131,255,0.10)' : 'rgba(8,19,31,0.48)', borderRadius:5, padding:14, marginBottom:22 }}>
+                  <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={useSpecificJurisdiction}
+                      onChange={e => {
+                        setUseSpecificJurisdiction(e.target.checked)
+                        setLocalizedLaunchError('')
+                      }}
+                      style={{ width:16, height:16, accentColor:DS.teal }}
+                    />
+                    <span style={{ color:DS.text, fontSize:13, fontWeight:850 }}>Use a specific real jurisdiction?</span>
+                  </label>
+                  <div style={{ color:DS.muted, fontSize:12, lineHeight:1.55, marginTop:7 }}>
+                    NEXUS will adapt the selected scenario to this real location while preserving the original exercise structure.
+                  </div>
+                  {useSpecificJurisdiction && (
+                    <div style={{ marginTop:12 }}>
+                      <FieldLabel>Specific Jurisdiction</FieldLabel>
+                      <input
+                        type="text"
+                        value={specificJurisdiction}
+                        onChange={e => {
+                          setSpecificJurisdiction(e.target.value)
+                          setLocalizedLaunchError('')
+                        }}
+                        placeholder="Seattle, WA / New Castle County, DE / Port of Long Beach"
+                        style={{ width:'100%', height:42, background:DS.bg2, color:DS.text, border:`1px solid ${localizedLaunchError ? 'rgba(226,75,74,0.72)' : DS.borderSoft}`, borderRadius:5, padding:'0 12px', boxSizing:'border-box', fontSize:13, outline:'none' }}
+                      />
+                      <div style={{ color:DS.dim, fontSize:11.5, lineHeight:1.45, marginTop:6 }}>
+                        Use a real city, county, campus, port, airport, tribal jurisdiction, U.S. territory, or other real operational setting.
+                      </div>
+                      {localizedLaunchError && <div style={{ color:'#FFB4B4', fontSize:12, lineHeight:1.5, marginTop:8 }}>{localizedLaunchError}</div>}
+                    </div>
+                  )}
+                </div>
+
+                <button onClick={handleStartExercise} disabled={!canLaunch} style={{ width:'100%', height:52, border:'none', borderRadius:5, background:canLaunch ? `linear-gradient(180deg, #2E83FF, #1455B8)` : 'rgba(87,146,198,0.16)', color:canLaunch ? '#fff' : DS.dim, cursor:canLaunch ? 'pointer' : 'not-allowed', fontWeight:950, letterSpacing:'0.12em', textTransform:'uppercase', boxShadow:canLaunch ? '0 18px 44px rgba(46,131,255,0.22)' : 'none' }}>
                   {initLoading ? 'Generating Scenario World...' : canLaunch ? 'Start Exercise' : 'Select a scenario to begin'}
                 </button>
               </div>
@@ -643,6 +704,7 @@ export default function StartExercise({ state, update, startScenario, initLoadin
                 <div style={{ padding:'12px 0', borderBottom:`1px solid ${DS.borderSoft}` }}>
                   <div style={{ fontSize:10, color:DS.dim, textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:4 }}>Jurisdiction Context</div>
                   <div style={{ fontSize:13, color:DS.text, lineHeight:1.55 }}>{state.jurisdiction}</div>
+                  {isLocalizedScenario && <div style={{ fontSize:13, color:DS.teal2, lineHeight:1.55, marginTop:5 }}>Specific Jurisdiction: {cleanedSpecificJurisdiction}</div>}
                   <div style={{ fontSize:12, color:DS.muted, lineHeight:1.55, marginTop:7 }}>{jurisdiction?.desc}</div>
                   <div style={{ fontSize:12, color:DS.dim, lineHeight:1.55, marginTop:7 }}><span style={{ color:DS.amber }}>Constraints:</span> {jurisdiction?.constraints}</div>
                 </div>
