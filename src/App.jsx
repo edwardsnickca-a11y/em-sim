@@ -2655,7 +2655,48 @@ function MediaIconTile({ item }) {
 
 function MapUpdater({ center }) {
   const map = useMap()
-  useEffect(() => { map.setView(center, 13) }, [center])
+  useEffect(() => { map.setView(center, 13) }, [map, center])
+  return null
+}
+
+function MapResizeHandler({ watchKey }) {
+  const map = useMap()
+
+  useEffect(() => {
+    const container = map.getContainer()
+    let frameId
+    const timeoutIds = []
+
+    const invalidate = () => {
+      if (frameId) cancelAnimationFrame(frameId)
+      frameId = requestAnimationFrame(() => {
+        map.invalidateSize({ pan: false })
+      })
+    }
+
+    invalidate()
+    timeoutIds.push(setTimeout(invalidate, 120))
+    timeoutIds.push(setTimeout(invalidate, 360))
+
+    const observer = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(invalidate)
+      : null
+
+    if (observer) {
+      observer.observe(container)
+      if (container.parentElement) observer.observe(container.parentElement)
+    }
+
+    window.addEventListener('resize', invalidate)
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId)
+      timeoutIds.forEach(clearTimeout)
+      if (observer) observer.disconnect()
+      window.removeEventListener('resize', invalidate)
+    }
+  }, [map, watchKey])
+
   return null
 }
 
@@ -3958,6 +3999,7 @@ async function startCustomScenario(customScenario) {
                 <MapContainer center={center} zoom={mapZoom} style={{ height:'100%', width:'100%' }}>
                   <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
                   <ScaleControl position="bottomright" imperial={true} metric={true} />
+                  <MapResizeHandler watchKey={`${rightWidth}-${rightSplit}-${center?.[0]}-${center?.[1]}`} />
                   <MapUpdater center={center}/>
                   {initPins.map(pin => (
                     <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT, pin.type)}>
