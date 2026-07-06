@@ -3487,6 +3487,10 @@ async function startCustomScenario(customScenario) {
     ? `${state.playerName}'s Notepad`
     : `${roleLabel}'s Notepad`
 
+  // Responsive wide-screen / group display shell.
+  // Uses more room on wall monitors without stretching beyond a readable EOC workspace.
+  const liveShellWidth = 'min(96vw, 2440px)'
+
   const leftWidth = boundaries[0]
   const centerWidth = boundaries[1] - boundaries[0]
   const rightWidth = 100 - boundaries[1]
@@ -3678,7 +3682,7 @@ async function startCustomScenario(customScenario) {
         background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))',
         boxSizing:'border-box',
       }}>
-        <div style={{ width:'min(100%, 1760px)', padding:'0 clamp(16px, 1.6vw, 28px)', display:'grid', gridTemplateColumns:'auto 1fr auto', gap:18, alignItems:'center', boxSizing:'border-box' }}>
+        <div style={{ width:liveShellWidth, padding:'0 clamp(16px, 1.6vw, 28px)', display:'grid', gridTemplateColumns:'auto 1fr auto', gap:18, alignItems:'center', boxSizing:'border-box' }}>
           <div style={{ display:'flex', alignItems:'center', gap:13 }}>
             <NexusLogo size="sm" subtitle="Live Exercise Interface" compact />
           </div>
@@ -3724,7 +3728,7 @@ async function startCustomScenario(customScenario) {
       <main style={{ flex:1, minHeight:0, padding:'clamp(10px, 1vw, 16px)', display:'flex', flexDirection:'column', alignItems:'center', gap:9, boxSizing:'border-box' }}>
 
         {/* LIFELINE BAR */}
-        <section style={{ ...panelShell, width:'min(100%, 1760px)', flexShrink:0, minHeight:'auto', boxSizing:'border-box' }}>
+        <section style={{ ...panelShell, width:liveShellWidth, flexShrink:0, minHeight:'auto', boxSizing:'border-box' }}>
           <div style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 10px', borderBottom:`1px solid ${UI.borderSoft}` }}>
             <div style={{ fontSize:11, color:UI.text, fontWeight:950, textTransform:'uppercase', letterSpacing:'0.10em', display:'flex', alignItems:'center' }}>
               Community Lifelines
@@ -3738,7 +3742,7 @@ async function startCustomScenario(customScenario) {
         </section>
 
         {/* ESF ACTIVATION TRACKER */}
-        <section style={{ width:'min(100%, 1760px)', display:'flex', alignItems:'center', gap:7, border:`1px solid ${UI.border}`, borderRadius:6, background:'rgba(3,14,24,0.68)', padding:'7px 10px', flexShrink:0, boxSizing:'border-box' }}>
+        <section style={{ width:liveShellWidth, display:'flex', alignItems:'center', gap:7, border:`1px solid ${UI.border}`, borderRadius:6, background:'rgba(3,14,24,0.68)', padding:'7px 10px', flexShrink:0, boxSizing:'border-box' }}>
           <div style={{ fontSize:11, color:UI.text, fontWeight:950, textTransform:'uppercase', letterSpacing:'0.10em', whiteSpace:'nowrap', display:'flex', alignItems:'center' }}>
             ESF Activation Tracker
             <InfoBtn panelKey="esf" activeInfo={activeInfo} setActiveInfo={setActiveInfo} />
@@ -3764,7 +3768,7 @@ async function startCustomScenario(customScenario) {
         </section>
 
         {/* THREE-COLUMN WORKSPACE */}
-        <div ref={containerRef} style={{ width:'min(100%, 1760px)', display:'flex', flex:1, minHeight:0, boxSizing:'border-box' }}>
+        <div ref={containerRef} style={{ width:liveShellWidth, display:'flex', flex:1, minHeight:0, boxSizing:'border-box' }}>
 
           {/* LEFT COLUMN: FLASH CARDS / MEDIA */}
           <div ref={leftColRef} style={{ width:`${leftWidth}%`, display:'flex', flexDirection:'column', flexShrink:0, minHeight:0 }}>
