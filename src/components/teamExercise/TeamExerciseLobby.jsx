@@ -104,7 +104,7 @@ function getInitialRoomCode() {
   catch { return '' }
 }
 
-export default function TeamExerciseLobby({ entryMode='host', state, update, onMissionPortal }) {
+export default function TeamExerciseLobby({ entryMode='host', state, update, onMissionPortal, onStartExercise }) {
   const scenarioEntries = useMemo(() => Object.entries(SCENARIOS).filter(([key]) => Boolean(SCENARIO_VISUALS[key])), [])
   const initialLinkCode = getInitialRoomCode()
   const [mode, setMode] = useState(entryMode)
@@ -124,6 +124,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   const [copyMsg, setCopyMsg] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [launching, setLaunching] = useState(false)
 
   const code = room?.roomCode || ''
   const selectedVisual = SCENARIO_VISUALS[selectedScenario] || SCENARIO_VISUALS[room?.exercise?.scenario]
@@ -133,6 +134,8 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   const takenRoles = roster.map(p => p.role).filter(Boolean)
   const joinTakenRoles = (joinPreview?.players || []).map(p => p.role).filter(Boolean)
   const currentPlayer = roster.find(p => p.id === playerId)
+  const hostPlayer = roster.find(p => p.isHost)
+  const launchPlayer = currentPlayer || (mode === 'host' ? hostPlayer : null)
 
   useEffect(() => {
     if (screen !== 'lobby' || !code) return undefined
@@ -168,6 +171,13 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
     const id = setInterval(load, 2500)
     return () => { cancelled = true; clearInterval(id) }
   }, [screen, joinCode])
+
+  useEffect(() => {
+    if (room?.status !== 'active' || launching || !launchPlayer || !onStartExercise) return
+    setLaunching(true)
+    update?.({ teamRoom:room })
+    onStartExercise(room, launchPlayer)
+  }, [room, launching, launchPlayer, onStartExercise, update])
 
   useEffect(() => {
     if (screen !== 'join') return undefined
@@ -234,6 +244,17 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
     setBusy(true); setError('')
     try {
       const data = await apiTeamRoom({ action:'updateRole', code, playerId:id, role })
+      setRoom(data.room)
+      update?.({ teamRoom:data.room })
+    } catch (err) { setError(err.message) }
+    finally { setBusy(false) }
+  }
+
+  async function startExercise() {
+    if (!code || busy || room?.status !== 'lobby') return
+    setBusy(true); setError('')
+    try {
+      const data = await apiTeamRoom({ action:'start', code })
       setRoom(data.room)
       update?.({ teamRoom:data.room })
     } catch (err) { setError(err.message) }
@@ -368,7 +389,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
 
         <section style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:12 }}>
           <div style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:DS.panel, padding:18 }}><FieldLabel>Team Shared Notes</FieldLabel><div style={{ color:DS.muted, fontSize:14 }}>Shared notes activate during live team play. They stay visible to the team and support coordination, but they do not replace player action submissions.</div></div>
-          <div style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:DS.panel2, padding:18, display:'grid', gap:12 }}><div><FieldLabel>STARTEX</FieldLabel><div style={{ color:DS.muted, fontSize:13, lineHeight:1.5 }}>Next build wires this button to the normal single-player EOC live page.</div></div><PrimaryButton disabled={true} onClick={() => {}}>STARTEX — Next Build</PrimaryButton></div>
+          <div style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:DS.panel2, padding:18, display:'grid', gap:12 }}><div><FieldLabel>STARTEX</FieldLabel><div style={{ color:DS.muted, fontSize:13, lineHeight:1.5 }}>{activeRoles >= 2 ? 'Start the exercise for everyone in this room.' : 'At least two active player roles are required to start.'}</div></div><PrimaryButton disabled={busy || launching || room?.status !== 'lobby' || activeRoles < 2} onClick={startExercise}>{launching ? 'Launching...' : busy ? 'Starting...' : 'STARTEX'}</PrimaryButton></div>
         </section>
       </>
     )

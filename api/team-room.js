@@ -313,7 +313,7 @@ async function handleCreate(body) {
   }
 
   await redisSaveRoom(room);
-  return { ok: true, room: publicRoom(room) };
+  return { ok: true, playerId: room.players[0]?.id || null, room: publicRoom(room) };
 }
 
 async function handleGet(code) {
@@ -351,7 +351,7 @@ async function handleJoin(body) {
 
   room.players.push(player);
   await redisSaveRoom(room);
-  return { ok: true, player, room: publicRoom(room) };
+  return { ok: true, playerId: player.id, player, room: publicRoom(room) };
 }
 
 async function handleUpdateRole(body) {
