@@ -3011,6 +3011,12 @@ export default function App() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(SAVE_KEY)
+      const params = new URLSearchParams(window.location.search)
+      const teamRoom = params.get('teamRoom')
+      if (teamRoom) {
+        setState({ ...defaultState, ...(saved ? JSON.parse(saved) : {}), screen:'team-lobby', teamEntryMode:'join' })
+        return
+      }
       setState(saved ? { ...defaultState, ...JSON.parse(saved) } : defaultState)
     } catch { setState(defaultState) }
   }, [])
