@@ -57,7 +57,7 @@ function Icon({ type, size=28, color=DS.blue2 }) {
   return <svg {...p}>{icons[type] || icons.file}</svg>
 }
 
-function Header({ onStartExercise, onStartTeamExercise, onGuidedTour, onResources }) {
+function Header({ onStartExercise, onTeamExercise, onGuidedTour, onResources }) {
   return (
     <header style={{ height:76, display:'flex', alignItems:'center', justifyContent:'center', borderBottom:`1px solid ${DS.border}`, background:'linear-gradient(180deg, rgba(2,10,18,0.98), rgba(3,13,22,0.96))', boxSizing:'border-box', flexShrink:0 }}>
       <div style={{ width:'min(100%, 1680px)', padding:'0 clamp(18px, 2vw, 34px)', display:'flex', alignItems:'center', justifyContent:'space-between', boxSizing:'border-box' }}>
@@ -79,8 +79,8 @@ function Header({ onStartExercise, onStartTeamExercise, onGuidedTour, onResource
           <a href="/NEXUS_EOC_User_Guide.pdf" target="_blank" rel="noreferrer" style={{ height:42, padding:'0 16px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer', textDecoration:'none' }}>
             <Icon type="file" size={19} color={DS.blue2} /> User Guide
           </a>
-          <button onClick={onStartTeamExercise} style={{ height:42, padding:'0 16px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(45,226,184,0.10)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer' }}>
-            <Icon type="org" size={19} color={DS.green} /> Team Exercise
+          <button onClick={onTeamExercise} style={{ height:42, padding:'0 16px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer' }}>
+            <Icon type="org" size={20} color={DS.green} /> Team Exercise
           </button>
           <button onClick={onStartExercise} style={{ height:42, padding:'0 20px', display:'flex', alignItems:'center', gap:10, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'linear-gradient(180deg, #1455B8, #0E3F91)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer', boxShadow:'0 0 22px rgba(46,131,255,0.16)' }}>
             Start Exercise <Icon type="arrow" size={19} color="#fff" />
@@ -691,10 +691,64 @@ function AboutNexusModal({ onClose }) {
 }
 
 
-export default function MissionPortal({ onStartExercise, onStartTeamExercise }) {
+function TeamExerciseChoiceModal({ onClose, onHost, onJoin }) {
+  const choice = (icon, title, text, onClick, accent) => (
+    <button
+      onClick={onClick}
+      style={{
+        textAlign:'left',
+        border:`1px solid ${DS.borderStrong}`,
+        borderRadius:8,
+        background:'linear-gradient(180deg, rgba(6,23,38,0.94), rgba(2,11,19,0.96))',
+        color:DS.text,
+        padding:20,
+        cursor:'pointer',
+        display:'grid',
+        gridTemplateColumns:'58px 1fr 26px',
+        gap:16,
+        alignItems:'center',
+      }}
+    >
+      <div style={{ width:52, height:52, borderRadius:'50%', border:`1.5px solid ${accent}`, display:'grid', placeItems:'center', background:`${accent}16` }}>
+        <Icon type={icon} size={30} color={accent} />
+      </div>
+      <div>
+        <div style={{ fontSize:18, fontWeight:950, letterSpacing:'0.04em', textTransform:'uppercase', marginBottom:6 }}>{title}</div>
+        <div style={{ color:DS.muted, fontSize:13, lineHeight:1.5 }}>{text}</div>
+      </div>
+      <Icon type="arrow" size={24} color={accent} />
+    </button>
+  )
+
+  return (
+    <div role="dialog" aria-modal="true" aria-label="Team Exercise" style={{ position:'fixed', inset:0, zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:24, background:'rgba(1, 7, 13, 0.76)', backdropFilter:'blur(7px)', WebkitBackdropFilter:'blur(7px)' }}>
+      <div style={{ width:'min(780px, 94vw)', border:`1px solid ${DS.borderStrong}`, borderRadius:10, overflow:'hidden', background:'linear-gradient(135deg, rgba(4,17,29,0.98), rgba(2,9,16,0.98) 58%, rgba(3,13,23,0.98))', boxShadow:'0 28px 90px rgba(0,0,0,0.62), 0 0 42px rgba(46,131,255,0.13)', color:DS.text }}>
+        <div style={{ minHeight:76, padding:'18px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:18, borderBottom:`1px solid ${DS.border}`, background:'linear-gradient(90deg, rgba(46,131,255,0.18), rgba(45,226,184,0.06), transparent)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:14, minWidth:0 }}>
+            <NexusLogo variant="primary" tone="dark" size={48} imageStyle={{ maxWidth:260 }} />
+            <div style={{ width:1, height:38, background:DS.border, flex:'0 0 auto' }} />
+            <div style={{ color:DS.green, fontSize:13, fontWeight:850, letterSpacing:'0.12em', textTransform:'uppercase', whiteSpace:'nowrap' }}>Team Exercise</div>
+          </div>
+          <button onClick={onClose} aria-label="Close Team Exercise" style={{ width:38, height:38, borderRadius:8, border:`1px solid ${DS.border}`, background:'rgba(2,11,19,0.58)', color:DS.text, cursor:'pointer', fontSize:22, lineHeight:1, display:'grid', placeItems:'center' }}>×</button>
+        </div>
+        <div style={{ padding:'26px 28px 28px' }}>
+          <h2 style={{ margin:'0 0 8px', color:DS.text, fontSize:'clamp(28px, 3vw, 38px)', lineHeight:1.06, fontWeight:950 }}>Are you hosting or joining?</h2>
+          <p style={{ margin:'0 0 20px', color:DS.muted, fontSize:15, lineHeight:1.55 }}>Host creates the event and shares the room code. Players enter the code and wait for role assignment.</p>
+          <div style={{ display:'grid', gap:14 }}>
+            {choice('org', 'Host a Team Exercise', 'Create the room, choose the scenario, assign roles, and start the exercise.', onHost, DS.green)}
+            {choice('person', 'Join a Team Exercise', 'Enter a room code from your host and wait for your assigned EOC role.', onJoin, DS.blue2)}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function MissionPortal({ onStartExercise, onTeamExercise }) {
   const [showAboutNexus, setShowAboutNexus] = useState(false)
   const [showGuidedTour, setShowGuidedTour] = useState(false)
   const [showResources, setShowResources] = useState(false)
+  const [showTeamChoice, setShowTeamChoice] = useState(false)
   return (
     <div style={{ width:'100vw', minHeight:'100vh', background:`radial-gradient(circle at 22% 18%, rgba(46,131,255,0.12), transparent 34%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`, color:DS.text, fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif', overflow:'hidden' }}>
       <style>{`
@@ -702,7 +756,7 @@ export default function MissionPortal({ onStartExercise, onStartTeamExercise }) 
         @media (max-width: 1280px) { .nexus-scenario-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
         @media (max-width: 980px) { .nexus-scenario-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
       `}</style>
-      <Header onStartExercise={onStartExercise || (() => {})} onStartTeamExercise={onStartTeamExercise || (() => {})} onGuidedTour={() => setShowGuidedTour(true)} onResources={() => setShowResources(true)} />
+      <Header onStartExercise={onStartExercise || (() => {})} onTeamExercise={() => setShowTeamChoice(true)} onGuidedTour={() => setShowGuidedTour(true)} onResources={() => setShowResources(true)} />
       <main style={{ height:'calc(100vh - 76px)', overflowY:'auto', overflowX:'hidden', padding:'clamp(12px, 1.2vw, 20px)', boxSizing:'border-box' }}>
         <div style={{ width:'min(100%, 1680px)', margin:'0 auto', display:'flex', flexDirection:'column', gap:12 }}>
           <Hero />
@@ -746,6 +800,13 @@ export default function MissionPortal({ onStartExercise, onStartTeamExercise }) 
           {showGuidedTour && <GuidedTourModal onClose={() => setShowGuidedTour(false)} />}
       {showAboutNexus && <AboutNexusModal onClose={() => setShowAboutNexus(false)} />}
       {showResources && <ResourcesModal onClose={() => setShowResources(false)} />}
+      {showTeamChoice && (
+        <TeamExerciseChoiceModal
+          onClose={() => setShowTeamChoice(false)}
+          onHost={() => { setShowTeamChoice(false); onTeamExercise?.('host') }}
+          onJoin={() => { setShowTeamChoice(false); onTeamExercise?.('join') }}
+        />
+      )}
     </div>
   )
 }

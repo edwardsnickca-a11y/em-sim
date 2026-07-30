@@ -15,7 +15,7 @@ import { LIFELINES, DEFAULT_LIFELINES, LL_COLORS } from './data/lifelines'
 import { AAR_SECTIONS } from './data/aar'
 import MissionPortal from './components/missionPortal/MissionPortal'
 import StartExercise from './components/startExercise/StartExercise'
-import TeamLobby from './components/teamExercise/TeamLobby'
+import TeamExerciseLobby from './components/teamExercise/TeamExerciseLobby'
 import NexusLogo from './components/brand/NexusLogo'
 
 delete L.Icon.Default.prototype._getIconUrl
@@ -986,11 +986,10 @@ const INITIAL_LIFELINES_UNKNOWN = Object.fromEntries(
 const SAVE_KEY = 'em_sim_v14'
 
 const defaultState = {
-  screen:'portal', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'', role:'EOC Director',
+  screen:'portal', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'', role:'EOC Director', teamEntryMode:'host',
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[],
   dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:null,
-  teamRoom:null,
 }
 
 
@@ -3389,7 +3388,7 @@ async function startCustomScenario(customScenario) {
       <MissionPortal
         state={state}
         onStartExercise={() => update({ screen:'setup' })}
-        onStartTeamExercise={() => update({ screen:'teamLobby' })}
+        onTeamExercise={(entryMode='host') => update({ screen:'team-lobby', teamEntryMode:entryMode })}
         onStartCustomScenario={startCustomScenario}
         showGuidedTour={showOnboarding}
         onCloseGuidedTour={closeOnboarding}
@@ -3397,11 +3396,13 @@ async function startCustomScenario(customScenario) {
     )
   }
 
-  if (state.screen === 'teamLobby') {
+
+  if (state.screen === 'team-lobby') {
     return (
-      <TeamLobby
+      <TeamExerciseLobby
         state={state}
         update={update}
+        entryMode={state.teamEntryMode || 'host'}
         onMissionPortal={() => update({ screen:'portal' })}
       />
     )
