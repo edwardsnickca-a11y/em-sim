@@ -2,7 +2,8 @@
 // The app selects the location before Claude runs, so the model builds around a real place instead of choosing from examples.
 
 const RECENT_LOCATIONS_KEY = 'nexus_recent_locations_v1'
-const RECENT_LIMIT = 8
+const RECENT_LIMIT = 12
+const BROADLY_PLAUSIBLE_HAZARDS = new Set(['rdd', 'cyber', 'mci'])
 
 export function normalizeJurisdictionType(value = '') {
   const v = String(value || '').trim()
@@ -139,9 +140,18 @@ export function selectScenarioLocation(scenarioKey, jurisdictionType) {
   const normalized = normalizeJurisdictionType(jurisdictionType)
   const hazard = String(scenarioKey || '').toLowerCase()
 
-  let candidates = LOCATION_BANK.filter(loc => loc.jurisdictionType === normalized && loc.hazards.includes(hazard))
-  if (!candidates.length) candidates = LOCATION_BANK.filter(loc => loc.jurisdictionType === normalized)
-  if (!candidates.length) candidates = LOCATION_BANK.filter(loc => loc.hazards.includes(hazard))
+  const sameJurisdiction = LOCATION_BANK.filter(loc => loc.jurisdictionType === normalized)
+  let candidates = BROADLY_PLAUSIBLE_HAZARDS.has(hazard)
+    ? sameJurisdiction
+    : sameJurisdiction.filter(loc => loc.hazards.includes(hazard))
+
+  // A one-location pool guarantees repetition. When the exact jurisdiction/hazard
+  // match is too narrow, broaden while preserving real-world plausibility.
+  if (candidates.length < 2) {
+    const hazardMatches = LOCATION_BANK.filter(loc => loc.hazards.includes(hazard))
+    candidates = [...candidates, ...hazardMatches.filter(loc => !candidates.some(existing => existing.id === loc.id))]
+  }
+  if (!candidates.length) candidates = sameJurisdiction
   if (!candidates.length) candidates = LOCATION_BANK
 
   const recent = safeReadRecent()

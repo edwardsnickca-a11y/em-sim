@@ -25,6 +25,60 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
+
+const COACHING_PATTERNS = [
+  /\b(?:you|the player|the eoc)\s+(?:must|should|need(?:s)? to|has to|ought to)\b/i,
+  /\b(?:must|should|need(?:s)? to|has to|ought to)\s+(?:activate|coordinate|establish|request|notify|prioritize|open|deploy|assign|direct|issue|contact|brief|decide)\b/i,
+  /\b(?:the|your)\s+(?:top|first|immediate|highest)\s+priority\s+(?:is|should be)\b/i,
+  /\b(?:is|remains)\s+(?:the )?(?:top|first|immediate|highest)\s+priority\b/i,
+  /\b(?:take|make|begin|start|activate|establish|coordinate|request|notify|prioritize)\b.{0,40}\bimmediately\b/i,
+]
+
+function isCoachingText(value='') {
+  const text = String(value || '').trim()
+  return text ? COACHING_PATTERNS.some(pattern => pattern.test(text)) : false
+}
+
+function neutralizeGeneratedText(value='', fallback='') {
+  const text = String(value || '').trim()
+  if (!text) return fallback
+  const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text]
+  const kept = sentences.map(sentence => sentence.trim()).filter(sentence => sentence && !isCoachingText(sentence))
+  return kept.join(' ').trim() || fallback
+}
+
+function sanitizeWorldOutput(world, fallbackLocation='') {
+  const safe = world && typeof world === 'object' ? { ...world } : {}
+  safe.location = safe.location || fallbackLocation
+  safe.dispatches = Array.isArray(safe.dispatches)
+    ? safe.dispatches.map(item => neutralizeGeneratedText(item)).filter(Boolean).slice(0, 6)
+    : []
+  safe.openingNarrative = neutralizeGeneratedText(
+    safe.openingNarrative,
+    `STARTEX. Initial reports are still being reconciled for ${safe.location || 'the jurisdiction'}, and the operating picture remains incomplete.`
+  )
+  return safe
+}
+
+function sanitizeTurnOutput(turn, currentState) {
+  const safe = turn && typeof turn === 'object' ? { ...turn } : {}
+  safe.consequence = neutralizeGeneratedText(
+    safe.consequence,
+    'New information is still being reconciled. Several reports remain incomplete or unconfirmed.'
+  )
+  safe.dispatches = Array.isArray(safe.dispatches)
+    ? safe.dispatches.map(item => neutralizeGeneratedText(item)).filter(Boolean).slice(0, 4)
+    : []
+  safe.prompt = neutralizeGeneratedText(
+    safe.prompt,
+    'Several coordination issues remain unresolved as the situation develops.'
+  )
+  safe.lifelines = safe.lifelines || currentState?.lifelines
+  safe.headlines = Array.isArray(safe.headlines) ? safe.headlines : []
+  safe.pins = Array.isArray(safe.pins) ? safe.pins : []
+  return safe
+}
+
 function makeIcon(color, type='OTHER') {
   const t = String(type || 'OTHER').toUpperCase()
   const iconMap = {
@@ -135,7 +189,7 @@ YOUR TASK:
 Generate a specific, realistic opening world state for the approved custom scenario.
 Generate 4-7 initial map pins representing EOC-relevant locations or impacts. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible for the real location. If you are not confident about exact facilities, use generic labels and plausible coordinates near the jurisdiction center.
 Generate 4-6 opening dispatch items that reflect the selected location, event/hazard, training focus, and EOC-level emergency management concerns.
-Generate an opening narrative in Deputy Emergency Manager voice that establishes STARTEX, current uncertainty, EOC posture, and the immediate EOC-level decision pressure.
+Generate an opening narrative in Deputy Emergency Manager voice that establishes STARTEX, current uncertainty, EOC posture, and unresolved operational pressure. Do not identify the correct priority or tell the player what action to take.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 {
@@ -147,7 +201,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
   "dispatches": [
     "Dispatch item specific to this location, event/hazard, and EOC-level coordination problem"
   ],
-  "openingNarrative": "Deputy EM opening that names the selected location, describes STARTEX conditions, and puts the first EOC-level pressure in front of the player."
+  "openingNarrative": "Deputy EM opening that names the selected location and describes STARTEX conditions, uncertainty, and unresolved EOC-level pressure without prescribing an action."
 }`
 }
 
@@ -253,7 +307,7 @@ Generate 4-7 initial map pins representing key infrastructure for this specific 
 
 Generate 4-6 opening dispatch items that reflect the selected location, jurisdiction type, realistic resource constraints, and EOC-level emergency management concerns. Keep the player at the EOC level, not the field Incident Commander level.
 
-Generate an opening narrative (2-3 sentences) that establishes the selected location, the incident conditions, and the most immediate EOC-level challenge facing the player.
+Generate an opening narrative (2-3 sentences) that establishes the selected location, current incident conditions, known gaps, and unresolved coordination pressure. Present the situation without identifying the correct priority, recommending an action, or telling the player what to do.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 {
@@ -265,7 +319,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
   "dispatches": [
     "Dispatch item specific to this location and jurisdiction"
   ],
-  "openingNarrative": "2-3 sentence opening that names the selected location, describes the incident, and flags the key EOC-level constraint for this jurisdiction type."
+  "openingNarrative": "2-3 sentence opening that names the selected location and describes incident conditions, uncertainty, and unresolved coordination pressure without recommending an action."
 }`
 }
 
@@ -916,9 +970,13 @@ The app requires valid JSON. Respond only with valid JSON. Do not use markdown f
 
 For live turns, keep the Deputy Emergency Manager voice inside the "consequence" and "prompt" fields.
 
-The "consequence" field should be conversational, operational, and human. It should explain what changed, why it matters, what pressure it creates, and what remains unresolved.
+The "consequence" field should be conversational, operational, and human. It should explain what changed, why it matters, what pressure it creates, and what remains unresolved. It must not identify the correct priority, recommend a solution, or tell the player what the EOC must or should do.
 
-The "prompt" field should not be a generic question. It should put the next EOC-level pressure or decision issue in front of the player in one sentence.
+Flash-card dispatches must contain only reports, requests, observations, constraints, conflicting information, or status changes. Do not write directives, recommendations, priorities, solutions, or statements that the EOC must act immediately.
+
+The "prompt" field should not be a generic question and must not reveal the preferred action. State the unresolved EOC-level issue or competing pressure neutrally in one sentence.
+
+Avoid coaching phrases including: "the EOC must," "you should," "needs to be established," "is the priority," "the first action is," and "immediately" when used to prescribe a response.
 
 Continue generating dispatches, headlines, pins, and lifeline updates so the app UI can update correctly.
 
@@ -990,7 +1048,6 @@ const defaultState = {
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[],
   dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:null,
-  teamMode:false, roomCode:null, playerId:null, players:[], hostMode:null, teamRoom:null,
 }
 
 
@@ -3082,7 +3139,7 @@ export default function App() {
     })
     const data = await res.json()
     const raw  = data.content?.[0]?.text || ''
-    return JSON.parse(raw.replace(/```json|```/g,'').trim())
+    return sanitizeWorldOutput(JSON.parse(raw.replace(/```json|```/g,'').trim()), selectedLocation?.label || jurisdiction)
   }
 
 
@@ -3096,16 +3153,12 @@ async function initCustomWorld(customScenario) {
   })
   const data = await res.json()
   const raw  = data.content?.[0]?.text || ''
-  return JSON.parse(raw.replace(/```json|```/g,'').trim())
+  return sanitizeWorldOutput(JSON.parse(raw.replace(/```json|```/g,'').trim()), customScenario.location)
 }
 
   async function startScenario(scenarioKey, launchOptions={}) {
     const sc = SCENARIOS[scenarioKey]
-    const launchJurisdiction = launchOptions.jurisdiction || state.jurisdiction
-    const launchDifficulty = launchOptions.difficulty || state.difficulty
-    const launchRole = launchOptions.role || state.role || 'EOC Director'
-    const launchPlayerName = launchOptions.playerName ?? state.playerName
-    const jurisdiction = normalizeJurisdictionType(launchJurisdiction)
+    const jurisdiction = normalizeJurisdictionType(state.jurisdiction)
     const specificJurisdiction = String(launchOptions?.specificJurisdiction || '').trim()
     const isLocalizedScenario = Boolean(specificJurisdiction)
     const selectedLocation = isLocalizedScenario
@@ -3125,23 +3178,19 @@ async function initCustomWorld(customScenario) {
     setActiveESFs({})
     setInitLoading(true)
     if (typeof window !== 'undefined' && window.posthog) {
-      window.posthog.capture('scenario_launched', { scenario: scenarioKey, jurisdiction, difficulty: launchDifficulty, location: selectedLocation?.label, localized: isLocalizedScenario })
+      window.posthog.capture('scenario_launched', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, location: selectedLocation?.label, localized: isLocalizedScenario })
     }
-    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: launchDifficulty, role: launchRole, location: selectedLocation?.label, localized: isLocalizedScenario, ...(launchPlayerName ? { player: launchPlayerName } : {}) })
+    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, role: state.role, location: selectedLocation?.label, localized: isLocalizedScenario, ...(state.playerName ? { player: state.playerName } : {}) })
 
     update({
       screen:'game', scenario:scenarioKey,
       dispatches:[], terminal:[
-        { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${selectedLocation?.label || jurisdiction} — ${launchDifficulty}` },
+        { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${selectedLocation?.label || jurisdiction} — ${state.difficulty}` },
         { type:'system', text:`Generating scenario world for ${selectedLocation?.label || jurisdiction}...` },
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
       notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
       worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:isLocalizedScenario ? specificJurisdiction : null,
-      jurisdiction:launchJurisdiction, difficulty:launchDifficulty, role:launchRole, playerName:launchPlayerName,
-      teamMode:Boolean(launchOptions.teamMode), roomCode:launchOptions.roomCode || null,
-      playerId:launchOptions.playerId || null, players:launchOptions.players || [],
-      hostMode:launchOptions.hostMode || null, teamRoom:launchOptions.teamRoom || state.teamRoom || null,
     })
 
     try {
@@ -3153,16 +3202,16 @@ async function initCustomWorld(customScenario) {
         worldState: world,
         dispatches: initDispatches,
         terminal: [
-          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${launchDifficulty} — ${launchRole.toUpperCase()}${launchPlayerName ? ` — ${launchPlayerName.toUpperCase()}` : ''}` },
+          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${state.difficulty} — ${(state.role||'EOC Director').toUpperCase()}${state.playerName ? ` — ${state.playerName.toUpperCase()}` : ''}` },
           { type:'divider' },
-          { type:'narrator', text:world.openingNarrative + ' What is your first action?' },
+          { type:'narrator', text:world.openingNarrative },
         ],
         dynamicPins: initPins,
         exerciseTranscript: [{
           type:'opening',
           time:'H+0:00',
           location: world.location,
-          narrative: world.openingNarrative + ' What is your first action?',
+          narrative: world.openingNarrative,
           dispatches: initDispatches,
           pins: initPins,
           lifelines: INITIAL_LIFELINES_UNKNOWN,
@@ -3171,9 +3220,9 @@ async function initCustomWorld(customScenario) {
     } catch(e) {
       update({
         terminal: [
-          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${launchDifficulty}` },
+          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${state.difficulty}` },
           { type:'divider' },
-          { type:'narrator', text:sc.desc + ' Your EOC is activating. What is your first action?' },
+          { type:'narrator', text:sc.desc + ' Your EOC is activating. Initial reports remain incomplete.' },
         ],
         dispatches: [{ id:0, text:`${sc.name} confirmed. EOC activation underway. Resources status unknown.`, turn:0 }],
         exerciseTranscript: [{
@@ -3181,7 +3230,7 @@ async function initCustomWorld(customScenario) {
           time:'H+0:00',
           location: selectedLocation?.label || jurisdiction,
           localizedJurisdiction: isLocalizedScenario ? specificJurisdiction : null,
-          narrative: sc.desc + ' Your EOC is activating. What is your first action?',
+          narrative: sc.desc + ' Your EOC is activating. Initial reports remain incomplete.',
           dispatches: [{ id:0, text:`${sc.name} confirmed. EOC activation underway. Resources status unknown.`, turn:0 }],
           pins: [],
           lifelines: INITIAL_LIFELINES_UNKNOWN,
@@ -3273,22 +3322,6 @@ async function startCustomScenario(customScenario) {
   setTimeout(() => inputRef.current?.focus(), 100)
 }
 
-  async function startTeamExercise(room, participant) {
-    if (!room?.exercise?.scenario || !participant?.role) return
-    await startScenario(room.exercise.scenario, {
-      jurisdiction: room.exercise.jurisdiction,
-      difficulty: room.exercise.difficulty,
-      role: participant.role,
-      playerName: participant.name,
-      teamMode: true,
-      roomCode: room.roomCode,
-      playerId: participant.id,
-      players: room.players || [],
-      hostMode: room.exercise.hostMode,
-      teamRoom: room,
-    })
-  }
-
   async function sendAction() {
     if (!input.trim() || loading || !state) return
     const action = input.trim()
@@ -3317,7 +3350,8 @@ async function startCustomScenario(customScenario) {
       const raw  = data.content?.[0]?.text || ''
       let parsed
       try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
-      catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'What is your next action?', lifelines:state.lifelines, headlines:[], pins:[], aar:null } }
+      catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'Several coordination issues remain unresolved as the situation develops.', lifelines:state.lifelines, headlines:[], pins:[], aar:null } }
+      parsed = sanitizeTurnOutput(parsed, state)
 
       const nextTurn   = state.turn + 1
       if (typeof window !== 'undefined' && window.posthog) {
@@ -3435,7 +3469,6 @@ async function startCustomScenario(customScenario) {
         update={update}
         entryMode={state.teamEntryMode || 'host'}
         onMissionPortal={() => update({ screen:'portal' })}
-        onStartExercise={startTeamExercise}
       />
     )
   }
