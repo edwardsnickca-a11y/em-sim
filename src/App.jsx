@@ -15,6 +15,7 @@ import { LIFELINES, DEFAULT_LIFELINES, LL_COLORS } from './data/lifelines'
 import { AAR_SECTIONS } from './data/aar'
 import MissionPortal from './components/missionPortal/MissionPortal'
 import StartExercise from './components/startExercise/StartExercise'
+import TeamLobby from './components/teamExercise/TeamLobby'
 import NexusLogo from './components/brand/NexusLogo'
 
 delete L.Icon.Default.prototype._getIconUrl
@@ -989,6 +990,7 @@ const defaultState = {
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[],
   dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:null,
+  teamRoom:null,
 }
 
 
@@ -3387,9 +3389,20 @@ async function startCustomScenario(customScenario) {
       <MissionPortal
         state={state}
         onStartExercise={() => update({ screen:'setup' })}
+        onStartTeamExercise={() => update({ screen:'teamLobby' })}
         onStartCustomScenario={startCustomScenario}
         showGuidedTour={showOnboarding}
         onCloseGuidedTour={closeOnboarding}
+      />
+    )
+  }
+
+  if (state.screen === 'teamLobby') {
+    return (
+      <TeamLobby
+        state={state}
+        update={update}
+        onMissionPortal={() => update({ screen:'portal' })}
       />
     )
   }
