@@ -2437,10 +2437,16 @@ function AARDisplay({ aar, teamMode=false, teamAar=null, individualAar=null, all
     report += `${'='.repeat(72)}\n`
     report += `NEXUS EOC — nexuseoc.com\n`
 
-    if (typeof downloadPdfTextFile === 'function') {
-      downloadPdfTextFile(`NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.pdf`, report)
+    const filename = `NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.pdf`
+    if (teamMode && typeof downloadPlainPdfTextFile === 'function') {
+      // Team reports can extend well beyond the designed two-page solo AAR layout.
+      // Use the fully paginated text renderer so the shared, individual, facilitator,
+      // and communications sections are never truncated.
+      downloadPlainPdfTextFile(filename, report)
+    } else if (typeof downloadPdfTextFile === 'function') {
+      downloadPdfTextFile(filename, report)
     } else {
-      downloadTextFile(`NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.txt`, report)
+      downloadTextFile(filename.replace(/\.pdf$/i, '.txt'), report)
     }
   }
 
@@ -4729,9 +4735,18 @@ async function startCustomScenario(customScenario) {
                     </div>
                   )}
                   {(loading || initLoading) && (
-                    <div style={{ color:UI.dim, fontStyle:'italic', fontSize:fs }}>
-                      {initLoading ? 'Building scenario world...' : 'Evaluating action...'}
-                    </div>
+                    state.teamMode && teamLiveRoom?.status === 'ending' ? (
+                      <div style={{ marginTop:16, padding:'18px 20px', border:`1px solid ${UI.border}`, background:UI.panelSoft, borderRadius:6 }}>
+                        <div style={{ color:UI.text, fontSize:fs+1, fontWeight:900, marginBottom:8 }}>Generating Team AAR</div>
+                        <div style={{ color:UI.muted, fontSize:fs, lineHeight:1.6 }}>
+                          This may take several minutes. Take a short break while NEXUS reviews the team’s decisions, coordination, and role performance.
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ color:UI.dim, fontStyle:'italic', fontSize:fs }}>
+                        {initLoading ? 'Building scenario world...' : 'Evaluating action...'}
+                      </div>
+                    )
                   )}
                 </div>
               )}
