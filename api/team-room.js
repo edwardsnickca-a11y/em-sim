@@ -255,6 +255,10 @@ function publicRoom(room) {
     players: room.players,
     sharedNotes: room.sharedNotes || [],
     sharedScenario: room.sharedScenario || null,
+    turn: Number(room.turn || 0),
+    turnStatus: room.turnStatus || 'collecting',
+    submissions: (room.submissions || []).map(({ response, ...submission }) => submission),
+    sharedTurnState: room.sharedTurnState || null,
     startedAt: room.startedAt || null,
     createdAt: room.createdAt,
     updatedAt: room.updatedAt,
@@ -290,6 +294,9 @@ async function handleCreate(body) {
     players: [],
     sharedNotes: [],
     submissions: [],
+    turn: 0,
+    turnStatus: 'collecting',
+    sharedTurnState: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -407,9 +414,104 @@ async function handleStart(body) {
 
   room.sharedScenario = sharedScenario;
   room.status = 'active';
+  room.turn = 0;
+  room.turnStatus = 'collecting';
+  room.submissions = [];
+  room.sharedTurnState = null;
   room.startedAt = new Date().toISOString();
   await redisSaveRoom(room);
   return { ok: true, room: publicRoom(room) };
+}
+
+
+async function handleSubmitResponse(body) {
+  const roomCode = normalizeRoomCode(body.roomCode || body.code);
+  const playerId = String(body.playerId || '').trim();
+  const response = String(body.response || '').trim();
+  const expectedTurn = Number(body.turn);
+  if (!roomCode) throw new Error('Room code is required');
+  if (!playerId) throw new Error('Player ID is required');
+  if (!response) throw new Error('Response is required');
+
+  const room = await redisGetRoom(roomCode);
+  if (!room) return { ok:false, error:'Room not found', statusCode:404 };
+  if (room.status !== 'active') throw new Error('Team exercise is not active');
+  if (Number(room.turn || 0) !== expectedTurn) throw new Error('This turn has already advanced');
+  if ((room.turnStatus || 'collecting') !== 'collecting') throw new Error('The team turn is already being processed');
+
+  const player = room.players.find((item) => item.id === playerId && item.status !== 'removed');
+  if (!player || !player.role) throw new Error('Active player not found');
+
+  room.submissions = (room.submissions || []).filter((item) => !(item.turn === expectedTurn && item.playerId === playerId));
+  room.submissions.push({
+    turn: expectedTurn,
+    playerId,
+    playerName: player.name,
+    playerRole: player.role,
+    response,
+    submittedAt: new Date().toISOString(),
+  });
+  await redisSaveRoom(room);
+  return { ok:true, room:publicRoom(room) };
+}
+
+async function handleBeginAdvance(body) {
+  const roomCode = normalizeRoomCode(body.roomCode || body.code);
+  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
+  const expectedTurn = Number(body.turn);
+  const room = await redisGetRoom(roomCode);
+  if (!room) return { ok:false, error:'Room not found', statusCode:404 };
+  const host = room.players.find((item) => item.id === hostPlayerId && item.isHost);
+  if (!host) throw new Error('Only the host can advance the team turn');
+  if (room.status !== 'active') throw new Error('Team exercise is not active');
+  if (Number(room.turn || 0) !== expectedTurn) throw new Error('This turn has already advanced');
+  if ((room.turnStatus || 'collecting') !== 'collecting') throw new Error('The team turn is already being processed');
+
+  const activePlayers = room.players.filter((player) => player.status !== 'removed' && player.role);
+  const submissions = (room.submissions || []).filter((item) => item.turn === expectedTurn);
+  const submittedIds = new Set(submissions.map((item) => item.playerId));
+  const missing = activePlayers.filter((player) => !submittedIds.has(player.id));
+  if (missing.length) throw new Error(`Waiting for ${missing.map((player) => player.name || player.role).join(', ')}`);
+
+  room.turnStatus = 'processing';
+  room.processingStartedAt = new Date().toISOString();
+  await redisSaveRoom(room);
+  return { ok:true, submissions, room:publicRoom(room) };
+}
+
+async function handleCompleteTurn(body) {
+  const roomCode = normalizeRoomCode(body.roomCode || body.code);
+  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
+  const expectedTurn = Number(body.turn);
+  const sharedTurnState = body.sharedTurnState;
+  const room = await redisGetRoom(roomCode);
+  if (!room) return { ok:false, error:'Room not found', statusCode:404 };
+  const host = room.players.find((item) => item.id === hostPlayerId && item.isHost);
+  if (!host) throw new Error('Only the host can complete the team turn');
+  if (Number(room.turn || 0) !== expectedTurn) throw new Error('This turn has already advanced');
+  if (!sharedTurnState || Number(sharedTurnState.turn) !== expectedTurn + 1) throw new Error('Valid shared turn state is required');
+
+  room.sharedTurnState = sharedTurnState;
+  room.turn = expectedTurn + 1;
+  room.turnStatus = 'collecting';
+  room.submissions = [];
+  room.processingStartedAt = null;
+  if (sharedTurnState.situation === 'ENDEX') room.status = 'ended';
+  await redisSaveRoom(room);
+  return { ok:true, room:publicRoom(room) };
+}
+
+async function handleCancelAdvance(body) {
+  const roomCode = normalizeRoomCode(body.roomCode || body.code);
+  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
+  const room = await redisGetRoom(roomCode);
+  if (!room) return { ok:false, error:'Room not found', statusCode:404 };
+  const host = room.players.find((item) => item.id === hostPlayerId && item.isHost);
+  if (!host) throw new Error('Only the host can reset the team turn');
+  room.turnStatus = 'collecting';
+  room.processingStartedAt = null;
+  await redisSaveRoom(room);
+  return { ok:true, room:publicRoom(room) };
 }
 
 module.exports = async function handler(req, res) {
@@ -458,6 +560,18 @@ module.exports = async function handler(req, res) {
       case 'start':
       case 'startRoom':
         result = await handleStart(body);
+        break;
+      case 'submitResponse':
+        result = await handleSubmitResponse(body);
+        break;
+      case 'beginAdvance':
+        result = await handleBeginAdvance(body);
+        break;
+      case 'completeTurn':
+        result = await handleCompleteTurn(body);
+        break;
+      case 'cancelAdvance':
+        result = await handleCancelAdvance(body);
         break;
       default:
         throw new Error('Unknown team room action');

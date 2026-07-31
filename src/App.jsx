@@ -3064,6 +3064,8 @@ export default function App() {
   const [activeInfo, setActiveInfo]   = useState(null)
   const [activeESFs, setActiveESFs]   = useState({})
   const [showEndDialog, setShowEndDialog] = useState(false)
+  const [teamLiveRoom, setTeamLiveRoom] = useState(null)
+  const [teamSyncError, setTeamSyncError] = useState('')
   const [settings, setSettings]       = useState(() => {
     try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}') } }
     catch { return DEFAULT_SETTINGS }
@@ -3476,9 +3478,171 @@ async function startCustomScenario(customScenario) {
   setTimeout(() => inputRef.current?.focus(), 100)
 }
 
+  function applySharedTeamTurn(sharedTurnState, room=null) {
+    if (!sharedTurnState || Number(sharedTurnState.turn || 0) <= Number(state?.turn || 0)) return
+    update({
+      terminal: sharedTurnState.terminal || state.terminal,
+      history: sharedTurnState.history || state.history,
+      dispatches: sharedTurnState.dispatches || state.dispatches,
+      simTime: sharedTurnState.simTime || state.simTime,
+      situation: sharedTurnState.situation || state.situation,
+      turn: Number(sharedTurnState.turn),
+      lifelines: sharedTurnState.lifelines || state.lifelines,
+      headlines: sharedTurnState.headlines || state.headlines,
+      dynamicPins: sharedTurnState.dynamicPins || state.dynamicPins,
+      aar: sharedTurnState.aar || state.aar,
+      screen: sharedTurnState.situation === 'ENDEX' && sharedTurnState.aar ? 'aar' : state.screen,
+      exerciseTranscript: sharedTurnState.exerciseTranscript || state.exerciseTranscript,
+      teamRoom: room || state.teamRoom,
+      players: room?.players || state.players,
+    })
+  }
+
+  useEffect(() => {
+    if (state?.screen !== 'game' || !state?.teamMode || !state?.roomCode) {
+      setTeamLiveRoom(null)
+      setTeamSyncError('')
+      return undefined
+    }
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/team-room?code=${encodeURIComponent(state.roomCode)}`)
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to synchronize Team Room')
+        if (cancelled) return
+        setTeamLiveRoom(data.room)
+        setTeamSyncError('')
+        if (data.room?.sharedTurnState && Number(data.room.sharedTurnState.turn || 0) > Number(state.turn || 0)) {
+          applySharedTeamTurn(data.room.sharedTurnState, data.room)
+        }
+      } catch (err) {
+        if (!cancelled) setTeamSyncError(err.message)
+      }
+    }
+    load()
+    const id = setInterval(load, 2000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [state?.screen, state?.teamMode, state?.roomCode, state?.turn])
+
+  async function submitTeamResponse(action) {
+    setLoading(true)
+    setTeamSyncError('')
+    try {
+      const res = await fetch('/api/team-room', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ action:'submitResponse', roomCode:state.roomCode, playerId:state.playerId, turn:state.turn, response:action }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to submit team response')
+      setInput('')
+      setTeamLiveRoom(data.room)
+      update({ teamRoom:data.room, players:data.room?.players || state.players })
+    } catch (err) {
+      setTeamSyncError(err.message)
+    }
+    setLoading(false)
+    setTimeout(() => inputRef.current?.focus(), 50)
+  }
+
+  async function advanceTeamTurn() {
+    if (loading || !state?.teamMode || !state?.roomCode) return
+    setLoading(true)
+    setTeamSyncError('')
+    let began = false
+    try {
+      const beginRes = await fetch('/api/team-room', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ action:'beginAdvance', roomCode:state.roomCode, playerId:state.playerId, turn:state.turn }),
+      })
+      const beginData = await beginRes.json().catch(() => ({}))
+      if (!beginRes.ok || beginData.ok === false) throw new Error(beginData.error || 'Unable to advance team turn')
+      began = true
+      setTeamLiveRoom(beginData.room)
+
+      const submissions = beginData.submissions || []
+      const combinedAction = submissions.map((item) => `[${item.playerRole} — ${item.playerName}]\n${item.response}`).join('\n\n')
+      const teamMessage = `TEAM TURN ${state.turn + 1} RESPONSES\n\n${combinedAction}\n\nEvaluate these responses as the combined actions of the EOC team. Generate one shared consequence update for the entire room. Do not coach the players or identify the correct answer.`
+      const msgs = [...state.history, { role:'user', content:teamMessage }]
+      const aiRes = await fetch('/api/chat', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({
+          system:buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, '', 'EOC Team', state.customScenario),
+          messages:msgs,
+        }),
+      })
+      const aiData = await aiRes.json()
+      const raw = aiData.content?.[0]?.text || ''
+      let parsed
+      try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
+      catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'Several coordination issues remain unresolved as the situation develops.', lifelines:state.lifelines, headlines:[], pins:[], aar:null } }
+      parsed = sanitizeTurnOutput(parsed, state)
+
+      const nextTurn = state.turn + 1
+      const resolvedSituation = parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') ? 'ENDEX' : (parsed.situation||'DEVELOPING')
+      const newHistory = [...msgs, { role:'assistant', content:JSON.stringify(parsed) }]
+      const addedTerm = [
+        ...state.terminal,
+        { type:'player', text:`> TEAM RESPONSES SUBMITTED — TURN ${nextTurn}` },
+        { type:'time', text:parsed.time },
+        { type:'consequence', text:parsed.consequence },
+        resolvedSituation !== 'ENDEX' ? { type:'prompt', text:parsed.prompt } : null,
+        { type:'divider' },
+      ].filter(Boolean)
+      const newDispatches = parsed.dispatches?.length
+        ? [...parsed.dispatches.map((text,i) => ({ id:Date.now()+i, text, turn:nextTurn })), ...state.dispatches.slice(0,6)]
+        : state.dispatches
+      const newHeadlines = parsed.headlines?.length
+        ? [...parsed.headlines.map((h,i) => ({ ...h, id:Date.now()+i, turn:nextTurn })), ...state.headlines.slice(0,12)]
+        : state.headlines
+      const newDynamicPins = parsed.pins?.length
+        ? [...(state.dynamicPins||[]), ...parsed.pins.map((pin,i) => ({ ...pin, id:`dyn-${Date.now()}-${i}`, turn:nextTurn }))]
+        : (state.dynamicPins||[])
+      const transcriptEntry = {
+        type:'turn', turn:nextTurn, simTime:parsed.time || state.simTime, situation:resolvedSituation,
+        playerInput:combinedAction, aiResponse:parsed.consequence || '', prompt:resolvedSituation !== 'ENDEX' ? (parsed.prompt || '') : '',
+        dispatches:parsed.dispatches || [], headlines:parsed.headlines || [], pins:parsed.pins || [], lifelines:parsed.lifelines || state.lifelines,
+      }
+      const sharedTurnState = {
+        turn:nextTurn,
+        simTime:parsed.time || state.simTime,
+        situation:resolvedSituation,
+        terminal:addedTerm,
+        history:newHistory,
+        dispatches:newDispatches,
+        lifelines:parsed.lifelines || state.lifelines,
+        headlines:newHeadlines,
+        dynamicPins:newDynamicPins,
+        aar:parsed.aar || state.aar,
+        exerciseTranscript:[...(state.exerciseTranscript || []), transcriptEntry],
+      }
+      const completeRes = await fetch('/api/team-room', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ action:'completeTurn', roomCode:state.roomCode, playerId:state.playerId, turn:state.turn, sharedTurnState }),
+      })
+      const completeData = await completeRes.json().catch(() => ({}))
+      if (!completeRes.ok || completeData.ok === false) throw new Error(completeData.error || 'Unable to save shared team turn')
+      setTeamLiveRoom(completeData.room)
+      applySharedTeamTurn(sharedTurnState, completeData.room)
+    } catch (err) {
+      setTeamSyncError(err.message)
+      if (began) {
+        fetch('/api/team-room', {
+          method:'POST', headers:{ 'Content-Type':'application/json' },
+          body:JSON.stringify({ action:'cancelAdvance', roomCode:state.roomCode, playerId:state.playerId }),
+        }).catch(() => {})
+      }
+    }
+    setLoading(false)
+  }
+
   async function sendAction() {
     if (!input.trim() || loading || !state) return
     const action = input.trim()
+    if (state.teamMode) {
+      await submitTeamResponse(action)
+      return
+    }
     const isEndex = action.toUpperCase() === 'ENDEX'
     setInput(''); setLoading(true)
 
@@ -3757,6 +3921,14 @@ async function startCustomScenario(customScenario) {
   const initPins    = dynamicPins.filter(p => p.id?.startsWith('init-'))
   const turnPins    = dynamicPins.filter(p => !p.id?.startsWith('init-'))
   const isEndex     = state.situation === 'ENDEX'
+  const liveRoom = teamLiveRoom || state.teamRoom || null
+  const teamActivePlayers = (liveRoom?.players || state.players || []).filter(player => player.status !== 'removed' && player.role)
+  const teamTurnSubmissions = (liveRoom?.submissions || []).filter(item => Number(item.turn) === Number(state.turn))
+  const teamSubmittedIds = new Set(teamTurnSubmissions.map(item => item.playerId))
+  const currentTeamPlayer = teamActivePlayers.find(player => player.id === state.playerId) || (liveRoom?.players || []).find(player => player.id === state.playerId)
+  const currentPlayerSubmitted = Boolean(state.teamMode && teamSubmittedIds.has(state.playerId))
+  const teamAllSubmitted = Boolean(state.teamMode && teamActivePlayers.length > 0 && teamActivePlayers.every(player => teamSubmittedIds.has(player.id)))
+  const currentPlayerIsHost = Boolean(currentTeamPlayer?.isHost)
   const scenarioName = SCENARIOS[state.scenario]?.name || customScenarioTitle(state.customScenario) || state.scenario || 'Active Exercise'
   const roleLabel = state.role || 'EOC Director'
   const notepadTitle = state.playerName
@@ -4174,17 +4346,30 @@ async function startCustomScenario(customScenario) {
                 </div>
 
                 <div style={{ ...panelShell, height:inputAreaHeight, flexShrink:0 }}>
-                  {panelHdr('Your Response', 'terminal')}
+                  {panelHdr('Your Response', 'terminal', state.teamMode ? <span style={{ color:teamAllSubmitted ? UI.teal : UI.muted, fontSize:9 }}>{teamTurnSubmissions.length}/{teamActivePlayers.length} submitted</span> : null)}
                   <div style={{ flex:1, display:'flex', gap:9, padding:10, minHeight:0 }}>
                     <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
-                      placeholder={initLoading ? 'Generating scenario...' : 'Enter your operational response. Enter creates a new line.'}
-                      disabled={initLoading}
+                      placeholder={initLoading ? 'Generating scenario...' : currentPlayerSubmitted ? 'Response submitted. You may revise it before the host advances the turn.' : 'Enter your operational response. Enter creates a new line.'}
+                      disabled={initLoading || (state.teamMode && liveRoom?.turnStatus === 'processing')}
                       style={{ flex:1, resize:'none', lineHeight:1.6, fontSize:fs, background:'rgba(2,11,19,0.82)', border:`1px solid ${UI.borderSoft}`, borderRadius:5, color:UI.text, padding:'9px 10px', fontFamily:'Inter, Segoe UI, sans-serif', height:'100%', boxSizing:'border-box', outline:'none' }}/>
-                    <button className="nexus-live-button" onClick={sendAction} disabled={loading||!input.trim()||initLoading}
-                      style={{ width:138, fontWeight:950, alignSelf:'stretch', color:'#fff', border:'none', borderRadius:5, background:(loading||!input.trim()||initLoading) ? 'rgba(87,146,198,0.18)' : 'linear-gradient(180deg, #2E83FF, #1455B8)', cursor:(loading||!input.trim()||initLoading)?'not-allowed':'pointer', opacity:(loading||!input.trim()||initLoading)?0.55:1 }}>
-                      Submit Response
-                    </button>
+                    <div style={{ width:150, display:'flex', flexDirection:'column', gap:7 }}>
+                      <button className="nexus-live-button" onClick={sendAction} disabled={loading||!input.trim()||initLoading||(state.teamMode && liveRoom?.turnStatus === 'processing')}
+                        style={{ flex:1, minHeight:38, fontWeight:950, color:'#fff', border:'none', borderRadius:5, background:(loading||!input.trim()||initLoading||(state.teamMode && liveRoom?.turnStatus === 'processing')) ? 'rgba(87,146,198,0.18)' : 'linear-gradient(180deg, #2E83FF, #1455B8)', cursor:(loading||!input.trim()||initLoading||(state.teamMode && liveRoom?.turnStatus === 'processing'))?'not-allowed':'pointer', opacity:(loading||!input.trim()||initLoading||(state.teamMode && liveRoom?.turnStatus === 'processing'))?0.55:1 }}>
+                        {currentPlayerSubmitted ? 'Update Response' : 'Submit Response'}
+                      </button>
+                      {state.teamMode && currentPlayerIsHost && (
+                        <button className="nexus-live-button" onClick={advanceTeamTurn} disabled={loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing'}
+                          style={{ minHeight:34, fontWeight:950, color:'#06111B', border:'none', borderRadius:5, background:(loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing') ? 'rgba(245,155,34,0.18)' : 'linear-gradient(180deg, #F7B64A, #D9820D)', cursor:(loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing')?'not-allowed':'pointer', opacity:(loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing')?0.55:1 }}>
+                          {liveRoom?.turnStatus === 'processing' ? 'Advancing...' : `Advance Turn ${state.turn + 1}`}
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  {state.teamMode && (teamSyncError || currentPlayerSubmitted || liveRoom?.turnStatus === 'processing') && (
+                    <div style={{ padding:'0 10px 7px', fontSize:10, color:teamSyncError ? UI.red : liveRoom?.turnStatus === 'processing' ? UI.amber : UI.teal }}>
+                      {teamSyncError || (liveRoom?.turnStatus === 'processing' ? 'The host is generating the shared situation update.' : 'Response saved to the Team Room. Waiting for the remaining players and host advance.')}
+                    </div>
+                  )}
                 </div>
 
                 <div style={hDragBar}
