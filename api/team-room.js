@@ -248,10 +248,13 @@ async function redisSaveRoom(room) {
 }
 
 function publicRoom(room, viewerId = '') {
+  const viewer = (room.players || []).find((player) => player.id === viewerId);
+  const viewerIsHost = Boolean(viewer?.isHost);
   const messages = (room.messages || []).filter((message) => {
     if (message.channel === 'room') return true;
     return viewerId && (message.senderId === viewerId || message.recipientId === viewerId);
   });
+  const viewerIndividualAar = viewerId ? (room.individualAars || {})[viewerId] || null : null;
   return {
     roomCode: room.roomCode,
     status: room.status,
@@ -265,6 +268,12 @@ function publicRoom(room, viewerId = '') {
     sharedTurnState: room.sharedTurnState || null,
     messages,
     chatSettings: room.chatSettings || { includePrivateMessagesInTranscript: false },
+    teamAar: room.teamAar || null,
+    individualAar: viewerIndividualAar,
+    allIndividualAars: viewerIsHost ? (room.individualAars || {}) : {},
+    facilitatorAar: viewerIsHost ? (room.facilitatorAar || null) : null,
+    communicationsLog: viewerIsHost ? (room.communicationsLog || []) : [],
+    endedAt: room.endedAt || null,
     startedAt: room.startedAt || null,
     createdAt: room.createdAt,
     updatedAt: room.updatedAt,
@@ -302,6 +311,11 @@ async function handleCreate(body) {
     messages: [],
     chatSettings: { includePrivateMessagesInTranscript: false },
     submissions: [],
+    submissionHistory: [],
+    teamAar: null,
+    individualAars: {},
+    facilitatorAar: null,
+    communicationsLog: [],
     turn: 0,
     turnStatus: 'collecting',
     sharedTurnState: null,
@@ -425,6 +439,11 @@ async function handleStart(body) {
   room.turn = 0;
   room.turnStatus = 'collecting';
   room.submissions = [];
+  room.submissionHistory = [];
+  room.teamAar = null;
+  room.individualAars = {};
+  room.facilitatorAar = null;
+  room.communicationsLog = [];
   room.sharedTurnState = null;
   room.startedAt = new Date().toISOString();
   await redisSaveRoom(room);
@@ -499,6 +518,8 @@ async function handleCompleteTurn(body) {
   if (Number(room.turn || 0) !== expectedTurn) throw new Error('This turn has already advanced');
   if (!sharedTurnState || Number(sharedTurnState.turn) !== expectedTurn + 1) throw new Error('Valid shared turn state is required');
 
+  const completedSubmissions = (room.submissions || []).filter((item) => item.turn === expectedTurn);
+  room.submissionHistory = [...(room.submissionHistory || []), ...completedSubmissions].slice(-500);
   room.sharedTurnState = sharedTurnState;
   room.turn = expectedTurn + 1;
   room.turnStatus = 'collecting';
@@ -520,6 +541,73 @@ async function handleCancelAdvance(body) {
   room.processingStartedAt = null;
   await redisSaveRoom(room);
   return { ok:true, room:publicRoom(room) };
+}
+
+
+async function handleBeginEndex(body) {
+  const roomCode = normalizeRoomCode(body.roomCode || body.code);
+  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
+  const room = await redisGetRoom(roomCode);
+  if (!room) return { ok:false, error:'Room not found', statusCode:404 };
+  const host = room.players.find((item) => item.id === hostPlayerId && item.isHost);
+  if (!host) throw new Error('Only the host can end the Team Exercise');
+  if (room.status !== 'active') throw new Error('Team exercise is not active');
+  if ((room.turnStatus || 'collecting') === 'processing') throw new Error('Wait for the current team turn to finish');
+
+  const includePrivate = Boolean(room.chatSettings?.includePrivateMessagesInTranscript);
+  const communications = (room.messages || []).filter((message) => message.channel === 'room' || includePrivate);
+  room.turnStatus = 'processing';
+  room.processingStartedAt = new Date().toISOString();
+  await redisSaveRoom(room);
+  return {
+    ok:true,
+    room:publicRoom(room, hostPlayerId),
+    aarContext: {
+      players: room.players.filter((player) => player.status !== 'removed'),
+      submissionHistory: room.submissionHistory || [],
+      currentSubmissions: room.submissions || [],
+      communications,
+      chatSettings: room.chatSettings || { includePrivateMessagesInTranscript:false },
+      sharedScenario: room.sharedScenario || null,
+      sharedTurnState: room.sharedTurnState || null,
+      turn: Number(room.turn || 0),
+    },
+  };
+}
+
+async function handleCompleteEndex(body) {
+  const roomCode = normalizeRoomCode(body.roomCode || body.code);
+  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
+  const room = await redisGetRoom(roomCode);
+  if (!room) return { ok:false, error:'Room not found', statusCode:404 };
+  const host = room.players.find((item) => item.id === hostPlayerId && item.isHost);
+  if (!host) throw new Error('Only the host can complete Team ENDEX');
+  if (!body.teamAar || typeof body.teamAar !== 'object') throw new Error('Team AAR is required');
+
+  const individualAars = body.individualAars && typeof body.individualAars === 'object' ? body.individualAars : {};
+  const finalTurn = Number(room.turn || 0) + 1;
+  const finalTime = String(body.simTime || room.sharedTurnState?.simTime || 'ENDEX');
+  const finalTranscript = Array.isArray(body.exerciseTranscript) ? body.exerciseTranscript : (room.sharedTurnState?.exerciseTranscript || []);
+
+  room.teamAar = body.teamAar;
+  room.individualAars = individualAars;
+  room.facilitatorAar = body.facilitatorAar || null;
+  room.communicationsLog = Array.isArray(body.communicationsLog) ? body.communicationsLog : [];
+  room.status = 'ended';
+  room.turnStatus = 'complete';
+  room.turn = finalTurn;
+  room.endedAt = new Date().toISOString();
+  room.processingStartedAt = null;
+  room.sharedTurnState = {
+    ...(room.sharedTurnState || {}),
+    turn: finalTurn,
+    simTime: finalTime,
+    situation: 'ENDEX',
+    aar: body.teamAar,
+    exerciseTranscript: finalTranscript,
+  };
+  await redisSaveRoom(room);
+  return { ok:true, room:publicRoom(room, hostPlayerId) };
 }
 
 async function handleSendMessage(body) {
@@ -634,6 +722,12 @@ module.exports = async function handler(req, res) {
         break;
       case 'cancelAdvance':
         result = await handleCancelAdvance(body);
+        break;
+      case 'beginEndex':
+        result = await handleBeginEndex(body);
+        break;
+      case 'completeEndex':
+        result = await handleCompleteEndex(body);
         break;
       case 'sendMessage':
         result = await handleSendMessage(body);

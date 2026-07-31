@@ -1084,6 +1084,7 @@ const defaultState = {
   situation:'DEVELOPING', turn:0, lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[],
   dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:null,
   teamMode:false, roomCode:null, playerId:null, players:[], hostMode:null, teamRoom:null,
+  teamAar:null, individualAar:null, allIndividualAars:{}, facilitatorAar:null, teamCommunicationsLog:[],
 }
 
 
@@ -2370,7 +2371,7 @@ async function downloadPdfTextFile(filename, text) {
 
 
 // ─── AAR DISPLAY COMPONENT ────────────────────────────────────────────────────
-function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, onRestart, onMissionPortal, fs, ac, al }) {
+function AARDisplay({ aar, teamMode=false, teamAar=null, individualAar=null, allIndividualAars={}, facilitatorAar=null, communicationsLog=[], isHost=false, players=[], scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, onRestart, onMissionPortal, fs, ac, al }) {
   const scenarioName = SCENARIOS[scenario]?.name || scenario || 'Scenario'
   const generatedDate = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
   const startTime = transcript?.[0]?.time || 'H+0:00'
@@ -2410,6 +2411,29 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
       report += `${clean(content)}\n\n`
     })
 
+    if (teamMode && individualAar) {
+      report += `INDIVIDUAL ROLE AAR — ${playerName || role}\n${'-'.repeat(48)}\n`
+      ;[
+        ['ROLE CONTRIBUTION', individualAar.situationSummary],
+        ['ROLE DECISIONS', individualAar.decisionLog],
+        ['ROLE COORDINATION', individualAar.resourceCoordination],
+        ['ROLE COMMUNICATIONS', individualAar.communications],
+        ['INDIVIDUAL STRENGTHS', individualAar.strengths],
+        ['INDIVIDUAL GAPS', individualAar.criticalGaps],
+        ['ROLE RECOMMENDATIONS', individualAar.recommendations],
+      ].forEach(([label, content]) => { report += `${label}\n${clean(content)}\n\n` })
+    }
+    if (teamMode && isHost && facilitatorAar) {
+      report += `FACILITATOR AAR\n${'-'.repeat(48)}\n`
+      ;[
+        ['OVERVIEW', facilitatorAar.situationSummary],
+        ['CROSS-ROLE DECISIONS', facilitatorAar.decisionLog],
+        ['TEAM INTEGRATION', facilitatorAar.resourceCoordination],
+        ['COORDINATION PATTERNS', facilitatorAar.communications],
+        ['FACILITATOR PRIORITIES', facilitatorAar.recommendations],
+      ].forEach(([label, content]) => { report += `${label}\n${clean(content)}\n\n` })
+    }
+
     report += `${'='.repeat(72)}\n`
     report += `NEXUS EOC — nexuseoc.com\n`
 
@@ -2426,10 +2450,25 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
       worldState, transcript, finalLifelines: lifelines,
       finalSimTime: simTime, finalSituation: situation, aar,
     })
+    let finalReport = report
+    if (teamMode && communicationsLog?.length) {
+      finalReport += `
+
+TEAM COORDINATION COMMUNICATIONS LOG
+${'='.repeat(72)}
+`
+      communicationsLog.forEach(message => {
+        const destination = message.channel === 'direct' ? `PRIVATE TO ${message.recipientName || message.recipientRole}` : 'TEAM ROOM'
+        finalReport += `${message.createdAt || ''} | ${message.senderName || message.senderRole} | ${destination}
+${message.text}
+
+`
+      })
+    }
     if (typeof downloadPdfTextFile === 'function') {
-      downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.pdf`, report)
+      downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.pdf`, finalReport)
     } else {
-      downloadTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.txt`, report)
+      downloadTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.txt`, finalReport)
     }
   }
 
@@ -2541,9 +2580,9 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
             <div style={{ display:'grid', gridTemplateColumns:'78px 1fr', gap:20, alignItems:'center' }}>
               <div style={{ width:70, height:70, borderRadius:18, border:`2px solid ${UI.teal}`, color:UI.teal, display:'grid', placeItems:'center', fontSize:36, background:'rgba(45,226,184,0.10)', boxShadow:'0 16px 40px rgba(45,226,184,0.10)' }}>✓</div>
               <div>
-                <h1 style={{ margin:0, color:UI.text, fontSize:38, lineHeight:1.05, fontWeight:950, letterSpacing:'0.035em', textTransform:'uppercase' }}>After-Action Review</h1>
+                <h1 style={{ margin:0, color:UI.text, fontSize:38, lineHeight:1.05, fontWeight:950, letterSpacing:'0.035em', textTransform:'uppercase' }}>{teamMode ? 'Team After-Action Review' : 'After-Action Review'}</h1>
                 <p style={{ margin:'10px 0 0', color:UI.text, opacity:0.86, maxWidth:780, fontSize:16, lineHeight:1.5 }}>
-                  This After-Action Review is generated from your exercise transcript, decisions, injects, map updates, media feed, and scenario progression.
+                  {teamMode ? 'This report combines the shared Team AAR with your private role-specific evaluation.' : 'This After-Action Review is generated from your exercise transcript, decisions, injects, map updates, media feed, and scenario progression.'}
                 </p>
               </div>
             </div>
@@ -2570,6 +2609,57 @@ function AARDisplay({ aar, scenario, jurisdiction, difficulty, role, playerName,
               {sectionCard({ title:'Recommendations', icon:'☼', accent:UI.amber, content:aar?.recommendations })}
             </div>
           </section>
+
+          {teamMode && individualAar && (
+            <section style={{ marginTop:22 }}>
+              <div style={{ color:UI.cyan, fontSize:20, fontWeight:950, letterSpacing:'0.05em', textTransform:'uppercase', marginBottom:12 }}>Individual Role AAR — {playerName || role}</div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                {sectionCard({ title:'Role Contribution', icon:'◎', accent:UI.cyan, content:individualAar.situationSummary })}
+                {sectionCard({ title:'Role Decisions', icon:'▣', accent:UI.amber, content:individualAar.decisionLog })}
+                {sectionCard({ title:'Coordination Performance', icon:'⛓', accent:UI.teal, content:individualAar.resourceCoordination })}
+                {sectionCard({ title:'Individual Strengths', icon:'✓', accent:UI.green, content:individualAar.strengths })}
+                {sectionCard({ title:'Individual Gaps', icon:'!', accent:UI.red, content:individualAar.criticalGaps })}
+                {sectionCard({ title:'Role Recommendations', icon:'☼', accent:UI.amber, content:individualAar.recommendations })}
+              </div>
+            </section>
+          )}
+
+          {teamMode && isHost && facilitatorAar && (
+            <section style={{ marginTop:22 }}>
+              <div style={{ color:UI.purple, fontSize:20, fontWeight:950, letterSpacing:'0.05em', textTransform:'uppercase', marginBottom:12 }}>Facilitator View</div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                {sectionCard({ title:'Cross-Role Assessment', icon:'◈', accent:UI.purple, content:facilitatorAar.decisionLog })}
+                {sectionCard({ title:'Coordination Patterns', icon:'⌁', accent:UI.cyan, content:facilitatorAar.communications })}
+                {sectionCard({ title:'Team Integration', icon:'⛓', accent:UI.teal, content:facilitatorAar.resourceCoordination })}
+                {sectionCard({ title:'Follow-On Training Priorities', icon:'☼', accent:UI.amber, content:facilitatorAar.recommendations })}
+              </div>
+              {Object.keys(allIndividualAars || {}).length > 0 && (
+                <div style={{ marginTop:14 }}>
+                  <div style={{ color:UI.muted, fontSize:12, fontWeight:900, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:10 }}>All Role Evaluations</div>
+                  <div style={{ display:'grid', gap:10 }}>
+                    {Object.entries(allIndividualAars).map(([playerId, roleAar]) => {
+                      const player = (players || []).find(item => item.id === playerId)
+                      return sectionCard({
+                        title: player ? `${player.name} — ${player.role}` : `Player ${playerId.slice(0,6)}`,
+                        icon:'◉', accent:UI.purple,
+                        content:`DECISIONS
+${clean(roleAar?.decisionLog)}
+
+STRENGTHS
+${clean(roleAar?.strengths)}
+
+GAPS
+${clean(roleAar?.criticalGaps)}
+
+RECOMMENDATIONS
+${clean(roleAar?.recommendations)}`,
+                      })
+                    })}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
         </main>
       </div>
     </div>
@@ -3399,6 +3489,7 @@ async function initCustomWorld(customScenario) {
       players:room.players || [],
       hostMode:room.exercise.hostMode,
       teamRoom:room,
+      teamAar:null, individualAar:null, allIndividualAars:{}, facilitatorAar:null, teamCommunicationsLog:[],
     })
 
     setTimeout(() => inputRef.current?.focus(), 100)
@@ -3496,8 +3587,13 @@ async function startCustomScenario(customScenario) {
       lifelines: sharedTurnState.lifelines || state.lifelines,
       headlines: sharedTurnState.headlines || state.headlines,
       dynamicPins: sharedTurnState.dynamicPins || state.dynamicPins,
-      aar: sharedTurnState.aar || state.aar,
-      screen: sharedTurnState.situation === 'ENDEX' && sharedTurnState.aar ? 'aar' : state.screen,
+      aar: sharedTurnState.aar || room?.teamAar || state.aar,
+      teamAar: room?.teamAar || sharedTurnState.aar || state.teamAar,
+      individualAar: room?.individualAar || state.individualAar,
+      allIndividualAars: room?.allIndividualAars || state.allIndividualAars || {},
+      facilitatorAar: room?.facilitatorAar || state.facilitatorAar,
+      teamCommunicationsLog: room?.communicationsLog || state.teamCommunicationsLog || [],
+      screen: sharedTurnState.situation === 'ENDEX' && (sharedTurnState.aar || room?.teamAar) ? 'aar' : state.screen,
       exerciseTranscript: sharedTurnState.exerciseTranscript || state.exerciseTranscript,
       teamRoom: room || state.teamRoom,
       players: room?.players || state.players,
@@ -3519,7 +3615,19 @@ async function startCustomScenario(customScenario) {
         if (cancelled) return
         setTeamLiveRoom(data.room)
         setTeamSyncError('')
-        if (data.room?.sharedTurnState && Number(data.room.sharedTurnState.turn || 0) > Number(state.turn || 0)) {
+        if (data.room?.status === 'ended' && data.room?.teamAar) {
+          update({
+            screen:'aar', situation:'ENDEX', aar:data.room.teamAar, teamAar:data.room.teamAar,
+            individualAar:data.room.individualAar || null,
+            allIndividualAars:data.room.allIndividualAars || {},
+            facilitatorAar:data.room.facilitatorAar || null,
+            teamCommunicationsLog:data.room.communicationsLog || [],
+            teamRoom:data.room, players:data.room.players || state.players,
+            turn:Number(data.room.sharedTurnState?.turn || data.room.turn || state.turn),
+            simTime:data.room.sharedTurnState?.simTime || state.simTime,
+            exerciseTranscript:data.room.sharedTurnState?.exerciseTranscript || state.exerciseTranscript,
+          })
+        } else if (data.room?.sharedTurnState && Number(data.room.sharedTurnState.turn || 0) > Number(state.turn || 0)) {
           applySharedTeamTurn(data.room.sharedTurnState, data.room)
         }
       } catch (err) {
@@ -3684,6 +3792,85 @@ async function startCustomScenario(customScenario) {
       if (!completeRes.ok || completeData.ok === false) throw new Error(completeData.error || 'Unable to save shared team turn')
       setTeamLiveRoom(completeData.room)
       applySharedTeamTurn(sharedTurnState, completeData.room)
+    } catch (err) {
+      setTeamSyncError(err.message)
+      if (began) {
+        fetch('/api/team-room', {
+          method:'POST', headers:{ 'Content-Type':'application/json' },
+          body:JSON.stringify({ action:'cancelAdvance', roomCode:state.roomCode, playerId:state.playerId }),
+        }).catch(() => {})
+      }
+    }
+    setLoading(false)
+  }
+
+
+  async function endTeamExerciseWithAar() {
+    if (loading || !state?.teamMode || !state?.roomCode) return
+    setLoading(true)
+    setTeamSyncError('')
+    let began = false
+    try {
+      const beginRes = await fetch('/api/team-room', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ action:'beginEndex', roomCode:state.roomCode, playerId:state.playerId }),
+      })
+      const beginData = await beginRes.json().catch(() => ({}))
+      if (!beginRes.ok || beginData.ok === false) throw new Error(beginData.error || 'Unable to begin Team ENDEX')
+      began = true
+      setTeamLiveRoom(beginData.room)
+
+      const context = beginData.aarContext || {}
+      const players = (context.players || []).filter(player => player.role)
+      const allSubmissions = [...(context.submissionHistory || []), ...(context.currentSubmissions || [])]
+      const decisions = allSubmissions.length
+        ? allSubmissions.map(item => `TURN ${Number(item.turn) + 1} — ${item.playerRole} — ${item.playerName}\n${item.response}`).join('\n\n')
+        : 'No role submissions were captured.'
+      const communications = (context.communications || []).length
+        ? context.communications.map(message => `${message.channel === 'direct' ? `PRIVATE ${message.senderName} → ${message.recipientName}` : `TEAM ROOM — ${message.senderName} (${message.senderRole})`}: ${message.text}`).join('\n')
+        : 'No Team Coordination messages were captured.'
+      const roster = players.map(player => `${player.id} | ${player.name} | ${player.role}${player.isHost ? ' | HOST' : ''}`).join('\n')
+      const transcriptSummary = JSON.stringify(context.sharedTurnState?.exerciseTranscript || state.exerciseTranscript || [])
+
+      const aarSystem = `You are the NEXUS EOC After-Action Review evaluator. Produce JSON only. Evaluate emergency operations center decision-making, coordination, information management, leadership support, Community Lifelines, resource coordination, public information, continuity/recovery awareness, and role discipline. Be candid, specific, evidence-based, and practitioner-focused. Do not invent actions. Distinguish shared team performance from each player's private role performance. Private messages may be evaluated only when included in the supplied communications log.`
+      const aarRequest = `Generate the final Team Exercise AAR for this completed session.\n\nSCENARIO: ${SCENARIOS[state.scenario]?.name || state.scenario}\nJURISDICTION: ${state.jurisdiction}\nDIFFICULTY: ${state.difficulty}\nFINAL TIME: ${state.simTime}\nTURNS COMPLETED: ${state.turn}\n\nROSTER (use the exact player IDs as JSON keys):\n${roster}\n\nROLE SUBMISSIONS:\n${decisions}\n\nCOMMUNICATIONS LOG (${context.chatSettings?.includePrivateMessagesInTranscript ? 'team room and private messages included' : 'team room messages only'}):\n${communications}\n\nEXERCISE RECORD:\n${transcriptSummary}\n\nReturn exactly this JSON shape:\n{\n  "teamAar": {\n    "situationSummary":"", "decisionLog":"", "resourceCoordination":"", "communications":"",\n    "strengths":"", "criticalGaps":"", "doctrineReferences":"", "recommendations":""\n  },\n  "individualAars": {\n    "PLAYER_ID": {\n      "situationSummary":"Brief role context and contribution", "decisionLog":"Assessment of this player's actual submissions and timing",\n      "resourceCoordination":"Role-specific coordination and resource performance", "communications":"Role-specific communication performance",\n      "strengths":"Specific strengths", "criticalGaps":"Specific gaps or missed opportunities",\n      "doctrineReferences":"Relevant doctrine tied to this role's actions", "recommendations":"Specific role-focused improvements"\n    }\n  },\n  "facilitatorAar": {\n    "situationSummary":"Overall exercise-control summary", "decisionLog":"Cross-role comparison and decision sequencing",\n    "resourceCoordination":"Team integration assessment", "communications":"Coordination patterns and communications observations",\n    "strengths":"Team and role strengths", "criticalGaps":"Cross-team gaps and conflicts",\n    "doctrineReferences":"Relevant doctrine", "recommendations":"Facilitator discussion points and follow-on training priorities"\n  }\n}\nCreate one individualAars entry for every rostered player ID.`
+
+      const aiRes = await fetch('/api/chat', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ system:aarSystem, messages:[{ role:'user', content:aarRequest }] }),
+      })
+      const aiData = await aiRes.json()
+      const raw = aiData.content?.[0]?.text || ''
+      let generated
+      try { generated = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
+      catch { throw new Error('The Team AAR response could not be parsed') }
+      if (!generated?.teamAar || !generated?.individualAars) throw new Error('The Team AAR response was incomplete')
+
+      const finalTranscript = [...(state.exerciseTranscript || []), {
+        type:'turn', turn:state.turn + 1, simTime:state.simTime, situation:'ENDEX',
+        playerInput:'HOST ENDEX', aiResponse:'ENDEX — Team Exercise complete.', prompt:'', dispatches:[], headlines:[], pins:[], lifelines:state.lifelines,
+      }]
+      const completeRes = await fetch('/api/team-room', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({
+          action:'completeEndex', roomCode:state.roomCode, playerId:state.playerId,
+          teamAar:generated.teamAar, individualAars:generated.individualAars,
+          facilitatorAar:generated.facilitatorAar || null,
+          communicationsLog:context.communications || [],
+          simTime:state.simTime, exerciseTranscript:finalTranscript,
+        }),
+      })
+      const completeData = await completeRes.json().catch(() => ({}))
+      if (!completeRes.ok || completeData.ok === false) throw new Error(completeData.error || 'Unable to save Team AAR')
+      const room = completeData.room
+      setTeamLiveRoom(room)
+      update({
+        screen:'aar', situation:'ENDEX', turn:Number(room?.sharedTurnState?.turn || state.turn + 1),
+        aar:room.teamAar, teamAar:room.teamAar, individualAar:room.individualAar || null,
+        allIndividualAars:room.allIndividualAars || {},
+        facilitatorAar:room.facilitatorAar || null, teamCommunicationsLog:room.communicationsLog || [],
+        teamRoom:room, players:room.players || state.players, exerciseTranscript:finalTranscript,
+      })
     } catch (err) {
       setTeamSyncError(err.message)
       if (began) {
@@ -3873,7 +4060,15 @@ async function startCustomScenario(customScenario) {
   if (state.screen === 'aar' && state.aar) {
     return (
       <AARDisplay
-        aar={state.aar}
+        aar={state.teamMode ? (state.teamAar || state.aar) : state.aar}
+        teamMode={Boolean(state.teamMode)}
+        teamAar={state.teamAar || null}
+        individualAar={state.individualAar || null}
+        allIndividualAars={state.allIndividualAars || {}}
+        facilitatorAar={state.facilitatorAar || null}
+        communicationsLog={state.teamCommunicationsLog || []}
+        isHost={Boolean((state.teamRoom?.players || state.players || []).find(player => player.id === state.playerId)?.isHost)}
+        players={state.teamRoom?.players || state.players || []}
         scenario={state.scenario}
         jurisdiction={state.jurisdiction}
         difficulty={state.difficulty}
@@ -4130,7 +4325,7 @@ async function startCustomScenario(customScenario) {
 
             <div style={{ padding:20, display:'grid', gap:12 }}>
               <button
-                onClick={() => { setShowEndDialog(false); setInput('ENDEX'); setTimeout(() => sendAction(), 50) }}
+                onClick={() => { setShowEndDialog(false); if (state.teamMode) endTeamExerciseWithAar(); else { setInput('ENDEX'); setTimeout(() => sendAction(), 50) } }}
                 style={{
                   width:'100%',
                   minHeight:48,
@@ -4148,7 +4343,7 @@ async function startCustomScenario(customScenario) {
                 End with AAR
               </button>
 
-              <button
+              {!state.teamMode && <button
                 onClick={() => { setShowEndDialog(false); reset() }}
                 style={{
                   width:'100%',
@@ -4165,7 +4360,7 @@ async function startCustomScenario(customScenario) {
                 }}
               >
                 End without AAR
-              </button>
+              </button>}
 
               <button
                 onClick={() => setShowEndDialog(false)}
@@ -4223,7 +4418,7 @@ async function startCustomScenario(customScenario) {
               style={{ height:38, padding:'0 14px', borderRadius:4, border:`1px solid ${UI.borderStrong}`, background:'rgba(3,13,23,0.72)', color:UI.text, cursor:'pointer', fontWeight:850 }}>
               Mission Portal
             </button>
-            {!isEndex && (
+            {!isEndex && (!state.teamMode || currentPlayerIsHost) && (
               <div style={{ position:'relative' }}>
                 <button className="nexus-live-button" onClick={() => setShowEndDialog(s => !s)}
                   style={{ height:38, padding:'0 14px', borderRadius:4, border:`1px solid rgba(226,75,74,0.70)`, background:'rgba(226,75,74,0.10)', color:'#FFD2D2', cursor:'pointer', fontWeight:900 }}>
