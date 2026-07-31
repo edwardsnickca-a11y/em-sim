@@ -3811,49 +3811,96 @@ async function startCustomScenario(customScenario) {
     setTeamSyncError('')
     let began = false
 
+    const AAR_KEYS = ['situationSummary','decisionLog','resourceCoordination','communications','strengths','criticalGaps','doctrineReferences','recommendations']
+    const AAR_ALIASES = {
+      situationSummary:['situationSummary','situation_summary','summary','overview','roleContribution','role_contribution'],
+      decisionLog:['decisionLog','decision_log','decisions','decisionReview','decision_review','roleDecisions','role_decisions'],
+      resourceCoordination:['resourceCoordination','resource_coordination','coordination','resourceEffectiveness','resource_effectiveness','coordinationPerformance','coordination_performance'],
+      communications:['communications','communication','communicationsManagement','communications_management','informationManagement','information_management','roleCommunications','role_communications'],
+      strengths:['strengths','whatWentWell','what_went_well','individualStrengths','individual_strengths'],
+      criticalGaps:['criticalGaps','critical_gaps','gaps','areasForImprovement','areas_for_improvement','individualGaps','individual_gaps'],
+      doctrineReferences:['doctrineReferences','doctrine_references','doctrine','references','doctrineNotes','doctrine_notes'],
+      recommendations:['recommendations','correctiveActions','corrective_actions','improvements','roleRecommendations','role_recommendations'],
+    }
+
+    const aarText = value => {
+      if (Array.isArray(value)) return value.map(item => typeof item === 'string' ? item : JSON.stringify(item)).join('\n').trim()
+      if (value && typeof value === 'object') return Object.values(value).map(item => typeof item === 'string' ? item : JSON.stringify(item)).join('\n').trim()
+      return String(value || '').trim()
+    }
+
+    const normalizeAar = candidate => {
+      const source = candidate && typeof candidate === 'object' ? candidate : {}
+      return Object.fromEntries(AAR_KEYS.map(key => {
+        const alias = AAR_ALIASES[key].find(name => aarText(source[name]))
+        return [key, alias ? aarText(source[alias]) : '']
+      }))
+    }
+
     const parseAarResponse = (raw, label) => {
       const cleaned = String(raw || '').replace(/```json|```/gi, '').trim()
       const firstBrace = cleaned.indexOf('{')
       const lastBrace = cleaned.lastIndexOf('}')
       if (firstBrace < 0 || lastBrace <= firstBrace) throw new Error(`${label} returned no JSON`)
       const parsed = JSON.parse(cleaned.slice(firstBrace, lastBrace + 1))
-      if (!parsed?.aar) throw new Error(`${label} returned no AAR`)
-      const required = ['situationSummary','decisionLog','resourceCoordination','communications','strengths','criticalGaps','doctrineReferences','recommendations']
-      if (required.some(key => !String(parsed.aar[key] || '').trim())) throw new Error(`${label} returned an incomplete AAR`)
-      return parsed.aar
+      const aar = normalizeAar(parsed?.aar || parsed?.AAR || parsed)
+      const missing = AAR_KEYS.filter(key => !aar[key])
+      if (missing.length) {
+        const error = new Error(`${label} returned an incomplete AAR: ${missing.join(', ')}`)
+        error.missingAarFields = missing
+        error.rawAarResponse = raw
+        throw error
+      }
+      return aar
     }
 
     const requestBaselineAar = async ({ role, playerName, record, label }) => {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 120000)
+      const system = buildSystemPrompt(
+        state.scenario,
+        state.jurisdiction,
+        state.difficulty,
+        state.worldState,
+        playerName,
+        role,
+        state.customScenario,
+      )
+      const sourceMessage = `AAR SOURCE RECORD — treat this as the authoritative record of the completed exercise. Do not invent actions or outcomes. Evaluate only what appears below.\n\n${record}`
+
+      const callAar = async messages => {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 120000)
+        try {
+          const res = await fetch('/api/chat', {
+            method:'POST', headers:{ 'Content-Type':'application/json' }, signal:controller.signal,
+            body:JSON.stringify({ system, messages }),
+          })
+          const data = await res.json().catch(() => ({}))
+          if (!res.ok) throw new Error(data?.error || `${label} request failed (${res.status})`)
+          return data.content?.[0]?.text || ''
+        } finally {
+          clearTimeout(timeoutId)
+        }
+      }
+
+      const initialMessages = [
+        { role:'user', content:sourceMessage },
+        { role:'user', content:'ENDEX' },
+      ]
+      const firstRaw = await callAar(initialMessages)
       try {
-        const res = await fetch('/api/chat', {
-          method:'POST', headers:{ 'Content-Type':'application/json' }, signal:controller.signal,
-          body:JSON.stringify({
-            system:buildSystemPrompt(
-              state.scenario,
-              state.jurisdiction,
-              state.difficulty,
-              state.worldState,
-              playerName,
-              role,
-              state.customScenario,
-            ),
-            messages:[
-              {
-                role:'user',
-                content:`AAR SOURCE RECORD — treat this as the authoritative record of the completed exercise. Do not invent actions or outcomes. Evaluate only what appears below.\n\n${record}`,
-              },
-              { role:'user', content:'ENDEX' },
-            ],
-          }),
-        })
-        const data = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(data?.error || `${label} request failed (${res.status})`)
-        const raw = data.content?.[0]?.text || ''
-        return parseAarResponse(raw, label)
-      } finally {
-        clearTimeout(timeoutId)
+        return parseAarResponse(firstRaw, label)
+      } catch (firstError) {
+        if (!firstError.missingAarFields) throw firstError
+        console.warn(`${label} required repair for missing fields:`, firstError.missingAarFields)
+        const repairRaw = await callAar([
+          ...initialMessages,
+          { role:'assistant', content:firstRaw },
+          {
+            role:'user',
+            content:`Repair the AAR JSON. Return JSON only. Preserve every evidence-based finding already present and supply each missing section from the authoritative source record. The aar object must contain all eight non-empty string fields exactly: ${AAR_KEYS.join(', ')}. Missing fields: ${firstError.missingAarFields.join(', ')}. Do not add facts not supported by the record.`,
+          },
+        ])
+        return parseAarResponse(repairRaw, `${label} repair`)
       }
     }
 
@@ -3901,9 +3948,9 @@ async function startCustomScenario(customScenario) {
       })
 
       const individualEntries = []
-      // Keep AAR generation reliable under normal API rate limits by evaluating two roles at a time.
-      for (let index = 0; index < players.length; index += 2) {
-        const batch = players.slice(index, index + 2)
+      // Evaluate one role at a time so each report receives a complete, focused response.
+      for (let index = 0; index < players.length; index += 1) {
+        const batch = players.slice(index, index + 1)
         const batchEntries = await Promise.all(batch.map(async player => {
         const playerSubmissions = allSubmissions.filter(item => item.playerId === player.id)
         const playerMessages = permittedCommunications.filter(message =>
