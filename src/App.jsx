@@ -3835,16 +3835,61 @@ async function startCustomScenario(customScenario) {
       const aarSystem = `You are the NEXUS EOC After-Action Review evaluator. Produce JSON only. Evaluate emergency operations center decision-making, coordination, information management, leadership support, Community Lifelines, resource coordination, public information, continuity/recovery awareness, and role discipline. Be candid, specific, evidence-based, and practitioner-focused. Do not invent actions. Distinguish shared team performance from each player's private role performance. Private messages may be evaluated only when included in the supplied communications log.`
       const aarRequest = `Generate the final Team Exercise AAR for this completed session.\n\nSCENARIO: ${SCENARIOS[state.scenario]?.name || state.scenario}\nJURISDICTION: ${state.jurisdiction}\nDIFFICULTY: ${state.difficulty}\nFINAL TIME: ${state.simTime}\nTURNS COMPLETED: ${state.turn}\n\nROSTER (use the exact player IDs as JSON keys):\n${roster}\n\nROLE SUBMISSIONS:\n${decisions}\n\nCOMMUNICATIONS LOG (${context.chatSettings?.includePrivateMessagesInTranscript ? 'team room and private messages included' : 'team room messages only'}):\n${communications}\n\nEXERCISE RECORD:\n${transcriptSummary}\n\nReturn exactly this JSON shape:\n{\n  "teamAar": {\n    "situationSummary":"", "decisionLog":"", "resourceCoordination":"", "communications":"",\n    "strengths":"", "criticalGaps":"", "doctrineReferences":"", "recommendations":""\n  },\n  "individualAars": {\n    "PLAYER_ID": {\n      "situationSummary":"Brief role context and contribution", "decisionLog":"Assessment of this player's actual submissions and timing",\n      "resourceCoordination":"Role-specific coordination and resource performance", "communications":"Role-specific communication performance",\n      "strengths":"Specific strengths", "criticalGaps":"Specific gaps or missed opportunities",\n      "doctrineReferences":"Relevant doctrine tied to this role's actions", "recommendations":"Specific role-focused improvements"\n    }\n  },\n  "facilitatorAar": {\n    "situationSummary":"Overall exercise-control summary", "decisionLog":"Cross-role comparison and decision sequencing",\n    "resourceCoordination":"Team integration assessment", "communications":"Coordination patterns and communications observations",\n    "strengths":"Team and role strengths", "criticalGaps":"Cross-team gaps and conflicts",\n    "doctrineReferences":"Relevant doctrine", "recommendations":"Facilitator discussion points and follow-on training priorities"\n  }\n}\nCreate one individualAars entry for every rostered player ID.`
 
-      const aiRes = await fetch('/api/chat', {
-        method:'POST', headers:{ 'Content-Type':'application/json' },
-        body:JSON.stringify({ system:aarSystem, messages:[{ role:'user', content:aarRequest }] }),
-      })
-      const aiData = await aiRes.json()
-      const raw = aiData.content?.[0]?.text || ''
-      let generated
-      try { generated = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
-      catch { throw new Error('The Team AAR response could not be parsed') }
-      if (!generated?.teamAar || !generated?.individualAars) throw new Error('The Team AAR response was incomplete')
+      const fallbackIndividualAars = Object.fromEntries(players.map(player => {
+        const playerSubmissions = allSubmissions.filter(item => item.playerId === player.id)
+        const submissionCount = playerSubmissions.length
+        return [player.id, {
+          situationSummary:`${player.name} served as ${player.role} during the Team Exercise.`,
+          decisionLog:submissionCount ? `${submissionCount} role response${submissionCount === 1 ? '' : 's'} were captured for review.` : 'No completed role response was captured.',
+          resourceCoordination:'Review the player transcript for specific coordination and resource-management decisions.',
+          communications:'Review Team Coordination messages and official responses for role-specific communication performance.',
+          strengths:'The exercise record was preserved for facilitator review.',
+          criticalGaps:submissionCount ? 'The automated evaluator was unavailable; facilitator review is required for specific performance gaps.' : 'No completed role response was captured before ENDEX.',
+          doctrineReferences:'Apply the jurisdiction’s EOC procedures, NIMS/ICS coordination principles, and relevant Community Lifeline doctrine during facilitator review.',
+          recommendations:'Conduct a facilitator-led review using the preserved transcript, submissions, and communications log.',
+        }]
+      }))
+      let generated = {
+        teamAar:{
+          situationSummary:`The Team Exercise concluded at ${state.simTime} after ${state.turn} completed turn${state.turn === 1 ? '' : 's'}.`,
+          decisionLog:`${allSubmissions.length} role submission${allSubmissions.length === 1 ? '' : 's'} were preserved in the exercise record.`,
+          resourceCoordination:'Use the preserved turn record to assess cross-role resource coordination and prioritization.',
+          communications:`${(context.communications || []).length} Team Coordination message${(context.communications || []).length === 1 ? '' : 's'} were preserved under the host’s transcript setting.`,
+          strengths:'The shared scenario, turn history, role submissions, and permitted communications were retained successfully.',
+          criticalGaps:'The automated narrative evaluation was unavailable at ENDEX; facilitator review is required for detailed findings.',
+          doctrineReferences:'Review performance against NIMS/ICS coordination principles, Community Lifelines, local EOC procedures, and applicable emergency plans.',
+          recommendations:'Conduct a facilitated hotwash and use the preserved record to document specific corrective actions.',
+        },
+        individualAars:fallbackIndividualAars,
+        facilitatorAar:{
+          situationSummary:'The Team Exercise ended successfully and the complete session record was preserved.',
+          decisionLog:'Review decision sequencing across the role submissions by turn.',
+          resourceCoordination:'Assess whether roles coordinated priorities, requests, and resource decisions effectively.',
+          communications:'Review the permitted Team Coordination log alongside official role responses.',
+          strengths:'Shared exercise state and participant records were retained.',
+          criticalGaps:'Automated detailed evaluation was unavailable; facilitator analysis is required.',
+          doctrineReferences:'Use NIMS/ICS, Community Lifelines, local plans, and role-specific procedures.',
+          recommendations:'Complete a facilitated hotwash and capture corrective actions in the final report.',
+        },
+      }
+
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 90000)
+        const aiRes = await fetch('/api/chat', {
+          method:'POST', headers:{ 'Content-Type':'application/json' }, signal:controller.signal,
+          body:JSON.stringify({ system:aarSystem, messages:[{ role:'user', content:aarRequest }] }),
+        })
+        clearTimeout(timeoutId)
+        if (!aiRes.ok) throw new Error('Team AAR generation request failed')
+        const aiData = await aiRes.json()
+        const raw = aiData.content?.[0]?.text || ''
+        const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim())
+        if (!parsed?.teamAar || !parsed?.individualAars) throw new Error('The Team AAR response was incomplete')
+        generated = parsed
+      } catch (aarGenerationError) {
+        console.warn('Team AAR generation fallback used:', aarGenerationError)
+      }
 
       const finalTranscript = [...(state.exerciseTranscript || []), {
         type:'turn', turn:state.turn + 1, simTime:state.simTime, situation:'ENDEX',

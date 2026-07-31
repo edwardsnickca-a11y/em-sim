@@ -539,6 +539,10 @@ async function handleCancelAdvance(body) {
   if (!host) throw new Error('Only the host can reset the team turn');
   room.turnStatus = 'collecting';
   room.processingStartedAt = null;
+  if (room.status === 'ending') {
+    room.status = 'active';
+    room.endexStartedAt = null;
+  }
   await redisSaveRoom(room);
   return { ok:true, room:publicRoom(room) };
 }
@@ -556,8 +560,10 @@ async function handleBeginEndex(body) {
 
   const includePrivate = Boolean(room.chatSettings?.includePrivateMessagesInTranscript);
   const communications = (room.messages || []).filter((message) => message.channel === 'room' || includePrivate);
+  room.status = 'ending';
   room.turnStatus = 'processing';
   room.processingStartedAt = new Date().toISOString();
+  room.endexStartedAt = room.processingStartedAt;
   await redisSaveRoom(room);
   return {
     ok:true,
@@ -598,6 +604,7 @@ async function handleCompleteEndex(body) {
   room.turn = finalTurn;
   room.endedAt = new Date().toISOString();
   room.processingStartedAt = null;
+  room.endexStartedAt = null;
   room.sharedTurnState = {
     ...(room.sharedTurnState || {}),
     turn: finalTurn,
