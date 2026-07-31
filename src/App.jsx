@@ -1269,7 +1269,7 @@ function pdfSafe(value = '') {
 
 function parseAarForPdf(rawText = '') {
   const safe = pdfSafe(rawText)
-  const headings = [
+  const coreHeadings = new Set([
     'SITUATION SUMMARY',
     'DECISION LOG REVIEW',
     'RESOURCE & COORDINATION EFFECTIVENESS',
@@ -1278,26 +1278,38 @@ function parseAarForPdf(rawText = '') {
     'STRENGTHS',
     'CRITICAL GAPS',
     'RECOMMENDATIONS',
-  ]
-  const headingSet = new Set(headings)
+  ])
   const meta = {}
   const sections = {}
+  const sectionOrder = []
   let current = '_meta'
   sections[current] = []
+
+  const isSectionHeading = value => {
+    const trimmed = String(value || '').trim()
+    if (!trimmed || trimmed.length > 86 || trimmed.includes(':')) return false
+    const upper = trimmed.toUpperCase()
+    if (coreHeadings.has(upper)) return true
+    if (/^(INDIVIDUAL ROLE AAR|FACILITATOR AAR|COMMUNICATIONS LOG)/.test(upper)) return true
+    if (/^(ROLE CONTRIBUTION|ROLE DECISIONS|ROLE COORDINATION|ROLE COMMUNICATIONS|INDIVIDUAL STRENGTHS|INDIVIDUAL GAPS|ROLE RECOMMENDATIONS|OVERVIEW|CROSS-ROLE DECISIONS|TEAM INTEGRATION|COORDINATION PATTERNS|FACILITATOR PRIORITIES)$/.test(upper)) return true
+    return /^[A-Z0-9][A-Z0-9 &/—–\-]{2,85}$/.test(trimmed) && /[A-Z]/.test(trimmed)
+  }
 
   safe.split('\n')
     .filter(line => !/^[=\-]{8,}$/.test(line.trim()))
     .forEach(line => {
       const trimmed = line.trim()
-      const upper = trimmed.toUpperCase()
-      if (headingSet.has(upper)) {
-        current = upper
-        sections[current] = []
+      if (isSectionHeading(trimmed)) {
+        current = trimmed.toUpperCase()
+        if (!Object.prototype.hasOwnProperty.call(sections, current)) {
+          sections[current] = []
+          sectionOrder.push(current)
+        }
         return
       }
       if (current === '_meta') {
         const m = trimmed.match(/^([A-Z][A-Z0-9 /_-]{1,34}):\s*(.*)$/)
-        if (m) meta[m[1].trim()] = m[2].trim()
+        if (m) meta[m[1].trim().toUpperCase()] = m[2].trim()
       }
       sections[current].push(line)
     })
@@ -1309,7 +1321,7 @@ function parseAarForPdf(rawText = '') {
       .trim()
   })
 
-  return { meta, sections }
+  return { meta, sections, sectionOrder }
 }
 
 function normalizePdfScenarioName(name = '') {
@@ -1427,10 +1439,10 @@ async function loadJpegForPdf(url) {
 }
 
 async function renderAarPdfV8(filename, rawText) {
-  const { meta, sections } = parseAarForPdf(rawText)
+  const { meta, sections, sectionOrder } = parseAarForPdf(rawText)
   const scenarioName = meta.SCENARIO || 'Scenario'
   const generated = meta.GENERATED || new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
-  const participant = meta.COMMANDER || meta.PARTICIPANT || meta.NAME || 'Not provided'
+  const participant = meta.PLAYER || meta.NAME || meta.PARTICIPANT || meta.COMMANDER || 'Not provided'
   const scenarioImage = await loadJpegForPdf(getAarScenarioImageUrl(scenarioName))
   const reportLogo = await loadJpegForPdf(NEXUS_REPORT_LOGO_URL)
 
@@ -1439,34 +1451,18 @@ async function renderAarPdfV8(filename, rawText) {
   const contentX = 24
   const contentW = W - 48
   const top = H - 22
+  const minY = 40
   const colors = {
-    navy:[2/255, 11/255, 19/255],
-    navy2:[6/255, 20/255, 33/255],
-    header:'#061522',
-    panel:'#081827',
-    panel2:'#0B1D2E',
-    panel3:'#0A1825',
-    border:'#24445F',
-    border2:'#315B78',
-    teal:'#2DE2B8',
-    cyan:'#45A3FF',
-    blue:'#2E83FF',
-    green:'#22C55E',
-    red:'#EF4444',
-    amber:'#F59B22',
-    purple:'#A855F7',
-    text:'#F4F8FE',
-    muted:'#B9C8D8',
-    dim:'#6F8195',
+    navy:[2/255, 11/255, 19/255], navy2:[6/255, 20/255, 33/255],
+    header:'#061522', panel:'#081827', panel2:'#0B1D2E', panel3:'#0A1825',
+    border:'#24445F', border2:'#315B78', teal:'#2DE2B8', cyan:'#45A3FF',
+    blue:'#2E83FF', green:'#22C55E', red:'#EF4444', amber:'#F59B22',
+    purple:'#A855F7', text:'#F4F8FE', muted:'#B9C8D8', dim:'#6F8195',
   }
 
   const hexToRgb = hex => {
     const clean = hex.replace('#', '')
-    return [
-      parseInt(clean.slice(0,2), 16) / 255,
-      parseInt(clean.slice(2,4), 16) / 255,
-      parseInt(clean.slice(4,6), 16) / 255,
-    ]
+    return [parseInt(clean.slice(0,2),16)/255, parseInt(clean.slice(2,4),16)/255, parseInt(clean.slice(4,6),16)/255]
   }
   const rg = hex => hexToRgb(hex).map(v => v.toFixed(3)).join(' ')
   const opsPages = []
@@ -1474,346 +1470,172 @@ async function renderAarPdfV8(filename, rawText) {
   const add = op => ops.push(op)
   const fill = hex => add(`${rg(hex)} rg`)
   const stroke = hex => add(`${rg(hex)} RG`)
-  const textAt = (value, x, y, size = 8, font = 'F1', color = colors.text) => {
+  const textAt = (value, x, y, size=8, font='F1', color=colors.text) => {
     fill(color)
     add(`BT /${font} ${size} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td (${escapePdf(pdfSafe(value))}) Tj ET`)
   }
-  const rect = (x, y, w, h, color, mode = 'f') => {
-    fill(color)
-    add(`${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re ${mode}`)
-  }
-  const rectStroke = (x, y, w, h, color, lw = 0.6) => {
-    stroke(color)
-    add(`${lw} w ${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re S`)
-  }
-  const line = (x1, y1, x2, y2, color, lw = 0.8) => {
-    stroke(color)
-    add(`${lw} w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S`)
-  }
-  const circle = (cx, cy, r, color, filled = false) => {
-    const k = 0.5522847498
+  const rect = (x,y,w,h,color,mode='f') => { fill(color); add(`${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re ${mode}`) }
+  const rectStroke = (x,y,w,h,color,lw=.6) => { stroke(color); add(`${lw} w ${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re S`) }
+  const line = (x1,y1,x2,y2,color,lw=.8) => { stroke(color); add(`${lw} w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S`) }
+  const circle = (cx,cy,r,color,filled=false) => {
+    const k=.5522847498
     filled ? fill(color) : stroke(color)
-    add(`${(cx+r).toFixed(2)} ${cy.toFixed(2)} m ${(cx+r).toFixed(2)} ${(cy+k*r).toFixed(2)} ${(cx+k*r).toFixed(2)} ${(cy+r).toFixed(2)} ${cx.toFixed(2)} ${(cy+r).toFixed(2)} c ${(cx-k*r).toFixed(2)} ${(cy+r).toFixed(2)} ${(cx-r).toFixed(2)} ${(cy+k*r).toFixed(2)} ${(cx-r).toFixed(2)} ${cy.toFixed(2)} c ${(cx-r).toFixed(2)} ${(cy-k*r).toFixed(2)} ${(cx-k*r).toFixed(2)} ${(cy-r).toFixed(2)} ${cx.toFixed(2)} ${(cy-r).toFixed(2)} c ${(cx+k*r).toFixed(2)} ${(cy-r).toFixed(2)} ${(cx+r).toFixed(2)} ${(cy-k*r).toFixed(2)} ${(cx+r).toFixed(2)} ${cy.toFixed(2)} c ${filled ? 'f' : 'S'}`)
+    add(`${(cx+r).toFixed(2)} ${cy.toFixed(2)} m ${(cx+r).toFixed(2)} ${(cy+k*r).toFixed(2)} ${(cx+k*r).toFixed(2)} ${(cy+r).toFixed(2)} ${cx.toFixed(2)} ${(cy+r).toFixed(2)} c ${(cx-k*r).toFixed(2)} ${(cy+r).toFixed(2)} ${(cx-r).toFixed(2)} ${(cy+k*r).toFixed(2)} ${(cx-r).toFixed(2)} ${cy.toFixed(2)} c ${(cx-r).toFixed(2)} ${(cy-k*r).toFixed(2)} ${(cx-k*r).toFixed(2)} ${(cy-r).toFixed(2)} ${cx.toFixed(2)} ${(cy-r).toFixed(2)} c ${(cx+k*r).toFixed(2)} ${(cy-r).toFixed(2)} ${(cx+r).toFixed(2)} ${(cy-k*r).toFixed(2)} ${(cx+r).toFixed(2)} ${cy.toFixed(2)} c ${filled?'f':'S'}`)
   }
-  const roundedRect = (x, y, w, h, color, filled = true, lw = 0.8) => {
-    filled ? fill(color) : stroke(color)
-    add(`${lw} w ${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re ${filled ? 'f' : 'S'}`)
+  const wrap = (value,size,maxW,fontFactor=.50) => {
+    const words=pdfSafe(value).replace(/\s+/g,' ').trim().split(' ').filter(Boolean)
+    const maxChars=Math.max(12,Math.floor(maxW/(size*fontFactor)))
+    const out=[]; let cur=''
+    words.forEach(word => { const next=`${cur} ${word}`.trim(); if(next.length>maxChars){ if(cur) out.push(cur); cur=word } else cur=next })
+    if(cur) out.push(cur)
+    return out
+  }
+  const bodyLines = (value,maxW,size=7.75) => {
+    const lines=[]
+    String(value||'').split(/\n\s*\n/).forEach(part => {
+      if(part.trim()) { lines.push(...wrap(part,size,maxW)); lines.push('') }
+    })
+    if(lines.length && lines[lines.length-1]==='') lines.pop()
+    return lines.length ? lines : ['Not captured in this exercise record.']
   }
 
-  const wrap = (value, size, maxW, fontFactor = 0.50) => {
-    const words = pdfSafe(value).replace(/\s+/g, ' ').trim().split(' ').filter(Boolean)
-    const maxChars = Math.max(12, Math.floor(maxW / (size * fontFactor)))
-    const lines = []
-    let cur = ''
-    words.forEach(word => {
-      const next = `${cur} ${word}`.trim()
-      if (next.length > maxChars) {
-        if (cur) lines.push(cur)
-        cur = word
-      } else cur = next
-    })
-    if (cur) lines.push(cur)
-    return lines
-  }
-  const paraHeight = (value, maxW, size, leading) => {
-    let lines = 0
-    String(value || '').split(/\n\s*\n/).forEach(part => {
-      if (part.trim()) lines += wrap(part, size, maxW).length + 1
-    })
-    return Math.max(0, lines - 1) * leading
-  }
-  const drawPara = (value, x, y, maxW, size = 8, leading = 9.8, color = colors.text, font = 'F1', maxLines = null) => {
-    let lines = []
-    String(value || '').split(/\n\s*\n/).forEach(part => {
-      if (part.trim()) {
-        lines.push(...wrap(part, size, maxW))
-        lines.push('')
-      }
-    })
-    if (lines.length && lines[lines.length - 1] === '') lines.pop()
-    if (maxLines && lines.length > maxLines) {
-      lines = lines.slice(0, maxLines)
-      lines[lines.length - 1] = `${lines[lines.length - 1].replace(/\.*$/, '')}...`
-    }
-    lines.forEach(lineText => {
-      if (!lineText) y -= leading * 0.5
-      else {
-        textAt(lineText, x, y, size, font, color)
-        y -= leading
-      }
-    })
-    return y
-  }
-
-  function drawBackground() {
-    const steps = 90
-    for (let i = 0; i < steps; i++) {
-      const t = i / (steps - 1)
-      const r = colors.navy[0] * (1 - t) + colors.navy2[0] * t
-      const g = colors.navy[1] * (1 - t) + colors.navy2[1] * t
-      const b = colors.navy[2] * (1 - t) + colors.navy2[2] * t
+  function drawBackground(){
+    const steps=90
+    for(let i=0;i<steps;i++){
+      const t=i/(steps-1), r=colors.navy[0]*(1-t)+colors.navy2[0]*t, g=colors.navy[1]*(1-t)+colors.navy2[1]*t, b=colors.navy[2]*(1-t)+colors.navy2[2]*t
       add(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg`)
-      add(`0 ${(H * (i / steps)).toFixed(2)} ${W} ${(H / steps + 1).toFixed(2)} re f`)
+      add(`0 ${(H*(i/steps)).toFixed(2)} ${W} ${(H/steps+1).toFixed(2)} re f`)
     }
   }
-
-  function drawHeader() {
-    const h = 34
-    rect(contentX, top - h, contentW, h, colors.header)
-    rectStroke(contentX, top - h, contentW, h, colors.border, 0.7)
-    rect(contentX, top - h - 3, contentW, 3, colors.teal)
-    if (reportLogo) {
-      const logoH = 25
-      const logoW = logoH * (reportLogo.width / reportLogo.height)
-      add('q')
-      add(`${logoW.toFixed(2)} 0 0 ${logoH.toFixed(2)} ${(contentX + 12).toFixed(2)} ${(top - 29).toFixed(2)} cm /ImLogo Do`)
-      add('Q')
-    } else {
-      textAt('NEXUS', contentX + 14, top - 27, 23, 'F2', colors.text)
-      textAt('EOC', contentX + 104, top - 27, 23, 'F2', colors.teal)
-    }
-    textAt('After-Action Review', contentX + contentW / 2 - 72, top - 25, 16, 'F2', colors.text)
-    textAt(`Generated ${generated}`, contentX + contentW - 110, top - 24, 6.8, 'F2', colors.dim)
+  function drawHeader(){
+    const h=34
+    rect(contentX,top-h,contentW,h,colors.header); rectStroke(contentX,top-h,contentW,h,colors.border,.7); rect(contentX,top-h-3,contentW,3,colors.teal)
+    if(reportLogo){ const logoH=25, logoW=logoH*(reportLogo.width/reportLogo.height); add('q'); add(`${logoW.toFixed(2)} 0 0 ${logoH.toFixed(2)} ${(contentX+12).toFixed(2)} ${(top-29).toFixed(2)} cm /ImLogo Do`); add('Q') }
+    else { textAt('NEXUS',contentX+14,top-27,23,'F2',colors.text); textAt('EOC',contentX+104,top-27,23,'F2',colors.teal) }
+    textAt('After-Action Review',contentX+contentW/2-72,top-25,16,'F2',colors.text)
+    textAt(`Generated ${generated}`,contentX+contentW-110,top-24,6.8,'F2',colors.dim)
   }
-
-  function drawFooter(pageNo) {
-    line(24, 24, W - 24, 24, colors.border, 0.5)
-    textAt('NEXUS EOC', 24, 11, 7, 'F2', colors.dim)
-    textAt('After-Action Review', 88, 11, 7, 'F1', colors.dim)
-    textAt(`Page ${pageNo}`, W - 55, 11, 7, 'F1', colors.dim)
+  function drawFooter(pageNo){ line(24,24,W-24,24,colors.border,.5); textAt('NEXUS EOC',24,11,7,'F2',colors.dim); textAt('After-Action Review',88,11,7,'F1',colors.dim); textAt(`Page ${pageNo}`,W-55,11,7,'F1',colors.dim) }
+  function drawIcon(icon,x,y,size,accent){
+    rectStroke(x,y,size,size,accent,.8); const cx=x+size/2, cy=y+size/2; stroke(accent); fill(accent); add('.95 w')
+    if(icon==='check'){ line(x+6,cy,cx-1,y+6,accent,.95); line(cx-1,y+6,x+size-5,y+size-6,accent,.95) }
+    else if(icon==='warn'){ line(cx,y+size-5,x+5,y+5,accent,.95); line(x+5,y+5,x+size-5,y+5,accent,.95); line(x+size-5,y+5,cx,y+size-5,accent,.95); line(cx,y+11,cx,y+17,accent,.95); circle(cx,y+8,1,accent,true) }
+    else if(icon==='bulb'){ circle(cx,cy+2,5.5,accent); line(cx-3,cy-4,cx+3,cy-4,accent,.95); line(cx-2,cy-7,cx+2,cy-7,accent,.95) }
+    else if(icon==='book'){ rectStroke(x+5,y+5,size/2-5,size-10,accent,.95); rectStroke(cx,y+5,size/2-5,size-10,accent,.95); line(cx,y+5,cx,y+size-5,accent,.95) }
+    else if(icon==='comms'){ line(cx,y+5,cx,y+size-5,accent,.95); line(cx,y+size-5,x+5,y+5,accent,.95); line(cx,y+size-5,x+size-5,y+5,accent,.95); circle(cx,y+size-5,1,accent,true) }
+    else if(icon==='chain'){ rectStroke(x+4,cy-3,8,8,accent,.95); rectStroke(x+size-12,cy-5,8,8,accent,.95); line(cx-3,cy+1,cx+3,cy-1,accent,.95) }
+    else { rectStroke(x+5,y+5,size-10,size-10,accent,.95); circle(cx,cy,2,accent,true) }
   }
-
-  function drawIcon(icon, x, y, size, accent) {
-    rectStroke(x, y, size, size, accent, 0.8)
-    const cx = x + size / 2
-    const cy = y + size / 2
-    stroke(accent)
-    fill(accent)
-    add(`0.95 w`)
-    if (icon === 'pin') {
-      circle(cx, cy + 2, 3.6, accent)
-      line(cx, cy - 1.6, cx, y + 5.5, accent, 0.95)
-      circle(cx, cy + 2, 1.0, accent, true)
-    } else if (icon === 'clipboard') {
-      rectStroke(x + 7, y + 6, size - 14, size - 12, accent, 0.95)
-      rectStroke(cx - 5, y + size - 9, 10, 5, accent, 0.95)
-      line(x + 10, cy + 2, x + size - 10, cy + 2, accent, 0.95)
-      line(x + 10, cy - 3, x + size - 10, cy - 3, accent, 0.95)
-    } else if (icon === 'chain') {
-      rectStroke(x + 6, cy - 3, 10, 10, accent, 0.95)
-      rectStroke(x + size - 16, cy - 7, 10, 10, accent, 0.95)
-      line(cx - 4, cy + 2, cx + 4, cy - 2, accent, 0.95)
-    } else if (icon === 'comms') {
-      const mastTop = y + size - 7
-      const mastBase = y + 6
-      line(cx, mastBase, cx, mastTop, accent, 0.95)
-      line(cx, mastTop, x + 7, mastBase, accent, 0.95)
-      line(cx, mastTop, x + size - 7, mastBase, accent, 0.95)
-      line(cx - 4, mastBase + 5, cx + 4, mastBase + 5, accent, 0.95)
-      line(x + 6, y + size - 5, x + 10, y + size - 9, accent, 0.95)
-      line(x + size - 6, y + size - 5, x + size - 10, y + size - 9, accent, 0.95)
-      line(x + 8, y + size - 2, x + 13, y + size - 7, accent, 0.95)
-      line(x + size - 8, y + size - 2, x + size - 13, y + size - 7, accent, 0.95)
-      circle(cx, mastTop, 1.1, accent, true)
-    } else if (icon === 'book') {
-      rectStroke(x + 7, y + 7, size / 2 - 7, size - 14, accent, 0.95)
-      rectStroke(cx, y + 7, size / 2 - 7, size - 14, accent, 0.95)
-      line(cx, y + 7, cx, y + size - 7, accent, 0.95)
-    } else if (icon === 'check') {
-      line(x + 8, cy, cx - 1, y + 8, accent, 0.95)
-      line(cx - 1, y + 8, x + size - 7, y + size - 8, accent, 0.95)
-    } else if (icon === 'warn') {
-      line(cx, y + size - 6, x + 7, y + 7, accent, 0.95)
-      line(x + 7, y + 7, x + size - 7, y + 7, accent, 0.95)
-      line(x + size - 7, y + 7, cx, y + size - 6, accent, 0.95)
-      line(cx, y + 14, cx, y + 21, accent, 0.95)
-      circle(cx, y + 10, 1, accent, true)
-    } else if (icon === 'bulb') {
-      circle(cx, cy + 3, 6.5, accent)
-      line(cx - 4, cy - 4, cx + 4, cy - 4, accent, 0.95)
-      line(cx - 3, cy - 8, cx + 3, cy - 8, accent, 0.95)
-      line(cx, y + size - 6, cx, y + size - 3, accent, 0.95)
-    }
+  const styleFor = title => {
+    const t=String(title||'').toUpperCase()
+    if(t.includes('STRENGTH')) return {accent:colors.green,icon:'check',fill:colors.panel2}
+    if(t.includes('GAP')||t.includes('CRITICAL')) return {accent:colors.red,icon:'warn',fill:colors.panel2}
+    if(t.includes('RECOMMEND')||t.includes('PRIORIT')) return {accent:colors.amber,icon:'bulb',fill:colors.panel2}
+    if(t.includes('DOCTRINE')||t.includes('REFERENCE')) return {accent:colors.purple,icon:'book',fill:colors.panel}
+    if(t.includes('COMMUNICATION')) return {accent:colors.cyan,icon:'comms',fill:colors.panel}
+    if(t.includes('COORDINATION')||t.includes('INTEGRATION')) return {accent:colors.teal,icon:'chain',fill:colors.panel}
+    if(t.includes('DECISION')) return {accent:colors.blue,icon:'clipboard',fill:colors.panel}
+    return {accent:colors.cyan,icon:'pin',fill:colors.panel}
   }
-
-  const drawCard = (x, yTop, w, title, body, accent, icon, size = 8, leading = 9.55, fillColor = colors.panel) => {
-    const bodyW = w - 18 - 34
-    const bodyH = paraHeight(body, bodyW, size, leading)
-    const h = Math.max(58, 38 + bodyH)
-    const yBottom = yTop - h
-    roundedRect(x, yBottom, w, h, fillColor)
-    rectStroke(x, yBottom, w, h, accent, 0.9)
-    rect(x, yBottom, 3, h, accent)
-    drawIcon(icon, x + 10, yTop - 31, 20, accent)
-    textAt(title.toUpperCase(), x + 40, yTop - 23, 11.5, 'F2', accent)
-    drawPara(body, x + 40, yTop - 42, bodyW, size, leading, colors.text)
+  const prettyTitle = title => String(title||'').toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase()).replace(/Aar/g,'AAR').replace(/Eoc/g,'EOC')
+  function drawCardLines(x,yTop,w,title,lines,continued=false){
+    const size=7.75, leading=9.2, bodyW=w-52
+    const h=Math.max(58,47+lines.reduce((n,l)=>n+(l?1:.45),0)*leading)
+    const yBottom=yTop-h, st=styleFor(title)
+    rect(x,yBottom,w,h,st.fill); rectStroke(x,yBottom,w,h,st.accent,.9); rect(x,yBottom,3,h,st.accent)
+    drawIcon(st.icon,x+10,yTop-31,20,st.accent)
+    textAt(`${prettyTitle(title)}${continued?' (continued)':''}`,x+40,yTop-23,10.6,'F2',st.accent)
+    let y=yTop-42
+    lines.forEach(lineText=>{ if(!lineText)y-=leading*.45; else { textAt(lineText,x+40,y,size,'F1',colors.text); y-=leading } })
     return yBottom
   }
-
-  function setupBox(x, yTop, w, label, value, h = 35) {
-    rect(x, yTop - h, w, h, colors.panel3)
-    rectStroke(x, yTop - h, w, h, colors.border2, 0.5)
-    textAt(label.toUpperCase(), x + 8, yTop - 11, 6.8, 'F2', colors.teal)
-    drawPara(value, x + 8, yTop - 23, w - 16, 6.9, 7.8, colors.text, 'F1', 3)
+  function drawDivider(title,yTop){
+    const h=32, accent=title.includes('FACILITATOR')?colors.amber:colors.teal
+    rect(contentX,yTop-h,contentW,h,colors.panel2); rectStroke(contentX,yTop-h,contentW,h,accent,.9); rect(contentX,yTop-h,4,h,accent)
+    textAt(prettyTitle(title),contentX+14,yTop-21,12.2,'F2',accent)
+    return yTop-h-10
   }
+  function setupBox(x,yTop,w,label,value,h=35){ rect(x,yTop-h,w,h,colors.panel3); rectStroke(x,yTop-h,w,h,colors.border2,.5); textAt(label.toUpperCase(),x+8,yTop-11,6.8,'F2',colors.teal); const lines=wrap(value,6.9,w-16); lines.slice(0,3).forEach((v,i)=>textAt(v,x+8,yTop-23-i*7.8,6.9,'F1',colors.text)) }
+  function metaStrip(x,yTop,w,h,pairs){ rect(x,yTop-h,w,h,colors.panel2); rectStroke(x,yTop-h,w,h,colors.border,.5); const cellW=w/pairs.length; pairs.forEach(([label,value],i)=>{ const cx=x+i*cellW; if(i)line(cx,yTop-h+5,cx,yTop-5,colors.border,.45); textAt(label.toUpperCase(),cx+5,yTop-12,5.7,'F2',colors.dim); wrap(value||'N/A',6.75,cellW-10).slice(0,2).forEach((v,j)=>textAt(v,cx+5,yTop-25-j*7.4,6.75,'F2',colors.text)) }) }
+  function drawScenarioImage(x,yTop,imgW){ const imgH=imgW/(16/9); rect(x,yTop-imgH-18,imgW,imgH+18,colors.panel2); if(scenarioImage){ add('q'); add(`${imgW.toFixed(2)} 0 0 ${imgH.toFixed(2)} ${x.toFixed(2)} ${(yTop-imgH).toFixed(2)} cm /Im1 Do`); add('Q') } rectStroke(x,yTop-imgH-18,imgW,imgH+18,colors.border,.5); textAt(scenarioName,x+8,yTop-imgH-12,8.5,'F2',colors.amber) }
 
-  function metaStrip(x, yTop, w, h, pairs) {
-    rect(x, yTop - h, w, h, colors.panel2)
-    rectStroke(x, yTop - h, w, h, colors.border, 0.5)
-    const cellW = w / pairs.length
-    pairs.forEach(([label, value], i) => {
-      const cx = x + i * cellW
-      if (i) line(cx, yTop - h + 5, cx, yTop - 5, colors.border, 0.45)
-      textAt(label.toUpperCase(), cx + 5, yTop - 12, 5.7, 'F2', colors.dim)
-      drawPara(value, cx + 5, yTop - 25, cellW - 10, 6.85, 7.8, colors.text, 'F2', 2)
-    })
-  }
+  let pageNo=0
+  const startPage=()=>{ if(pageNo>0){ drawFooter(pageNo); opsPages.push(ops) } pageNo+=1; ops=[]; drawBackground(); drawHeader(); return H-72 }
+  let pageTop=startPage()
+  let colY=[pageTop,pageTop]
+  const colGap=14, colW=(contentW-colGap)/2, colX=[contentX,contentX+colW+colGap]
 
-  function drawScenarioImage(x, yTop, imgW) {
-    const imgH = imgW / (16 / 9)
-    rect(x, yTop - imgH - 18, imgW, imgH + 18, colors.panel2)
-    if (scenarioImage) {
-      add('q')
-      add(`${imgW.toFixed(2)} 0 0 ${imgH.toFixed(2)} ${x.toFixed(2)} ${(yTop - imgH).toFixed(2)} cm /Im1 Do`)
-      add('Q')
-    }
-    rectStroke(x, yTop - imgH - 18, imgW, imgH + 18, colors.border, 0.5)
-    textAt(scenarioName, x + 8, yTop - imgH - 12, 8.5, 'F2', colors.amber)
-  }
-
-  const startPage = pageNo => {
-    ops = []
-    drawBackground()
-    drawHeader()
-  }
-  const finishPage = pageNo => {
-    drawFooter(pageNo)
-    opsPages.push(ops)
-  }
-
-  const scenarioDesc = scenarioDescriptionForPdf(scenarioName)
-  const jurisdictionDesc = jurisdictionDescriptionForPdf(meta.JURISDICTION)
-  const roleDesc = roleDescriptionForPdf(meta.ROLE)
-  const difficultyDesc = difficultyDescriptionForPdf(meta.DIFFICULTY)
-
-  const colGap = 14
-  const colW = (contentW - colGap) / 2
-  const leftX = contentX
-  const rightX = contentX + colW + colGap
-
-  startPage(1)
-  let y = top - 44
-  const heroH = 148
-  const imgW = 188
-  drawScenarioImage(contentX, y, imgW)
-  const rightSetupX = contentX + imgW + 12
-  const rightSetupW = contentW - imgW - 12
-  const setupGap = 6
-  const setupBoxH = (heroH - 3 * setupGap) / 4
+  let y=top-44
+  const heroH=148, imgW=188
+  drawScenarioImage(contentX,y,imgW)
+  const rightX=contentX+imgW+12, rightW=contentW-imgW-12, gap=6, boxH=(heroH-3*gap)/4
   ;[
-    ['Scenario', scenarioDesc],
-    ['Jurisdiction', jurisdictionDesc],
-    ['Role / Position', roleDesc],
-    ['Difficulty', difficultyDesc],
-  ].forEach(([label, value], idx) => setupBox(rightSetupX, y - idx * (setupBoxH + setupGap), rightSetupW, label, value, setupBoxH))
-  y -= heroH + 8
-
-  metaStrip(contentX, y, contentW, 34, [
-    ['Participant', participant],
-    ['Scenario', scenarioName],
-    ['Jurisdiction', meta.JURISDICTION || 'Unspecified'],
-    ['Role', meta.ROLE || 'EOC Director'],
-    ['Difficulty', meta.DIFFICULTY || 'Unspecified'],
-    ['Location', meta.LOCATION || 'Unspecified'],
-    ['Session', `${meta['SESSION START'] || 'N/A'} to ${meta['SESSION END'] || 'N/A'}`],
-    ['Duration', meta.DURATION || 'N/A'],
+    ['Scenario',scenarioDescriptionForPdf(scenarioName)],
+    ['Jurisdiction',jurisdictionDescriptionForPdf(meta.JURISDICTION)],
+    ['Role / Position',roleDescriptionForPdf(meta.ROLE)],
+    ['Difficulty',difficultyDescriptionForPdf(meta.DIFFICULTY)],
+  ].forEach(([label,value],idx)=>setupBox(rightX,y-idx*(boxH+gap),rightW,label,value,boxH))
+  y-=heroH+8
+  metaStrip(contentX,y,contentW,34,[
+    ['Player',participant],['Scenario',scenarioName],['Jurisdiction',meta.JURISDICTION||'Unspecified'],['Role',meta.ROLE||'EOC Director'],
+    ['Difficulty',meta.DIFFICULTY||'Unspecified'],['Location',meta.LOCATION||'Unspecified'],['Session',`${meta['SESSION START']||'N/A'} to ${meta['SESSION END']||'N/A'}`],['Duration',meta.DURATION||'N/A'],
   ])
-  y -= 44
+  colY=[y-44,y-44]
 
-  let leftY = y
-  let rightY = y
-  leftY = drawCard(leftX, leftY, colW, 'Situation Summary', sections['SITUATION SUMMARY'], colors.cyan, 'pin', 8.0, 9.55, colors.panel) - 8
-  leftY = drawCard(leftX, leftY, colW, 'Decision Log Review', sections['DECISION LOG REVIEW'], colors.blue, 'clipboard', 8.0, 9.55, colors.panel)
-  rightY = drawCard(rightX, rightY, colW, 'Strengths', sections.STRENGTHS, colors.green, 'check', 7.95, 9.5, colors.panel2) - 8
-  rightY = drawCard(rightX, rightY, colW, 'Critical Gaps', sections['CRITICAL GAPS'], colors.red, 'warn', 7.95, 9.5, colors.panel2)
-  finishPage(1)
-
-  startPage(2)
-  y = top - 52
-  leftY = y
-  rightY = y
-  leftY = drawCard(leftX, leftY, colW, 'Resource & Coordination Effectiveness', sections['RESOURCE & COORDINATION EFFECTIVENESS'], colors.teal, 'chain', 8.0, 9.55, colors.panel) - 8
-  leftY = drawCard(leftX, leftY, colW, 'Communications & Information Management', sections['COMMUNICATIONS & INFORMATION MANAGEMENT'], colors.cyan, 'comms', 8.0, 9.55, colors.panel) - 8
-  leftY = drawCard(leftX, leftY, colW, 'Doctrine / Reference Notes', sections['DOCTRINE / REFERENCE NOTES'], colors.purple, 'book', 7.8, 9.3, colors.panel)
-  rightY = drawCard(rightX, rightY, colW, 'Recommendations', sections.RECOMMENDATIONS, colors.amber, 'bulb', 8.0, 9.55, colors.panel2)
-  finishPage(2)
-
-  const objects = []
-  const addObj = value => { objects.push(value); return objects.length }
-  const font1 = addObj(encodePdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'))
-  const font2 = addObj(encodePdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>'))
-  let imageObj = null
-  if (scenarioImage) {
-    const header = encodePdfAscii(`<< /Type /XObject /Subtype /Image /Width ${scenarioImage.width} /Height ${scenarioImage.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${scenarioImage.bytes.length} >>\nstream\n`)
-    const footer = encodePdfAscii('\nendstream')
-    imageObj = addObj(concatPdfChunks([header, scenarioImage.bytes, footer]))
-  }
-  let logoObj = null
-  if (reportLogo) {
-    const header = encodePdfAscii(`<< /Type /XObject /Subtype /Image /Width ${reportLogo.width} /Height ${reportLogo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${reportLogo.bytes.length} >>\nstream\n`)
-    const footer = encodePdfAscii('\nendstream')
-    logoObj = addObj(concatPdfChunks([header, reportLogo.bytes, footer]))
-  }
-
-  const pageObjs = []
-  opsPages.forEach(pageOps => {
-    const stream = pageOps.join('\n')
-    const contentObj = addObj(encodePdfAscii(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`))
-    const xobjectItems = []
-    if (imageObj) xobjectItems.push(`/Im1 ${imageObj} 0 R`)
-    if (logoObj) xobjectItems.push(`/ImLogo ${logoObj} 0 R`)
-    const xobjects = xobjectItems.length ? `/XObject << ${xobjectItems.join(' ')} >>` : ''
-    const pageObj = addObj(encodePdfAscii(`<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 ${font1} 0 R /F2 ${font2} 0 R >> ${xobjects} >> /Contents ${contentObj} 0 R >>`))
-    pageObjs.push(pageObj)
+  const queue=[]
+  sectionOrder.forEach(title=>{
+    const body=sections[title]
+    const divider=/^(INDIVIDUAL ROLE AAR|FACILITATOR AAR|COMMUNICATIONS LOG)/.test(title)
+    if(divider) queue.push({type:'divider',title})
+    if(body) queue.push({type:'section',title,lines:bodyLines(body,colW-52,7.75),continued:false})
   })
 
-  const pagesObj = addObj(encodePdfAscii(`<< /Type /Pages /Kids [${pageObjs.map(n => `${n} 0 R`).join(' ')}] /Count ${pageObjs.length} >>`))
-  pageObjs.forEach(n => {
-    const oldText = new TextDecoder().decode(objects[n - 1])
-    objects[n - 1] = encodePdfAscii(oldText.replace('/Parent 0 0 R', `/Parent ${pagesObj} 0 R`))
-  })
-  const catalogObj = addObj(encodePdfAscii(`<< /Type /Catalog /Pages ${pagesObj} 0 R >>`))
-
-  const chunks = []
-  let offset = 0
-  const push = chunk => {
-    chunks.push(chunk)
-    offset += chunk.length
+  while(queue.length){
+    const item=queue.shift()
+    if(item.type==='divider'){
+      const lowest=Math.min(...colY)
+      if(lowest<minY+42){ pageTop=startPage(); colY=[pageTop,pageTop] }
+      const topY=Math.min(...colY)
+      const nextY=drawDivider(item.title,topY)
+      colY=[nextY,nextY]
+      continue
+    }
+    let col=colY[0]>=colY[1]?0:1
+    let available=colY[col]-minY
+    const leading=9.2, base=47
+    let maxLines=Math.floor((available-base)/leading)
+    if(maxLines<4){ pageTop=startPage(); colY=[pageTop,pageTop]; col=0; available=colY[col]-minY; maxLines=Math.floor((available-base)/leading) }
+    const take=Math.max(4,Math.min(item.lines.length,maxLines))
+    const chunk=item.lines.slice(0,take)
+    colY[col]=drawCardLines(colX[col],colY[col],colW,item.title,chunk,item.continued)-8
+    if(take<item.lines.length) queue.unshift({...item,lines:item.lines.slice(take),continued:true})
   }
-  push(encodePdfAscii('%PDF-1.4\n'))
-  const offsets = [0]
-  objects.forEach((obj, idx) => {
-    offsets.push(offset)
-    push(encodePdfAscii(`${idx + 1} 0 obj\n`))
-    push(obj)
-    push(encodePdfAscii('\nendobj\n'))
-  })
-  const xref = offset
-  push(encodePdfAscii(`xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`))
-  for (let i = 1; i < offsets.length; i++) push(encodePdfAscii(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`))
-  push(encodePdfAscii(`trailer\n<< /Size ${objects.length + 1} /Root ${catalogObj} 0 R >>\nstartxref\n${xref}\n%%EOF`))
+  drawFooter(pageNo); opsPages.push(ops)
 
-  const pdfBytes = concatPdfChunks(chunks)
-  const blob = new Blob([pdfBytes], { type:'application/pdf' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename.endsWith('.pdf') ? filename : filename.replace(/\.txt$/i, '.pdf')
-  a.click()
-  URL.revokeObjectURL(url)
+  const objects=[]
+  const addObj=value=>{ objects.push(value); return objects.length }
+  const font1=addObj(encodePdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'))
+  const font2=addObj(encodePdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>'))
+  let imageObj=null
+  if(scenarioImage){ const header=encodePdfAscii(`<< /Type /XObject /Subtype /Image /Width ${scenarioImage.width} /Height ${scenarioImage.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${scenarioImage.bytes.length} >>\nstream\n`); imageObj=addObj(concatPdfChunks([header,scenarioImage.bytes,encodePdfAscii('\nendstream')])) }
+  let logoObj=null
+  if(reportLogo){ const header=encodePdfAscii(`<< /Type /XObject /Subtype /Image /Width ${reportLogo.width} /Height ${reportLogo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${reportLogo.bytes.length} >>\nstream\n`); logoObj=addObj(concatPdfChunks([header,reportLogo.bytes,encodePdfAscii('\nendstream')])) }
+  const pageObjs=[]
+  opsPages.forEach(pageOps=>{
+    const stream=pageOps.join('\n'), contentObj=addObj(encodePdfAscii(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`))
+    const xitems=[]; if(imageObj)xitems.push(`/Im1 ${imageObj} 0 R`); if(logoObj)xitems.push(`/ImLogo ${logoObj} 0 R`)
+    const xobjects=xitems.length?`/XObject << ${xitems.join(' ')} >>`:''
+    pageObjs.push(addObj(encodePdfAscii(`<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 ${font1} 0 R /F2 ${font2} 0 R >> ${xobjects} >> /Contents ${contentObj} 0 R >>`)))
+  })
+  const pagesObj=addObj(encodePdfAscii(`<< /Type /Pages /Kids [${pageObjs.map(n=>`${n} 0 R`).join(' ')}] /Count ${pageObjs.length} >>`))
+  pageObjs.forEach(n=>{ const oldText=new TextDecoder().decode(objects[n-1]); objects[n-1]=encodePdfAscii(oldText.replace('/Parent 0 0 R',`/Parent ${pagesObj} 0 R`)) })
+  const catalogObj=addObj(encodePdfAscii(`<< /Type /Catalog /Pages ${pagesObj} 0 R >>`))
+  const chunks=[]; let offset=0; const push=chunk=>{ chunks.push(chunk); offset+=chunk.length }
+  push(encodePdfAscii('%PDF-1.4\n')); const offsets=[0]
+  objects.forEach((obj,idx)=>{ offsets.push(offset); push(encodePdfAscii(`${idx+1} 0 obj\n`)); push(obj); push(encodePdfAscii('\nendobj\n')) })
+  const xref=offset; push(encodePdfAscii(`xref\n0 ${objects.length+1}\n0000000000 65535 f \n`)); for(let i=1;i<offsets.length;i++)push(encodePdfAscii(`${String(offsets[i]).padStart(10,'0')} 00000 n \n`)); push(encodePdfAscii(`trailer\n<< /Size ${objects.length+1} /Root ${catalogObj} 0 R >>\nstartxref\n${xref}\n%%EOF`))
+  const blob=new Blob([concatPdfChunks(chunks)],{type:'application/pdf'}), url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=filename.endsWith('.pdf')?filename:filename.replace(/\.txt$/i,'.pdf'); a.click(); URL.revokeObjectURL(url)
 }
-
-
 
 function parseTranscriptForPdf(rawText = '') {
   const safe = pdfSafe(rawText)
@@ -2386,7 +2208,7 @@ function AARDisplay({ aar, teamMode=false, teamAar=null, individualAar=null, all
     report += `JURISDICTION:    ${jurisdiction || 'Unspecified'}\n`
     report += `ROLE:            ${role || 'EOC Director'}\n`
     report += `DIFFICULTY:      ${difficulty || 'Unspecified'}\n`
-    if (playerName) report += `COMMANDER:       ${playerName}\n`
+    if (playerName) report += `PLAYER:          ${playerName}\n`
     if (worldState?.location) report += `LOCATION:        ${worldState.location}\n`
     report += `SESSION START:   ${startTime}\n`
     report += `SESSION END:     ${endTime}\n`
@@ -2438,12 +2260,7 @@ function AARDisplay({ aar, teamMode=false, teamAar=null, individualAar=null, all
     report += `NEXUS EOC — nexuseoc.com\n`
 
     const filename = `NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.pdf`
-    if (teamMode && typeof downloadPlainPdfTextFile === 'function') {
-      // Team reports can extend well beyond the designed two-page solo AAR layout.
-      // Use the fully paginated text renderer so the shared, individual, facilitator,
-      // and communications sections are never truncated.
-      downloadPlainPdfTextFile(filename, report)
-    } else if (typeof downloadPdfTextFile === 'function') {
+    if (typeof downloadPdfTextFile === 'function') {
       downloadPdfTextFile(filename, report)
     } else {
       downloadTextFile(filename.replace(/\.pdf$/i, '.txt'), report)
@@ -4402,9 +4219,59 @@ async function startCustomScenario(customScenario) {
         .nexus-esf-tile .nexus-esf-tip { display: none; }
         .nexus-esf-tile:hover .nexus-esf-tip { display: block; }
         .nexus-live-button:hover { filter: brightness(1.12); }
+        @keyframes nexus-aar-spin { to { transform: rotate(360deg); } }
       `}</style>
 
       {activeInfo?.key && activeInfo?.anchor && <InfoCallout panelKey={activeInfo.key} anchorEl={activeInfo.anchor} onClose={() => setActiveInfo(null)} />}
+
+      {state.teamMode && teamLiveRoom?.status === 'ending' && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Generating Team AAR"
+          style={{
+            position:'fixed',
+            inset:0,
+            zIndex:8200,
+            display:'flex',
+            alignItems:'center',
+            justifyContent:'center',
+            padding:24,
+            background:'rgba(1, 7, 13, 0.82)',
+            backdropFilter:'blur(8px)',
+            WebkitBackdropFilter:'blur(8px)',
+          }}
+        >
+          <div style={{
+            width:'min(520px, 92vw)',
+            padding:'30px 32px',
+            border:`1px solid ${UI.borderStrong || UI.border}`,
+            borderRadius:10,
+            background:`linear-gradient(180deg, ${UI.panel}, ${UI.panelSoft})`,
+            boxShadow:'0 24px 80px rgba(0,0,0,.55)',
+            textAlign:'center',
+          }}>
+            <div style={{
+              width:54,
+              height:54,
+              margin:'0 auto 18px',
+              borderRadius:'50%',
+              border:`4px solid rgba(45,226,184,.18)`,
+              borderTopColor:UI.teal,
+              animation:'nexus-aar-spin 1s linear infinite',
+            }} />
+            <div style={{ color:UI.text, fontSize:fs+7, fontWeight:950, letterSpacing:'0.02em', marginBottom:12 }}>
+              Generating Team AAR
+            </div>
+            <div style={{ color:UI.muted, fontSize:fs+1, lineHeight:1.65 }}>
+              This may take several minutes. Take a short break while NEXUS reviews the team’s decisions, coordination, and role performance.
+            </div>
+            <div style={{ color:UI.dim, fontSize:Math.max(11, fs-1), marginTop:18 }}>
+              All participants will open the completed report automatically.
+            </div>
+          </div>
+        </div>
+      )}
 
       {showEndDialog && !isEndex && (
         <div
@@ -4735,18 +4602,9 @@ async function startCustomScenario(customScenario) {
                     </div>
                   )}
                   {(loading || initLoading) && (
-                    state.teamMode && teamLiveRoom?.status === 'ending' ? (
-                      <div style={{ marginTop:16, padding:'18px 20px', border:`1px solid ${UI.border}`, background:UI.panelSoft, borderRadius:6 }}>
-                        <div style={{ color:UI.text, fontSize:fs+1, fontWeight:900, marginBottom:8 }}>Generating Team AAR</div>
-                        <div style={{ color:UI.muted, fontSize:fs, lineHeight:1.6 }}>
-                          This may take several minutes. Take a short break while NEXUS reviews the team’s decisions, coordination, and role performance.
-                        </div>
-                      </div>
-                    ) : (
-                      <div style={{ color:UI.dim, fontStyle:'italic', fontSize:fs }}>
-                        {initLoading ? 'Building scenario world...' : 'Evaluating action...'}
-                      </div>
-                    )
+                    <div style={{ color:UI.dim, fontStyle:'italic', fontSize:fs }}>
+                      {initLoading ? 'Building scenario world...' : 'Evaluating action...'}
+                    </div>
                   )}
                 </div>
               )}
