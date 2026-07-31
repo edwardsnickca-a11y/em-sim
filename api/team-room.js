@@ -247,7 +247,11 @@ async function redisSaveRoom(room) {
   return room;
 }
 
-function publicRoom(room) {
+function publicRoom(room, viewerId = '') {
+  const messages = (room.messages || []).filter((message) => {
+    if (message.channel === 'room') return true;
+    return viewerId && (message.senderId === viewerId || message.recipientId === viewerId);
+  });
   return {
     roomCode: room.roomCode,
     status: room.status,
@@ -259,6 +263,8 @@ function publicRoom(room) {
     turnStatus: room.turnStatus || 'collecting',
     submissions: (room.submissions || []).map(({ response, ...submission }) => submission),
     sharedTurnState: room.sharedTurnState || null,
+    messages,
+    chatSettings: room.chatSettings || { includePrivateMessagesInTranscript: false },
     startedAt: room.startedAt || null,
     createdAt: room.createdAt,
     updatedAt: room.updatedAt,
@@ -293,6 +299,8 @@ async function handleCreate(body) {
     },
     players: [],
     sharedNotes: [],
+    messages: [],
+    chatSettings: { includePrivateMessagesInTranscript: false },
     submissions: [],
     turn: 0,
     turnStatus: 'collecting',
@@ -325,10 +333,10 @@ async function handleCreate(body) {
   return { ok: true, playerId: room.players[0]?.id || null, room: publicRoom(room) };
 }
 
-async function handleGet(code) {
+async function handleGet(code, viewerId = '') {
   const room = await redisGetRoom(code);
   if (!room) return { ok: false, error: 'Room not found', statusCode: 404 };
-  return { ok: true, room: publicRoom(room) };
+  return { ok: true, room: publicRoom(room, viewerId) };
 }
 
 async function handleJoin(body) {
@@ -514,6 +522,60 @@ async function handleCancelAdvance(body) {
   return { ok:true, room:publicRoom(room) };
 }
 
+async function handleSendMessage(body) {
+  const roomCode = normalizeRoomCode(body.roomCode || body.code);
+  const senderId = String(body.playerId || body.senderId || '').trim();
+  const text = String(body.message || body.text || '').trim();
+  const channel = body.channel === 'direct' ? 'direct' : 'room';
+  const recipientId = channel === 'direct' ? String(body.recipientId || '').trim() : '';
+  if (!roomCode) throw new Error('Room code is required');
+  if (!senderId) throw new Error('Player ID is required');
+  if (!text) throw new Error('Message is required');
+  if (text.length > 1000) throw new Error('Message must be 1000 characters or fewer');
+
+  const room = await redisGetRoom(roomCode);
+  if (!room) return { ok:false, error:'Room not found', statusCode:404 };
+  if (room.status !== 'active') throw new Error('Team chat is available during an active exercise');
+  const sender = room.players.find((player) => player.id === senderId && player.status !== 'removed');
+  if (!sender) throw new Error('Active player not found');
+  let recipient = null;
+  if (channel === 'direct') {
+    recipient = room.players.find((player) => player.id === recipientId && player.status !== 'removed');
+    if (!recipient || recipient.id === senderId) throw new Error('Select another active player');
+  }
+
+  const message = {
+    id: crypto.randomBytes(10).toString('hex'),
+    channel,
+    senderId,
+    senderName: sender.name,
+    senderRole: sender.role || 'Facilitator',
+    recipientId: recipient?.id || '',
+    recipientName: recipient?.name || '',
+    recipientRole: recipient?.role || '',
+    text,
+    createdAt: new Date().toISOString(),
+  };
+  room.messages = [...(room.messages || []), message].slice(-500);
+  await redisSaveRoom(room);
+  return { ok:true, message, room:publicRoom(room, senderId) };
+}
+
+async function handleUpdateChatSettings(body) {
+  const roomCode = normalizeRoomCode(body.roomCode || body.code);
+  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
+  const room = await redisGetRoom(roomCode);
+  if (!room) return { ok:false, error:'Room not found', statusCode:404 };
+  const host = room.players.find((player) => player.id === hostPlayerId && player.isHost);
+  if (!host) throw new Error('Only the host can change transcript chat settings');
+  room.chatSettings = {
+    ...(room.chatSettings || {}),
+    includePrivateMessagesInTranscript: Boolean(body.includePrivateMessagesInTranscript),
+  };
+  await redisSaveRoom(room);
+  return { ok:true, room:publicRoom(room, hostPlayerId) };
+}
+
 module.exports = async function handler(req, res) {
   try {
     if (req.method === 'OPTIONS') {
@@ -524,7 +586,7 @@ module.exports = async function handler(req, res) {
 
     if (req.method === 'GET') {
       const code = req.query?.code || req.query?.roomCode;
-      const result = await handleGet(code);
+      const result = await handleGet(code, req.query?.playerId || '');
       sendJson(res, result.statusCode || 200, result);
       return;
     }
@@ -549,7 +611,7 @@ module.exports = async function handler(req, res) {
         break;
       case 'get':
       case 'getRoom':
-        result = await handleGet(body.roomCode || body.code);
+        result = await handleGet(body.roomCode || body.code, body.playerId || '');
         break;
       case 'updateRole':
         result = await handleUpdateRole(body);
@@ -572,6 +634,12 @@ module.exports = async function handler(req, res) {
         break;
       case 'cancelAdvance':
         result = await handleCancelAdvance(body);
+        break;
+      case 'sendMessage':
+        result = await handleSendMessage(body);
+        break;
+      case 'updateChatSettings':
+        result = await handleUpdateChatSettings(body);
         break;
       default:
         throw new Error('Unknown team room action');
