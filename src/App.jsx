@@ -47,6 +47,40 @@ function neutralizeGeneratedText(value='', fallback='') {
   return kept.join(' ').trim() || fallback
 }
 
+const VALID_PIN_TYPES = new Set(['EOC','HOSPITAL','STAGING','SHELTER','AFFECTED','FIRE','HAZMAT','DAM','BLOCKED','OTHER'])
+
+function normalizeMapPin(pin, index=0, prefix='pin') {
+  const raw = pin && typeof pin === 'object' ? pin : {}
+  const rawType = raw.type ?? raw.category ?? raw.kind ?? raw.pinType
+  const candidateType = String(rawType || 'OTHER').trim().toUpperCase()
+  const type = VALID_PIN_TYPES.has(candidateType) ? candidateType : 'OTHER'
+  const lat = Number(raw.lat ?? raw.latitude)
+  const lng = Number(raw.lng ?? raw.lon ?? raw.longitude)
+  const rawLabel = raw.label ?? raw.name ?? raw.title
+  const labelText = String(rawLabel || '').trim()
+  const label = labelText && labelText.toLowerCase() !== 'undefined'
+    ? labelText
+    : `${type === 'OTHER' ? 'Incident' : type.charAt(0) + type.slice(1).toLowerCase()} location`
+  const rawNote = raw.note ?? raw.description ?? raw.details ?? ''
+  const noteText = String(rawNote || '').trim()
+
+  return {
+    ...raw,
+    id: String(raw.id || `${prefix}-${index}`),
+    type,
+    label,
+    note: noteText.toLowerCase() === 'undefined' ? '' : noteText,
+    lat,
+    lng,
+  }
+}
+
+function normalizeMapPins(pins, prefix='pin') {
+  return (Array.isArray(pins) ? pins : [])
+    .map((pin, index) => normalizeMapPin(pin, index, prefix))
+    .filter(pin => Number.isFinite(pin.lat) && Number.isFinite(pin.lng))
+}
+
 function sanitizeWorldOutput(world, fallbackLocation='') {
   const safe = world && typeof world === 'object' ? { ...world } : {}
   safe.location = safe.location || fallbackLocation
@@ -57,6 +91,7 @@ function sanitizeWorldOutput(world, fallbackLocation='') {
     safe.openingNarrative,
     `STARTEX. Initial reports are still being reconciled for ${safe.location || 'the jurisdiction'}, and the operating picture remains incomplete.`
   )
+  safe.pins = normalizeMapPins(safe.pins, 'init')
   return safe
 }
 
@@ -75,7 +110,7 @@ function sanitizeTurnOutput(turn, currentState) {
   )
   safe.lifelines = safe.lifelines || currentState?.lifelines
   safe.headlines = Array.isArray(safe.headlines) ? safe.headlines : []
-  safe.pins = Array.isArray(safe.pins) ? safe.pins : []
+  safe.pins = normalizeMapPins(safe.pins, 'turn')
   return safe
 }
 
@@ -3308,7 +3343,7 @@ async function initCustomWorld(customScenario) {
     const world = shared.world
     const selectedLocation = shared.selectedLocation || { label:world.location || jurisdiction }
     const initDispatches = (world.dispatches || []).map((text, i) => ({ id:i, text, turn:0 }))
-    const initPins = (world.pins || []).map((pin, i) => ({ ...pin, id:pin.id || `init-${i}` }))
+    const initPins = normalizeMapPins(world.pins, 'init')
 
     setActiveESFs({})
     setInitLoading(false)
@@ -4201,8 +4236,8 @@ async function startCustomScenario(customScenario) {
                     <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT, pin.type)}>
                       <Popup>
                         <div style={{ fontFamily:'Inter, sans-serif', fontSize:12 }}>
-                          <strong>{pin.label}</strong><br/>
-                          <span style={{ color:'#666' }}>{pin.type}</span><br/>
+                          <strong>{pin.label || 'Incident location'}</strong><br/>
+                          <span style={{ color:'#666' }}>{pin.type || 'OTHER'}</span><br/>
                           {pin.note}
                         </div>
                       </Popup>
@@ -4212,8 +4247,8 @@ async function startCustomScenario(customScenario) {
                     <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeDynamicIcon(pin.turn)}>
                       <Popup>
                         <div style={{ fontFamily:'Inter, sans-serif', fontSize:12 }}>
-                          <strong>{pin.label}</strong><br/>
-                          <span style={{ color:'#666' }}>Turn {pin.turn} — {pin.type}</span><br/>
+                          <strong>{pin.label || 'Incident location'}</strong><br/>
+                          <span style={{ color:'#666' }}>Turn {pin.turn} — {pin.type || 'OTHER'}</span><br/>
                           {pin.note}
                         </div>
                       </Popup>
