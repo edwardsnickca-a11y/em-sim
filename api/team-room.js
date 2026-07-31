@@ -254,6 +254,8 @@ function publicRoom(room) {
     exercise: room.exercise,
     players: room.players,
     sharedNotes: room.sharedNotes || [],
+    sharedScenario: room.sharedScenario || null,
+    startedAt: room.startedAt || null,
     createdAt: room.createdAt,
     updatedAt: room.updatedAt,
   };
@@ -393,12 +395,17 @@ async function handleRemovePlayer(body) {
 
 async function handleStart(body) {
   const roomCode = normalizeRoomCode(body.roomCode || body.code);
+  const sharedScenario = body.sharedScenario;
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok: false, error: 'Room not found', statusCode: 404 };
 
   const activePlayers = room.players.filter((player) => player.status !== 'removed' && player.role);
   if (activePlayers.length < 2) throw new Error('At least 2 active player roles are required to start');
+  if (!sharedScenario || !sharedScenario.world || !sharedScenario.selectedLocation) {
+    throw new Error('Shared scenario package is required to start the room');
+  }
 
+  room.sharedScenario = sharedScenario;
   room.status = 'active';
   room.startedAt = new Date().toISOString();
   await redisSaveRoom(room);

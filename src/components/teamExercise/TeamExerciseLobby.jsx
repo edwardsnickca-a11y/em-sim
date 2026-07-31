@@ -127,7 +127,7 @@ function writeTeamSession(code, participant) {
   } catch {}
 }
 
-export default function TeamExerciseLobby({ entryMode='host', state, update, onMissionPortal, onStartExercise }) {
+export default function TeamExerciseLobby({ entryMode='host', state, update, onMissionPortal, onPrepareStart, onStartExercise }) {
   const scenarioEntries = useMemo(() => Object.entries(SCENARIOS).filter(([key]) => Boolean(SCENARIO_VISUALS[key])), [])
   const initialLinkCode = getInitialRoomCode()
   const [mode, setMode] = useState(entryMode)
@@ -291,12 +291,14 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   }
 
   async function startExercise() {
-    if (!code || busy || room?.status !== 'lobby') return
+    if (!code || busy || room?.status !== 'lobby' || !onPrepareStart) return
     setBusy(true); setError('')
     try {
-      const data = await apiTeamRoom({ action:'start', code })
-      setRoom(data.room)
-      update?.({ teamRoom:data.room })
+      const activeRoom = await onPrepareStart(room, launchPlayer)
+      if (activeRoom) {
+        setRoom(activeRoom)
+        update?.({ teamRoom:activeRoom })
+      }
     } catch (err) { setError(err.message) }
     finally { setBusy(false) }
   }

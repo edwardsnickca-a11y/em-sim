@@ -3255,20 +3255,106 @@ async function initCustomWorld(customScenario) {
   }
 
 
-  async function startTeamExercise(room, participant) {
-    if (!room?.exercise?.scenario || !participant?.role) return
-    await startScenario(room.exercise.scenario, {
-      jurisdiction: room.exercise.jurisdiction,
-      difficulty: room.exercise.difficulty,
-      role: participant.role,
-      playerName: participant.name,
-      teamMode: true,
-      roomCode: room.roomCode,
-      playerId: participant.id,
-      players: room.players || [],
-      hostMode: room.exercise.hostMode,
-      teamRoom: room,
+  async function prepareTeamExercise(room) {
+    if (!room?.roomCode || !room?.exercise?.scenario) throw new Error('Team Room is missing its exercise setup')
+
+    const scenarioKey = room.exercise.scenario
+    const sc = SCENARIOS[scenarioKey]
+    const jurisdiction = normalizeJurisdictionType(room.exercise.jurisdiction || state.jurisdiction)
+    const difficulty = room.exercise.difficulty || state.difficulty
+    const selectedLocation = selectScenarioLocation(scenarioKey, jurisdiction)
+    rememberScenarioLocation(selectedLocation)
+
+    let world
+    try {
+      world = await initWorld(scenarioKey, jurisdiction, selectedLocation, null)
+    } catch (err) {
+      world = sanitizeWorldOutput({
+        location: selectedLocation?.label || jurisdiction,
+        openingNarrative: `${sc?.desc || 'An emergency incident is developing.'} The EOC is activating while initial reports remain incomplete.`,
+        dispatches: [`${sc?.name || 'Incident'} confirmed. EOC activation is underway. Resource status remains unknown.`],
+        pins: [],
+      }, selectedLocation?.label || jurisdiction)
+    }
+
+    const sharedScenario = {
+      version: 1,
+      scenarioKey,
+      jurisdiction,
+      difficulty,
+      selectedLocation,
+      world,
+      generatedAt: new Date().toISOString(),
+    }
+
+    const res = await fetch('/api/team-room', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body:JSON.stringify({ action:'start', code:room.roomCode, sharedScenario }),
     })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to start the Team Exercise')
+    return data.room
+  }
+
+  async function startTeamExercise(room, participant) {
+    const shared = room?.sharedScenario
+    if (!room?.exercise?.scenario || !participant?.role || !shared?.world) return
+
+    const scenarioKey = shared.scenarioKey || room.exercise.scenario
+    const sc = SCENARIOS[scenarioKey]
+    const jurisdiction = shared.jurisdiction || normalizeJurisdictionType(room.exercise.jurisdiction || state.jurisdiction)
+    const difficulty = shared.difficulty || room.exercise.difficulty || state.difficulty
+    const world = shared.world
+    const selectedLocation = shared.selectedLocation || { label:world.location || jurisdiction }
+    const initDispatches = (world.dispatches || []).map((text, i) => ({ id:i, text, turn:0 }))
+    const initPins = (world.pins || []).map((pin, i) => ({ ...pin, id:pin.id || `init-${i}` }))
+
+    setActiveESFs({})
+    setInitLoading(false)
+    update({
+      screen:'game',
+      scenario:scenarioKey,
+      jurisdiction,
+      difficulty,
+      role:participant.role,
+      playerName:participant.name,
+      dispatches:initDispatches,
+      terminal:[
+        { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${world.location || selectedLocation.label || jurisdiction} — ${difficulty} — ${participant.role.toUpperCase()}${participant.name ? ` — ${participant.name.toUpperCase()}` : ''}` },
+        { type:'divider' },
+        { type:'narrator', text:world.openingNarrative },
+      ],
+      history:[],
+      turn:0,
+      simTime:'H+0:00',
+      situation:'DEVELOPING',
+      notepad:'',
+      lifelines:INITIAL_LIFELINES_UNKNOWN,
+      headlines:[],
+      dynamicPins:initPins,
+      worldState:world,
+      aar:null,
+      exerciseTranscript:[{
+        type:'opening',
+        time:'H+0:00',
+        location:world.location || selectedLocation.label || jurisdiction,
+        narrative:world.openingNarrative,
+        dispatches:initDispatches,
+        pins:initPins,
+        lifelines:INITIAL_LIFELINES_UNKNOWN,
+      }],
+      customScenario:null,
+      localizedJurisdiction:null,
+      teamMode:true,
+      roomCode:room.roomCode,
+      playerId:participant.id,
+      players:room.players || [],
+      hostMode:room.exercise.hostMode,
+      teamRoom:room,
+    })
+
+    setTimeout(() => inputRef.current?.focus(), 100)
   }
 
 
@@ -3498,6 +3584,7 @@ async function startCustomScenario(customScenario) {
         update={update}
         entryMode={state.teamEntryMode || 'host'}
         onMissionPortal={() => update({ screen:'portal' })}
+        onPrepareStart={prepareTeamExercise}
         onStartExercise={startTeamExercise}
       />
     )
