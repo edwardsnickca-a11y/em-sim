@@ -1048,6 +1048,7 @@ const defaultState = {
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[],
   dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:null,
+  teamMode:false, roomCode:null, playerId:null, players:[], hostMode:null, teamRoom:null,
 }
 
 
@@ -3071,11 +3072,15 @@ export default function App() {
       const saved = localStorage.getItem(SAVE_KEY)
       const params = new URLSearchParams(window.location.search)
       const teamRoom = params.get('teamRoom')
+      const savedState = saved ? { ...defaultState, ...JSON.parse(saved) } : null
       if (teamRoom) {
-        setState({ ...defaultState, ...(saved ? JSON.parse(saved) : {}), screen:'team-lobby', teamEntryMode:'join' })
+        const sameActiveSession = savedState?.screen === 'game' && savedState?.teamMode && savedState?.roomCode === teamRoom.toUpperCase()
+        setState(sameActiveSession
+          ? savedState
+          : { ...defaultState, ...(savedState || {}), screen:'team-lobby', teamEntryMode:'join', roomCode:teamRoom.toUpperCase() })
         return
       }
-      setState(saved ? { ...defaultState, ...JSON.parse(saved) } : defaultState)
+      setState(savedState || defaultState)
     } catch { setState(defaultState) }
   }, [])
 
@@ -3158,7 +3163,10 @@ async function initCustomWorld(customScenario) {
 
   async function startScenario(scenarioKey, launchOptions={}) {
     const sc = SCENARIOS[scenarioKey]
-    const jurisdiction = normalizeJurisdictionType(state.jurisdiction)
+    const jurisdiction = normalizeJurisdictionType(launchOptions.jurisdiction || state.jurisdiction)
+    const launchDifficulty = launchOptions.difficulty || state.difficulty
+    const launchRole = launchOptions.role || state.role || 'EOC Director'
+    const launchPlayerName = launchOptions.playerName ?? state.playerName ?? ''
     const specificJurisdiction = String(launchOptions?.specificJurisdiction || '').trim()
     const isLocalizedScenario = Boolean(specificJurisdiction)
     const selectedLocation = isLocalizedScenario
@@ -3178,19 +3186,23 @@ async function initCustomWorld(customScenario) {
     setActiveESFs({})
     setInitLoading(true)
     if (typeof window !== 'undefined' && window.posthog) {
-      window.posthog.capture('scenario_launched', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, location: selectedLocation?.label, localized: isLocalizedScenario })
+      window.posthog.capture('scenario_launched', { scenario: scenarioKey, jurisdiction, difficulty: launchDifficulty, location: selectedLocation?.label, localized: isLocalizedScenario })
     }
-    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: state.difficulty, role: state.role, location: selectedLocation?.label, localized: isLocalizedScenario, ...(state.playerName ? { player: state.playerName } : {}) })
+    posthog.capture('scenario_started', { scenario: scenarioKey, jurisdiction, difficulty: launchDifficulty, role: launchRole, location: selectedLocation?.label, localized: isLocalizedScenario, ...(launchPlayerName ? { player: launchPlayerName } : {}) })
 
     update({
       screen:'game', scenario:scenarioKey,
       dispatches:[], terminal:[
-        { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${selectedLocation?.label || jurisdiction} — ${state.difficulty}` },
+        { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${selectedLocation?.label || jurisdiction} — ${launchDifficulty}` },
         { type:'system', text:`Generating scenario world for ${selectedLocation?.label || jurisdiction}...` },
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
       notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
       worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:isLocalizedScenario ? specificJurisdiction : null,
+      jurisdiction, difficulty:launchDifficulty, role:launchRole, playerName:launchPlayerName,
+      teamMode:Boolean(launchOptions.teamMode), roomCode:launchOptions.roomCode || null,
+      playerId:launchOptions.playerId || null, players:launchOptions.players || [],
+      hostMode:launchOptions.hostMode || null, teamRoom:launchOptions.teamRoom || state.teamRoom || null,
     })
 
     try {
@@ -3202,7 +3214,7 @@ async function initCustomWorld(customScenario) {
         worldState: world,
         dispatches: initDispatches,
         terminal: [
-          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${state.difficulty} — ${(state.role||'EOC Director').toUpperCase()}${state.playerName ? ` — ${state.playerName.toUpperCase()}` : ''}` },
+          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${launchDifficulty} — ${launchRole.toUpperCase()}${launchPlayerName ? ` — ${launchPlayerName.toUpperCase()}` : ''}` },
           { type:'divider' },
           { type:'narrator', text:world.openingNarrative },
         ],
@@ -3220,7 +3232,7 @@ async function initCustomWorld(customScenario) {
     } catch(e) {
       update({
         terminal: [
-          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${state.difficulty}` },
+          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${launchDifficulty}` },
           { type:'divider' },
           { type:'narrator', text:sc.desc + ' Your EOC is activating. Initial reports remain incomplete.' },
         ],
@@ -3240,6 +3252,23 @@ async function initCustomWorld(customScenario) {
 
     setInitLoading(false)
     setTimeout(() => inputRef.current?.focus(), 100)
+  }
+
+
+  async function startTeamExercise(room, participant) {
+    if (!room?.exercise?.scenario || !participant?.role) return
+    await startScenario(room.exercise.scenario, {
+      jurisdiction: room.exercise.jurisdiction,
+      difficulty: room.exercise.difficulty,
+      role: participant.role,
+      playerName: participant.name,
+      teamMode: true,
+      roomCode: room.roomCode,
+      playerId: participant.id,
+      players: room.players || [],
+      hostMode: room.exercise.hostMode,
+      teamRoom: room,
+    })
   }
 
 
@@ -3469,6 +3498,7 @@ async function startCustomScenario(customScenario) {
         update={update}
         entryMode={state.teamEntryMode || 'host'}
         onMissionPortal={() => update({ screen:'portal' })}
+        onStartExercise={startTeamExercise}
       />
     )
   }
