@@ -3343,7 +3343,11 @@ async function initCustomWorld(customScenario) {
     const world = shared.world
     const selectedLocation = shared.selectedLocation || { label:world.location || jurisdiction }
     const initDispatches = (world.dispatches || []).map((text, i) => ({ id:i, text, turn:0 }))
+    // Opening-world pins must always remain initial pins. Shared Redis data may
+    // already contain generated IDs, so force the init-* namespace here rather
+    // than allowing them to be rendered as turn/event markers.
     const initPins = normalizeMapPins(world.pins, 'init')
+      .map((pin, i) => ({ ...pin, id:`init-${i}` }))
 
     setActiveESFs({})
     setInitLoading(false)
