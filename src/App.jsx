@@ -3810,6 +3810,53 @@ async function startCustomScenario(customScenario) {
     setLoading(true)
     setTeamSyncError('')
     let began = false
+
+    const parseAarResponse = (raw, label) => {
+      const cleaned = String(raw || '').replace(/```json|```/gi, '').trim()
+      const firstBrace = cleaned.indexOf('{')
+      const lastBrace = cleaned.lastIndexOf('}')
+      if (firstBrace < 0 || lastBrace <= firstBrace) throw new Error(`${label} returned no JSON`)
+      const parsed = JSON.parse(cleaned.slice(firstBrace, lastBrace + 1))
+      if (!parsed?.aar) throw new Error(`${label} returned no AAR`)
+      const required = ['situationSummary','decisionLog','resourceCoordination','communications','strengths','criticalGaps','doctrineReferences','recommendations']
+      if (required.some(key => !String(parsed.aar[key] || '').trim())) throw new Error(`${label} returned an incomplete AAR`)
+      return parsed.aar
+    }
+
+    const requestBaselineAar = async ({ role, playerName, record, label }) => {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 120000)
+      try {
+        const res = await fetch('/api/chat', {
+          method:'POST', headers:{ 'Content-Type':'application/json' }, signal:controller.signal,
+          body:JSON.stringify({
+            system:buildSystemPrompt(
+              state.scenario,
+              state.jurisdiction,
+              state.difficulty,
+              state.worldState,
+              playerName,
+              role,
+              state.customScenario,
+            ),
+            messages:[
+              {
+                role:'user',
+                content:`AAR SOURCE RECORD — treat this as the authoritative record of the completed exercise. Do not invent actions or outcomes. Evaluate only what appears below.\n\n${record}`,
+              },
+              { role:'user', content:'ENDEX' },
+            ],
+          }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data?.error || `${label} request failed (${res.status})`)
+        const raw = data.content?.[0]?.text || ''
+        return parseAarResponse(raw, label)
+      } finally {
+        clearTimeout(timeoutId)
+      }
+    }
+
     try {
       const beginRes = await fetch('/api/team-room', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
@@ -3823,75 +3870,79 @@ async function startCustomScenario(customScenario) {
       const context = beginData.aarContext || {}
       const players = (context.players || []).filter(player => player.role)
       const allSubmissions = [...(context.submissionHistory || []), ...(context.currentSubmissions || [])]
-      const decisions = allSubmissions.length
-        ? allSubmissions.map(item => `TURN ${Number(item.turn) + 1} — ${item.playerRole} — ${item.playerName}\n${item.response}`).join('\n\n')
-        : 'No role submissions were captured.'
-      const communications = (context.communications || []).length
-        ? context.communications.map(message => `${message.channel === 'direct' ? `PRIVATE ${message.senderName} → ${message.recipientName}` : `TEAM ROOM — ${message.senderName} (${message.senderRole})`}: ${message.text}`).join('\n')
-        : 'No Team Coordination messages were captured.'
-      const roster = players.map(player => `${player.id} | ${player.name} | ${player.role}${player.isHost ? ' | HOST' : ''}`).join('\n')
-      const transcriptSummary = JSON.stringify(context.sharedTurnState?.exerciseTranscript || state.exerciseTranscript || [])
+      const permittedCommunications = context.communications || []
+      const sharedTranscript = context.sharedTurnState?.exerciseTranscript || state.exerciseTranscript || []
+      const scenarioName = SCENARIOS[state.scenario]?.name || state.scenario
 
-      const aarSystem = `You are the NEXUS EOC After-Action Review evaluator. Produce JSON only. Evaluate emergency operations center decision-making, coordination, information management, leadership support, Community Lifelines, resource coordination, public information, continuity/recovery awareness, and role discipline. Be candid, specific, evidence-based, and practitioner-focused. Do not invent actions. Distinguish shared team performance from each player's private role performance. Private messages may be evaluated only when included in the supplied communications log.`
-      const aarRequest = `Generate the final Team Exercise AAR for this completed session.\n\nSCENARIO: ${SCENARIOS[state.scenario]?.name || state.scenario}\nJURISDICTION: ${state.jurisdiction}\nDIFFICULTY: ${state.difficulty}\nFINAL TIME: ${state.simTime}\nTURNS COMPLETED: ${state.turn}\n\nROSTER (use the exact player IDs as JSON keys):\n${roster}\n\nROLE SUBMISSIONS:\n${decisions}\n\nCOMMUNICATIONS LOG (${context.chatSettings?.includePrivateMessagesInTranscript ? 'team room and private messages included' : 'team room messages only'}):\n${communications}\n\nEXERCISE RECORD:\n${transcriptSummary}\n\nReturn exactly this JSON shape:\n{\n  "teamAar": {\n    "situationSummary":"", "decisionLog":"", "resourceCoordination":"", "communications":"",\n    "strengths":"", "criticalGaps":"", "doctrineReferences":"", "recommendations":""\n  },\n  "individualAars": {\n    "PLAYER_ID": {\n      "situationSummary":"Brief role context and contribution", "decisionLog":"Assessment of this player's actual submissions and timing",\n      "resourceCoordination":"Role-specific coordination and resource performance", "communications":"Role-specific communication performance",\n      "strengths":"Specific strengths", "criticalGaps":"Specific gaps or missed opportunities",\n      "doctrineReferences":"Relevant doctrine tied to this role's actions", "recommendations":"Specific role-focused improvements"\n    }\n  },\n  "facilitatorAar": {\n    "situationSummary":"Overall exercise-control summary", "decisionLog":"Cross-role comparison and decision sequencing",\n    "resourceCoordination":"Team integration assessment", "communications":"Coordination patterns and communications observations",\n    "strengths":"Team and role strengths", "criticalGaps":"Cross-team gaps and conflicts",\n    "doctrineReferences":"Relevant doctrine", "recommendations":"Facilitator discussion points and follow-on training priorities"\n  }\n}\nCreate one individualAars entry for every rostered player ID.`
+      const rosterText = players.length
+        ? players.map(player => `${player.name} — ${player.role}${player.isHost ? ' (Host)' : ''}`).join('\n')
+        : 'No roster was available.'
+      const submissionText = allSubmissions.length
+        ? allSubmissions
+            .sort((a,b) => Number(a.turn) - Number(b.turn))
+            .map(item => `TURN ${Number(item.turn) + 1} — ${item.playerName} (${item.playerRole})\n${item.response}`)
+            .join('\n\n')
+        : 'No completed role submissions were captured.'
+      const communicationsText = permittedCommunications.length
+        ? permittedCommunications.map(message => {
+            if (message.channel === 'direct') return `PRIVATE — ${message.senderName} (${message.senderRole}) to ${message.recipientName}: ${message.text}`
+            return `TEAM ROOM — ${message.senderName} (${message.senderRole}): ${message.text}`
+          }).join('\n')
+        : 'No permitted Team Coordination messages were captured.'
 
-      const fallbackIndividualAars = Object.fromEntries(players.map(player => {
+      const sharedRecord = `SCENARIO: ${scenarioName}\nJURISDICTION: ${state.jurisdiction}\nDIFFICULTY: ${state.difficulty}\nFINAL SIMULATED TIME: ${state.simTime}\nCOMPLETED TURNS: ${state.turn}\n\nTEAM ROSTER:\n${rosterText}\n\nROLE SUBMISSIONS BY TURN:\n${submissionText}\n\nPERMITTED COMMUNICATIONS:\n${communicationsText}\n\nSHARED EXERCISE TRANSCRIPT:\n${JSON.stringify(sharedTranscript, null, 2)}`
+
+      // Use the same proven ENDEX/AAR contract as single-player EOC.
+      const teamAar = await requestBaselineAar({
+        role:'EOC Team',
+        playerName:'Team',
+        record:`Evaluate the EOC team as a whole. Emphasize cross-role decision quality, coordination, sequencing, information management, Community Lifelines, resource decisions, public information, leadership support, and consequences.\n\n${sharedRecord}`,
+        label:'Shared Team AAR',
+      })
+
+      const individualEntries = []
+      // Keep AAR generation reliable under normal API rate limits by evaluating two roles at a time.
+      for (let index = 0; index < players.length; index += 2) {
+        const batch = players.slice(index, index + 2)
+        const batchEntries = await Promise.all(batch.map(async player => {
         const playerSubmissions = allSubmissions.filter(item => item.playerId === player.id)
-        const submissionCount = playerSubmissions.length
-        return [player.id, {
-          situationSummary:`${player.name} served as ${player.role} during the Team Exercise.`,
-          decisionLog:submissionCount ? `${submissionCount} role response${submissionCount === 1 ? '' : 's'} were captured for review.` : 'No completed role response was captured.',
-          resourceCoordination:'Review the player transcript for specific coordination and resource-management decisions.',
-          communications:'Review Team Coordination messages and official responses for role-specific communication performance.',
-          strengths:'The exercise record was preserved for facilitator review.',
-          criticalGaps:submissionCount ? 'The automated evaluator was unavailable; facilitator review is required for specific performance gaps.' : 'No completed role response was captured before ENDEX.',
-          doctrineReferences:'Apply the jurisdiction’s EOC procedures, NIMS/ICS coordination principles, and relevant Community Lifeline doctrine during facilitator review.',
-          recommendations:'Conduct a facilitator-led review using the preserved transcript, submissions, and communications log.',
-        }]
-      }))
-      let generated = {
-        teamAar:{
-          situationSummary:`The Team Exercise concluded at ${state.simTime} after ${state.turn} completed turn${state.turn === 1 ? '' : 's'}.`,
-          decisionLog:`${allSubmissions.length} role submission${allSubmissions.length === 1 ? '' : 's'} were preserved in the exercise record.`,
-          resourceCoordination:'Use the preserved turn record to assess cross-role resource coordination and prioritization.',
-          communications:`${(context.communications || []).length} Team Coordination message${(context.communications || []).length === 1 ? '' : 's'} were preserved under the host’s transcript setting.`,
-          strengths:'The shared scenario, turn history, role submissions, and permitted communications were retained successfully.',
-          criticalGaps:'The automated narrative evaluation was unavailable at ENDEX; facilitator review is required for detailed findings.',
-          doctrineReferences:'Review performance against NIMS/ICS coordination principles, Community Lifelines, local EOC procedures, and applicable emergency plans.',
-          recommendations:'Conduct a facilitated hotwash and use the preserved record to document specific corrective actions.',
-        },
-        individualAars:fallbackIndividualAars,
-        facilitatorAar:{
-          situationSummary:'The Team Exercise ended successfully and the complete session record was preserved.',
-          decisionLog:'Review decision sequencing across the role submissions by turn.',
-          resourceCoordination:'Assess whether roles coordinated priorities, requests, and resource decisions effectively.',
-          communications:'Review the permitted Team Coordination log alongside official role responses.',
-          strengths:'Shared exercise state and participant records were retained.',
-          criticalGaps:'Automated detailed evaluation was unavailable; facilitator analysis is required.',
-          doctrineReferences:'Use NIMS/ICS, Community Lifelines, local plans, and role-specific procedures.',
-          recommendations:'Complete a facilitated hotwash and capture corrective actions in the final report.',
-        },
-      }
-
-      try {
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 90000)
-        const aiRes = await fetch('/api/chat', {
-          method:'POST', headers:{ 'Content-Type':'application/json' }, signal:controller.signal,
-          body:JSON.stringify({ system:aarSystem, messages:[{ role:'user', content:aarRequest }] }),
+        const playerMessages = permittedCommunications.filter(message =>
+          message.senderId === player.id || message.recipientId === player.id
+        )
+        const playerSubmissionText = playerSubmissions.length
+          ? playerSubmissions
+              .sort((a,b) => Number(a.turn) - Number(b.turn))
+              .map(item => `TURN ${Number(item.turn) + 1}\n${item.response}`)
+              .join('\n\n')
+          : 'No completed role submission was captured for this player.'
+        const playerMessageText = playerMessages.length
+          ? playerMessages.map(message => {
+              if (message.channel === 'direct') return `PRIVATE — ${message.senderName} to ${message.recipientName}: ${message.text}`
+              return `TEAM ROOM — ${message.senderName}: ${message.text}`
+            }).join('\n')
+          : 'No permitted coordination messages involved this player.'
+        const individualRecord = `Evaluate only ${player.name}'s performance as ${player.role}. Distinguish the player's own decisions from team outcomes. Do not attribute another player's action to this player. Tie every finding to an actual submission, omission, timing issue, coordination message, or resulting consequence.\n\nSHARED TEAM AAR:\n${JSON.stringify(teamAar, null, 2)}\n\nPLAYER'S OFFICIAL SUBMISSIONS:\n${playerSubmissionText}\n\nPLAYER'S PERMITTED COMMUNICATIONS:\n${playerMessageText}\n\nSHARED EXERCISE CONTEXT:\n${sharedRecord}`
+        const aar = await requestBaselineAar({
+          role:player.role,
+          playerName:player.name,
+          record:individualRecord,
+          label:`Individual AAR for ${player.name}`,
         })
-        clearTimeout(timeoutId)
-        if (!aiRes.ok) throw new Error('Team AAR generation request failed')
-        const aiData = await aiRes.json()
-        const raw = aiData.content?.[0]?.text || ''
-        const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim())
-        if (!parsed?.teamAar || !parsed?.individualAars) throw new Error('The Team AAR response was incomplete')
-        generated = parsed
-      } catch (aarGenerationError) {
-        console.warn('Team AAR generation fallback used:', aarGenerationError)
+          return [player.id, aar]
+        }))
+        individualEntries.push(...batchEntries)
       }
+      const individualAars = Object.fromEntries(individualEntries)
 
-      const finalTranscript = [...(state.exerciseTranscript || []), {
+      const facilitatorRecord = `Evaluate the exercise from the facilitator perspective. Compare role performance, identify cross-role coordination patterns, conflicting or missing actions, decision sequencing, and specific follow-on training priorities.\n\nSHARED TEAM AAR:\n${JSON.stringify(teamAar, null, 2)}\n\nINDIVIDUAL ROLE AARS:\n${JSON.stringify(individualAars, null, 2)}\n\nCOMPLETE TEAM RECORD:\n${sharedRecord}`
+      const facilitatorAar = await requestBaselineAar({
+        role:'Exercise Facilitator',
+        playerName:'Facilitator',
+        record:facilitatorRecord,
+        label:'Facilitator AAR',
+      })
+
+      const finalTranscript = [...sharedTranscript, {
         type:'turn', turn:state.turn + 1, simTime:state.simTime, situation:'ENDEX',
         playerInput:'HOST ENDEX', aiResponse:'ENDEX — Team Exercise complete.', prompt:'', dispatches:[], headlines:[], pins:[], lifelines:state.lifelines,
       }]
@@ -3899,9 +3950,8 @@ async function startCustomScenario(customScenario) {
         method:'POST', headers:{ 'Content-Type':'application/json' },
         body:JSON.stringify({
           action:'completeEndex', roomCode:state.roomCode, playerId:state.playerId,
-          teamAar:generated.teamAar, individualAars:generated.individualAars,
-          facilitatorAar:generated.facilitatorAar || null,
-          communicationsLog:context.communications || [],
+          teamAar, individualAars, facilitatorAar,
+          communicationsLog:permittedCommunications,
           simTime:state.simTime, exerciseTranscript:finalTranscript,
         }),
       })
@@ -3912,12 +3962,13 @@ async function startCustomScenario(customScenario) {
       update({
         screen:'aar', situation:'ENDEX', turn:Number(room?.sharedTurnState?.turn || state.turn + 1),
         aar:room.teamAar, teamAar:room.teamAar, individualAar:room.individualAar || null,
-        allIndividualAars:room.allIndividualAars || {},
-        facilitatorAar:room.facilitatorAar || null, teamCommunicationsLog:room.communicationsLog || [],
-        teamRoom:room, players:room.players || state.players, exerciseTranscript:finalTranscript,
+        allIndividualAars:room.allIndividualAars || {}, facilitatorAar:room.facilitatorAar || null,
+        teamCommunicationsLog:room.communicationsLog || [], teamRoom:room,
+        players:room.players || state.players, exerciseTranscript:finalTranscript,
       })
     } catch (err) {
-      setTeamSyncError(err.message)
+      console.error('Team AAR generation failed:', err)
+      setTeamSyncError(`AAR generation failed: ${err.name === 'AbortError' ? 'The AI request timed out. Please retry ENDEX.' : err.message}`)
       if (began) {
         fetch('/api/team-room', {
           method:'POST', headers:{ 'Content-Type':'application/json' },
