@@ -1299,8 +1299,15 @@ function parseAarForPdf(rawText = '') {
     .filter(line => !/^[=\-]{8,}$/.test(line.trim()))
     .forEach(line => {
       const trimmed = line.trim()
+      const upper = trimmed.toUpperCase()
+
+      // The report title is not an AAR content section. Treating it as a
+      // heading ends metadata collection before SCENARIO / PLAYER / ROLE are
+      // parsed, which forces the styled PDF to render placeholder values.
+      if (/^NEXUS EOC\s*[-—–]\s*AFTER[- ]ACTION REVIEW$/.test(upper)) return
+
       if (isSectionHeading(trimmed)) {
-        current = trimmed.toUpperCase()
+        current = upper
         if (!Object.prototype.hasOwnProperty.call(sections, current)) {
           sections[current] = []
           sectionOrder.push(current)
