@@ -4934,23 +4934,50 @@ async function startCustomScenario(customScenario) {
                 </div>
 
                 <div style={{ ...panelShell, height:inputAreaHeight, flexShrink:0 }}>
-                  {panelHdr('Your Response', 'terminal', state.teamMode ? <span style={{ color:teamAllSubmitted ? UI.teal : UI.muted, fontSize:9 }}>{teamTurnSubmissions.length}/{teamActivePlayers.length} submitted</span> : null)}
+                  {panelHdr(
+                    'Your Response',
+                    'terminal',
+                    state.teamMode ? (
+                      <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+                        <span style={{ color:teamAllSubmitted ? UI.teal : UI.muted, fontSize:9, fontWeight:900, whiteSpace:'nowrap' }}>
+                          {teamTurnSubmissions.length}/{teamActivePlayers.length} submitted
+                        </span>
+                        {currentPlayerIsHost && (
+                          <button
+                            className="nexus-live-button"
+                            onClick={advanceTeamTurn}
+                            disabled={loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing'}
+                            style={{
+                              minHeight:26,
+                              padding:'4px 11px',
+                              fontSize:10,
+                              lineHeight:1,
+                              fontWeight:950,
+                              color:'#06111B',
+                              border:'none',
+                              borderRadius:4,
+                              background:(loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing') ? 'rgba(245,155,34,0.18)' : 'linear-gradient(180deg, #F7B64A, #D9820D)',
+                              cursor:(loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing')?'not-allowed':'pointer',
+                              opacity:(loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing')?0.55:1,
+                              whiteSpace:'nowrap'
+                            }}
+                          >
+                            {liveRoom?.turnStatus === 'processing' ? 'Advancing...' : `Advance Turn ${state.turn + 1}`}
+                          </button>
+                        )}
+                      </div>
+                    ) : null
+                  )}
                   <div style={{ flex:1, display:'flex', gap:9, padding:10, minHeight:0 }}>
                     <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
                       placeholder={initLoading ? 'Generating scenario...' : currentPlayerSubmitted ? 'Response submitted. You may revise it before the host advances the turn.' : 'Enter your operational response. Enter creates a new line.'}
                       disabled={initLoading || (state.teamMode && liveRoom?.turnStatus === 'processing')}
                       style={{ flex:1, resize:'none', lineHeight:1.6, fontSize:fs, background:'rgba(2,11,19,0.82)', border:`1px solid ${UI.borderSoft}`, borderRadius:5, color:UI.text, padding:'9px 10px', fontFamily:'Inter, Segoe UI, sans-serif', height:'100%', boxSizing:'border-box', outline:'none' }}/>
-                    <div style={{ width:150, display:'flex', flexDirection:'column', gap:7 }}>
+                    <div style={{ width:150, display:'flex' }}>
                       <button className="nexus-live-button" onClick={sendAction} disabled={loading||!input.trim()||initLoading||(state.teamMode && liveRoom?.turnStatus === 'processing')}
                         style={{ flex:1, minHeight:38, fontWeight:950, color:'#fff', border:'none', borderRadius:5, background:(loading||!input.trim()||initLoading||(state.teamMode && liveRoom?.turnStatus === 'processing')) ? 'rgba(87,146,198,0.18)' : 'linear-gradient(180deg, #2E83FF, #1455B8)', cursor:(loading||!input.trim()||initLoading||(state.teamMode && liveRoom?.turnStatus === 'processing'))?'not-allowed':'pointer', opacity:(loading||!input.trim()||initLoading||(state.teamMode && liveRoom?.turnStatus === 'processing'))?0.55:1 }}>
                         {currentPlayerSubmitted ? 'Update Response' : 'Submit Response'}
                       </button>
-                      {state.teamMode && currentPlayerIsHost && (
-                        <button className="nexus-live-button" onClick={advanceTeamTurn} disabled={loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing'}
-                          style={{ minHeight:34, fontWeight:950, color:'#06111B', border:'none', borderRadius:5, background:(loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing') ? 'rgba(245,155,34,0.18)' : 'linear-gradient(180deg, #F7B64A, #D9820D)', cursor:(loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing')?'not-allowed':'pointer', opacity:(loading||!teamAllSubmitted||liveRoom?.turnStatus === 'processing')?0.55:1 }}>
-                          {liveRoom?.turnStatus === 'processing' ? 'Advancing...' : `Advance Turn ${state.turn + 1}`}
-                        </button>
-                      )}
                     </div>
                   </div>
                   {state.teamMode && (teamSyncError || currentPlayerSubmitted || liveRoom?.turnStatus === 'processing') && (
