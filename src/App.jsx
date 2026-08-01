@@ -1812,20 +1812,23 @@ async function renderAarPdfV8(filename, rawText) {
   if (appendixGroup) appendixGroups.push(appendixGroup)
 
   let appendixPageNo = 3
-  const appendixTopY = top - 52
+  // Continuation pages must reserve the complete report header and teal divider
+  // before any appendix title or card is drawn.
+  const appendixTitleY = top - 57
+  const appendixDividerY = appendixTitleY - 9
+  const appendixContentY = appendixDividerY - 16
   const appendixMinY = 42
   const appendixBodyW = contentW - 58
   const maxAppendixLines = 42
   appendixGroups.forEach(group => {
-    let currentY = appendixTopY
+    let currentY = appendixContentY
     let pageStarted = false
     const beginAppendixPage = continued => {
       startPage(appendixPageNo)
       pageStarted = true
-      currentY = appendixTopY
-      textAt(`${group.title}${continued ? ' (CONTINUED)' : ''}`.toUpperCase(), contentX, currentY + 13, 13.2, 'F2', colors.teal)
-      line(contentX, currentY + 4, contentX + contentW, currentY + 4, colors.border2, 0.7)
-      currentY -= 15
+      textAt(`${group.title}${continued ? ' (CONTINUED)' : ''}`.toUpperCase(), contentX, appendixTitleY, 13.2, 'F2', colors.teal)
+      line(contentX, appendixDividerY, contentX + contentW, appendixDividerY, colors.border2, 0.7)
+      currentY = appendixContentY
     }
     const closeAppendixPage = () => {
       if (!pageStarted) return
