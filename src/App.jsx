@@ -17,6 +17,7 @@ import MissionPortal from './components/missionPortal/MissionPortal'
 import StartExercise from './components/startExercise/StartExercise'
 import TeamExerciseLobby from './components/teamExercise/TeamExerciseLobby'
 import NexusLogo from './components/brand/NexusLogo'
+import TestConsole from './components/dev/TestConsole'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -4281,6 +4282,8 @@ async function startCustomScenario(customScenario) {
     })
     downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.pdf`, text)
   }
+
+  if (typeof window !== 'undefined' && window.location.pathname === '/dev/test-console') return <TestConsole />
 
   if (!state) return <div style={{ color:'#888', padding:'2rem', fontFamily:'monospace' }}>Loading...</div>
 
