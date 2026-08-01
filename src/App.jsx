@@ -2499,7 +2499,7 @@ async function downloadPdfTextFile(filename, text) {
 
 
 // ─── AAR DISPLAY COMPONENT ────────────────────────────────────────────────────
-function AARDisplay({ aar, teamMode=false, teamAar=null, individualAar=null, allIndividualAars={}, facilitatorAar=null, communicationsLog=[], isHost=false, players=[], scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, onRestart, onMissionPortal, fs, ac, al }) {
+function AARDisplay({ aar, teamMode=false, teamAar=null, individualAar=null, allIndividualAars={}, facilitatorAar=null, communicationsLog=[], isHost=false, players=[], scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, onRestart, onMissionPortal, fs, ac, al, embedded=false }) {
   const scenarioName = SCENARIOS[scenario]?.name || scenario || 'Scenario'
   const generatedDate = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
   const startTime = transcript?.[0]?.time || 'H+0:00'
@@ -2675,7 +2675,7 @@ ${message.text}
   return (
     <div style={{
       minHeight:'100vh',
-      width:'100vw',
+      width:embedded ? '100%' : '100vw',
       color:UI.text,
       fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
       background:`radial-gradient(circle at 72% 8%, rgba(46,131,255,0.14), transparent 30%), linear-gradient(135deg, ${UI.bg}, #02070D 62%)`,
@@ -4283,7 +4283,7 @@ async function startCustomScenario(customScenario) {
     downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.pdf`, text)
   }
 
-  if (typeof window !== 'undefined' && window.location.pathname === '/dev/test-console') return <TestConsole />
+  if (typeof window !== 'undefined' && window.location.pathname === '/dev/test-console') return <TestConsole AARComponent={AARDisplay} />
 
   if (!state) return <div style={{ color:'#888', padding:'2rem', fontFamily:'monospace' }}>Loading...</div>
 
