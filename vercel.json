@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/dev/test-console",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dev/test-console/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
