@@ -305,6 +305,7 @@ async function handleCreate(body) {
       difficulty: body.difficulty || body.exercise?.difficulty || '',
       trainingFocus: body.trainingFocus || body.exercise?.trainingFocus || '',
       specificJurisdiction: String(body.specificJurisdiction || body.exercise?.specificJurisdiction || '').trim(),
+      customScenario: body.customScenario || body.exercise?.customScenario || null,
       hostMode,
     },
     players: [],

@@ -3486,7 +3486,8 @@ async function initCustomWorld(customScenario) {
 }
 
   async function startScenario(scenarioKey, launchOptions={}) {
-    const sc = SCENARIOS[scenarioKey]
+    const customScenario = shared.customScenario || room.exercise.customScenario || null
+    const sc = SCENARIOS[scenarioKey] || { name:customScenarioTitle(customScenario), desc:customScenarioSummary(customScenario) }
     const jurisdiction = normalizeJurisdictionType(launchOptions.jurisdiction || state.jurisdiction)
     const launchDifficulty = launchOptions.difficulty || state.difficulty
     const launchRole = launchOptions.role || state.role || 'EOC Director'
@@ -3505,7 +3506,7 @@ async function initCustomWorld(customScenario) {
           isUserProvided: true,
         }
       : selectScenarioLocation(scenarioKey, jurisdiction)
-    if (!isLocalizedScenario) rememberScenarioLocation(selectedLocation)
+    if (!isLocalizedScenario && !isCustomScenario) rememberScenarioLocation(selectedLocation)
     const localization = isLocalizedScenario ? { specificJurisdiction } : null
     setActiveESFs({})
     setInitLoading(true)
@@ -3583,12 +3584,16 @@ async function initCustomWorld(customScenario) {
     if (!room?.roomCode || !room?.exercise?.scenario) throw new Error('Team Room is missing its exercise setup')
 
     const scenarioKey = room.exercise.scenario
-    const sc = SCENARIOS[scenarioKey]
-    const jurisdiction = normalizeJurisdictionType(room.exercise.jurisdiction || state.jurisdiction)
-    const difficulty = room.exercise.difficulty || state.difficulty
+    const customScenario = room.exercise.customScenario || null
+    const sc = SCENARIOS[scenarioKey] || { name:customScenarioTitle(customScenario), desc:customScenarioSummary(customScenario) }
+    const jurisdiction = customScenario?.location || normalizeJurisdictionType(room.exercise.jurisdiction || state.jurisdiction)
+    const difficulty = customScenario?.difficulty || room.exercise.difficulty || state.difficulty
     const specificJurisdiction = String(room.exercise.specificJurisdiction || '').trim()
-    const isLocalizedScenario = Boolean(specificJurisdiction)
-    const selectedLocation = isLocalizedScenario
+    const isCustomScenario = scenarioKey === 'custom' && Boolean(customScenario)
+    const isLocalizedScenario = !isCustomScenario && Boolean(specificJurisdiction)
+    const selectedLocation = isCustomScenario
+      ? { label:customScenario.location, name:customScenario.location, state:'User-specified real jurisdiction', region:'Custom Team Exercise setting', center:null, radiusMiles:10, notes:customScenario.situationDescription, isUserProvided:true }
+      : isLocalizedScenario
       ? {
           label:specificJurisdiction,
           name:specificJurisdiction,
@@ -3605,7 +3610,9 @@ async function initCustomWorld(customScenario) {
 
     let world
     try {
-      world = await initWorld(scenarioKey, jurisdiction, selectedLocation, localization)
+      world = isCustomScenario
+        ? await initCustomWorld(customScenario)
+        : await initWorld(scenarioKey, jurisdiction, selectedLocation, localization)
       if (isLocalizedScenario) world.localizedJurisdiction = specificJurisdiction
     } catch (err) {
       world = sanitizeWorldOutput({
@@ -3624,6 +3631,7 @@ async function initCustomWorld(customScenario) {
       selectedLocation,
       world,
       specificJurisdiction:isLocalizedScenario ? specificJurisdiction : null,
+      customScenario:isCustomScenario ? customScenario : null,
       generatedAt: new Date().toISOString(),
     }
 
@@ -3642,8 +3650,9 @@ async function initCustomWorld(customScenario) {
     if (!room?.exercise?.scenario || !participant?.role || !shared?.world) return
 
     const scenarioKey = shared.scenarioKey || room.exercise.scenario
-    const sc = SCENARIOS[scenarioKey]
-    const jurisdiction = shared.jurisdiction || normalizeJurisdictionType(room.exercise.jurisdiction || state.jurisdiction)
+    const customScenario = shared.customScenario || room.exercise.customScenario || null
+    const sc = SCENARIOS[scenarioKey] || { name:customScenarioTitle(customScenario), desc:customScenarioSummary(customScenario) }
+    const jurisdiction = shared.jurisdiction || customScenario?.location || normalizeJurisdictionType(room.exercise.jurisdiction || state.jurisdiction)
     const difficulty = shared.difficulty || room.exercise.difficulty || state.difficulty
     const world = shared.world
     const selectedLocation = shared.selectedLocation || { label:world.location || jurisdiction }
@@ -3688,7 +3697,7 @@ async function initCustomWorld(customScenario) {
         pins:initPins,
         lifelines:INITIAL_LIFELINES_UNKNOWN,
       }],
-      customScenario:null,
+      customScenario,
       localizedJurisdiction:shared.specificJurisdiction || room.exercise.specificJurisdiction || null,
       teamMode:true,
       roomCode:room.roomCode,

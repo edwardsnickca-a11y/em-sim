@@ -67,6 +67,10 @@ function TextInput(props) {
   return <input {...props} style={{ width:'100%', height:42, background:DS.bg2, color:DS.text, border:`1px solid ${DS.borderSoft}`, borderRadius:5, padding:'0 12px', boxSizing:'border-box', fontFamily:'Inter, system-ui, sans-serif', fontSize:13, outline:'none', ...(props.style || {}) }} />
 }
 
+function TextArea(props) {
+  return <textarea {...props} style={{ width:'100%', minHeight:96, resize:'vertical', background:DS.bg2, color:DS.text, border:`1px solid ${DS.borderSoft}`, borderRadius:5, padding:'10px 12px', boxSizing:'border-box', fontFamily:'Inter, system-ui, sans-serif', fontSize:13, lineHeight:1.45, outline:'none', ...(props.style || {}) }} />
+}
+
 function PrimaryButton({ children, disabled, onClick, tone='blue' }) {
   const green = tone === 'green'; const red = tone === 'red'
   return <button onClick={onClick} disabled={disabled} style={{ height:44, borderRadius:5, border:`1px solid ${disabled ? 'rgba(87,146,198,0.16)' : red ? 'rgba(226,75,74,0.72)' : green ? DS.teal2 : DS.borderStrong}`, background:disabled ? 'rgba(7,20,33,0.52)' : red ? 'linear-gradient(180deg, #9B231F, #6D1714)' : green ? 'linear-gradient(180deg, #168B55, #0D633D)' : 'linear-gradient(180deg, #1455B8, #0E3F91)', color:disabled ? 'rgba(185,200,216,0.36)' : '#fff', fontWeight:950, cursor:disabled ? 'not-allowed' : 'pointer', padding:'0 18px', fontSize:14, letterSpacing:'0.02em' }}>{children}</button>
@@ -134,6 +138,11 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   const [difficulty, setDifficulty] = useState(state?.difficulty || 'Standard')
   const [useSpecificJurisdiction, setUseSpecificJurisdiction] = useState(Boolean(state?.specificJurisdiction))
   const [specificJurisdiction, setSpecificJurisdiction] = useState(state?.specificJurisdiction || '')
+  const [buildCustomScenario, setBuildCustomScenario] = useState(Boolean(state?.customScenario))
+  const [customLocation, setCustomLocation] = useState(state?.customScenario?.location || '')
+  const [customEventHazard, setCustomEventHazard] = useState(state?.customScenario?.eventHazard || '')
+  const [customSituationDescription, setCustomSituationDescription] = useState(state?.customScenario?.situationDescription || '')
+  const [customTrainingFocus, setCustomTrainingFocus] = useState((state?.customScenario?.trainingFocus || []).join(', '))
   const [hostMode, setHostMode] = useState('host_player')
   const [hostRole, setHostRole] = useState(state?.role || 'EOC Director')
   const [hostName, setHostName] = useState(state?.playerName || 'Host')
@@ -157,6 +166,18 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
           ? 'Enter a real city and state, county and state, tribal jurisdiction, campus, port, airport, U.S. territory, or other specific operational setting.'
           : ''
     : ''
+
+  const cleanedCustomLocation = customLocation.trim()
+  const customLocationError = buildCustomScenario
+    ? !cleanedCustomLocation
+      ? 'Enter a real location or jurisdiction for the custom scenario.'
+      : isLocationAmbiguous(cleanedCustomLocation)
+        ? `Which ${cleanedCustomLocation} do you mean? Add the state, territory, or full jurisdiction name.`
+        : !isLocationSpecificEnough(cleanedCustomLocation)
+          ? 'Enter a real city and state, county and state, tribal jurisdiction, campus, port, airport, U.S. territory, or other specific operational setting.'
+          : ''
+    : ''
+  const customScenarioReady = !buildCustomScenario || (cleanedCustomLocation && customEventHazard.trim() && customSituationDescription.trim() && !customLocationError)
 
   const code = room?.roomCode || ''
   const selectedVisual = SCENARIO_VISUALS[selectedScenario] || SCENARIO_VISUALS[room?.exercise?.scenario]
@@ -235,14 +256,24 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   async function createRoom() {
     setBusy(true); setError('')
     try {
-      const data = await apiTeamRoom({ action:'create', scenario:selectedScenario, jurisdiction, difficulty, hostMode, hostName, hostRole, specificJurisdiction:useSpecificJurisdiction ? cleanedSpecificJurisdiction : '' })
+      const customScenario = buildCustomScenario ? {
+        location:cleanedCustomLocation,
+        eventHazard:customEventHazard.trim(),
+        situationDescription:customSituationDescription.trim(),
+        role:hostMode === 'host_player' ? hostRole : 'EOC Director',
+        difficulty,
+        trainingFocus:customTrainingFocus.split(',').map(item => item.trim()).filter(Boolean),
+        preview:`${customEventHazard.trim()} in ${cleanedCustomLocation}. ${customSituationDescription.trim()}`,
+      } : null
+      const data = await apiTeamRoom({ action:'create', scenario:buildCustomScenario ? 'custom' : selectedScenario, jurisdiction:buildCustomScenario ? cleanedCustomLocation : jurisdiction, difficulty, hostMode, hostName, hostRole, specificJurisdiction:!buildCustomScenario && useSpecificJurisdiction ? cleanedSpecificJurisdiction : '', customScenario })
       setRoom(data.room)
       setPlayerId(data.playerId || null)
       update?.({
-        scenario:selectedScenario,
-        jurisdiction,
+        scenario:buildCustomScenario ? 'custom' : selectedScenario,
+        jurisdiction:buildCustomScenario ? cleanedCustomLocation : jurisdiction,
         difficulty,
-        specificJurisdiction:useSpecificJurisdiction ? cleanedSpecificJurisdiction : '',
+        customScenario,
+        specificJurisdiction:!buildCustomScenario && useSpecificJurisdiction ? cleanedSpecificJurisdiction : '',
         role:hostMode === 'host_player' ? hostRole : state?.role,
         playerName:hostMode === 'host_player' ? hostName : state?.playerName,
         teamRoom:data.room,
@@ -418,14 +449,27 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
 
       <section style={{ display:'grid', gridTemplateColumns:'minmax(0, 1.58fr) minmax(340px, 0.82fr)', gap:12, alignItems:'start' }}>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:12 }}>
-          {scenarioEntries.map(([key, scenario]) => <ScenarioCard key={key} scenarioKey={key} scenario={scenario} selected={selectedScenario === key} onSelect={setSelectedScenario} />)}
+          {scenarioEntries.map(([key, scenario]) => <ScenarioCard key={key} scenarioKey={key} scenario={scenario} selected={selectedScenario === key} onSelect={(key) => { setSelectedScenario(key); setBuildCustomScenario(false) }} />)}
         </div>
         <aside style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:DS.panel2, padding:18, position:'sticky', top:12 }}>
           <FieldLabel>Team Exercise Setup</FieldLabel>
-          <div style={{ color:DS.text, fontSize:22, fontWeight:950, marginBottom:16 }}>{selectedVisual?.title || SCENARIOS[selectedScenario]?.name}</div>
+          <div style={{ color:DS.text, fontSize:22, fontWeight:950, marginBottom:16 }}>{buildCustomScenario ? 'Build Custom Scenario' : (selectedVisual?.title || SCENARIOS[selectedScenario]?.name)}</div>
           <div style={{ display:'grid', gap:14 }}>
-            <label><FieldLabel>Jurisdiction Type</FieldLabel><SelectField value={jurisdiction} onChange={e => setJurisdiction(e.target.value)}>{JURISDICTIONS.map(j => <option key={j} value={j}>{j}</option>)}</SelectField></label>
-            <div style={{ border:`1px solid ${useSpecificJurisdiction ? DS.borderStrong : DS.borderSoft}`, background:useSpecificJurisdiction ? 'rgba(46,131,255,0.10)' : 'rgba(8,19,31,0.48)', borderRadius:5, padding:14 }}>
+            <div style={{ border:`1px solid ${buildCustomScenario ? DS.borderStrong : DS.borderSoft}`, background:buildCustomScenario ? 'rgba(46,131,255,0.10)' : 'rgba(8,19,31,0.48)', borderRadius:5, padding:14 }}>
+              <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
+                <input type="checkbox" checked={buildCustomScenario} onChange={e => { setBuildCustomScenario(e.target.checked); if (e.target.checked) setUseSpecificJurisdiction(false); setError('') }} style={{ width:16, height:16, accentColor:DS.teal }} />
+                <span style={{ color:DS.text, fontSize:13, fontWeight:850 }}>Build Custom Scenario</span>
+              </label>
+              <div style={{ color:DS.muted, fontSize:12, lineHeight:1.55, marginTop:7 }}>Create one shared Team Exercise from a real location, event or hazard, situation description, and training focus.</div>
+              {buildCustomScenario && <div style={{ display:'grid', gap:12, marginTop:12 }}>
+                <label><FieldLabel>Location / Jurisdiction</FieldLabel><TextInput value={customLocation} onChange={e => { setCustomLocation(e.target.value); setError('') }} placeholder="Seattle, WA / New Castle County, DE / Port of Long Beach" style={{ borderColor:customLocationError ? 'rgba(226,75,74,0.72)' : DS.borderSoft }} />{customLocationError && <div style={{ color:'#FFB4B4', fontSize:12, lineHeight:1.5, marginTop:8 }}>{customLocationError}</div>}</label>
+                <label><FieldLabel>Event / Hazard</FieldLabel><TextInput value={customEventHazard} onChange={e => setCustomEventHazard(e.target.value)} placeholder="Major water-system contamination" /></label>
+                <label><FieldLabel>Situation Description</FieldLabel><TextArea value={customSituationDescription} onChange={e => setCustomSituationDescription(e.target.value)} placeholder="Describe the starting conditions, known impacts, uncertainty, and EOC-level coordination problem." /></label>
+                <label><FieldLabel>Training Focus</FieldLabel><TextInput value={customTrainingFocus} onChange={e => setCustomTrainingFocus(e.target.value)} placeholder="Public information, resource coordination, continuity" /><div style={{ color:DS.dim, fontSize:11.5, lineHeight:1.45, marginTop:6 }}>Separate multiple focus areas with commas.</div></label>
+              </div>}
+            </div>
+            {!buildCustomScenario && <label><FieldLabel>Jurisdiction Type</FieldLabel><SelectField value={jurisdiction} onChange={e => setJurisdiction(e.target.value)}>{JURISDICTIONS.map(j => <option key={j} value={j}>{j}</option>)}</SelectField></label>}
+            {!buildCustomScenario && <div style={{ border:`1px solid ${useSpecificJurisdiction ? DS.borderStrong : DS.borderSoft}`, background:useSpecificJurisdiction ? 'rgba(46,131,255,0.10)' : 'rgba(8,19,31,0.48)', borderRadius:5, padding:14 }}>
               <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
                 <input
                   type="checkbox"
@@ -459,13 +503,13 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
                   {specificJurisdictionError && <div style={{ color:'#FFB4B4', fontSize:12, lineHeight:1.5, marginTop:8 }}>{specificJurisdictionError}</div>}
                 </div>
               )}
-            </div>
+            </div>}
             <label><FieldLabel>Difficulty</FieldLabel><SelectField value={difficulty} onChange={e => setDifficulty(e.target.value)}>{DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}</SelectField></label>
             <label><FieldLabel>Host Mode</FieldLabel><SelectField value={hostMode} onChange={e => setHostMode(e.target.value)}><option value="host_player">Host will play a role</option><option value="facilitator_only">Host will facilitate only</option></SelectField></label>
             <label><FieldLabel>Host Name</FieldLabel><TextInput value={hostName} onChange={e => setHostName(e.target.value)} placeholder="Host" /></label>
             {hostMode === 'host_player' && <label><FieldLabel>Host Role</FieldLabel><SelectField value={hostRole} onChange={e => setHostRole(e.target.value)}><RoleOptions takenRoles={[]} currentRole={hostRole} /></SelectField></label>}
             {ErrorBlock}
-            <div style={{ borderTop:`1px solid ${DS.borderSoft}`, paddingTop:14 }}><PrimaryButton disabled={busy || !selectedScenario || !jurisdiction || !difficulty || Boolean(specificJurisdictionError) || (hostMode === 'host_player' && !hostRole)} onClick={createRoom}>{busy ? 'Creating...' : 'Create Team Room'}</PrimaryButton></div>
+            <div style={{ borderTop:`1px solid ${DS.borderSoft}`, paddingTop:14 }}><PrimaryButton disabled={busy || (!buildCustomScenario && !selectedScenario) || !difficulty || (!buildCustomScenario && !jurisdiction) || Boolean(specificJurisdictionError) || !customScenarioReady || (hostMode === 'host_player' && !hostRole)} onClick={createRoom}>{busy ? 'Creating...' : 'Create Team Room'}</PrimaryButton></div>
           </div>
         </aside>
       </section>
