@@ -35,6 +35,26 @@ const SCENARIO_VISUALS = {
   train: { title:'Train Derailment — MCI / HazMat', img:trainImage, tag:'MCI / HazMat', desc:'Rail incident combining casualties, hazardous materials, evacuation decisions, and railroad coordination.' },
 }
 
+
+const AMBIGUOUS_LOCATIONS = [
+  'springfield', 'portland', 'columbus', 'richmond', 'greenville', 'franklin',
+  'clinton', 'madison', 'jackson', 'salem', 'auburn', 'burlington', 'manchester',
+  'newport', 'washington', 'georgetown', 'fairview', 'kingston', 'milford',
+]
+
+function isLocationAmbiguous(value='') {
+  return AMBIGUOUS_LOCATIONS.includes(value.trim().toLowerCase())
+}
+
+function isLocationSpecificEnough(value='') {
+  const clean = value.trim()
+  if (!clean) return false
+  if (/\b(dc|d\.c\.)\b/i.test(clean)) return true
+  if (/\b(nation|tribe|tribal|territory|county|parish|borough|university|college|campus|port|airport|installation|base|station|district|authority)\b/i.test(clean)) return true
+  if (/\b(puerto rico|guam|american samoa|u\.s\. virgin islands|northern mariana islands)\b/i.test(clean)) return true
+  return clean.includes(',') && clean.length >= 6
+}
+
 function FieldLabel({ children }) {
   return <div style={{ fontSize:10, color:DS.muted, textTransform:'uppercase', letterSpacing:'0.13em', fontWeight:900, marginBottom:7 }}>{children}</div>
 }
@@ -104,30 +124,7 @@ function getInitialRoomCode() {
   catch { return '' }
 }
 
-
-const TEAM_SESSION_PREFIX = 'nexus_team_session_'
-
-function readTeamSession(code) {
-  const clean = String(code || '').trim().toUpperCase()
-  if (!clean) return null
-  try { return JSON.parse(localStorage.getItem(`${TEAM_SESSION_PREFIX}${clean}`) || 'null') }
-  catch { return null }
-}
-
-function writeTeamSession(code, participant) {
-  const clean = String(code || '').trim().toUpperCase()
-  if (!clean || !participant?.id) return
-  try {
-    localStorage.setItem(`${TEAM_SESSION_PREFIX}${clean}`, JSON.stringify({
-      playerId: participant.id,
-      playerName: participant.name || '',
-      playerRole: participant.role || '',
-      savedAt: new Date().toISOString(),
-    }))
-  } catch {}
-}
-
-export default function TeamExerciseLobby({ entryMode='host', state, update, onMissionPortal, onPrepareStart, onStartExercise }) {
+export default function TeamExerciseLobby({ entryMode='host', state, update, onMissionPortal }) {
   const scenarioEntries = useMemo(() => Object.entries(SCENARIOS).filter(([key]) => Boolean(SCENARIO_VISUALS[key])), [])
   const initialLinkCode = getInitialRoomCode()
   const [mode, setMode] = useState(entryMode)
@@ -135,6 +132,8 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   const [selectedScenario, setSelectedScenario] = useState(state?.scenario || 'hurricane')
   const [jurisdiction, setJurisdiction] = useState(state?.jurisdiction || 'Mid-Size City')
   const [difficulty, setDifficulty] = useState(state?.difficulty || 'Standard')
+  const [useSpecificJurisdiction, setUseSpecificJurisdiction] = useState(Boolean(state?.specificJurisdiction))
+  const [specificJurisdiction, setSpecificJurisdiction] = useState(state?.specificJurisdiction || '')
   const [hostMode, setHostMode] = useState('host_player')
   const [hostRole, setHostRole] = useState(state?.role || 'EOC Director')
   const [hostName, setHostName] = useState(state?.playerName || 'Host')
@@ -142,12 +141,22 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   const [joinCode, setJoinCode] = useState(initialLinkCode.toUpperCase())
   const [joinName, setJoinName] = useState('')
   const [joinRole, setJoinRole] = useState('EOC Director')
-  const [playerId, setPlayerId] = useState(() => state?.playerId || readTeamSession(initialLinkCode || state?.teamRoom?.roomCode)?.playerId || null)
+  const [playerId, setPlayerId] = useState(null)
   const [joinPreview, setJoinPreview] = useState(null)
   const [copyMsg, setCopyMsg] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  const [launching, setLaunching] = useState(false)
+
+  const cleanedSpecificJurisdiction = specificJurisdiction.trim()
+  const specificJurisdictionError = useSpecificJurisdiction
+    ? !cleanedSpecificJurisdiction
+      ? 'Enter a real, specific jurisdiction or turn off Use a specific real jurisdiction.'
+      : isLocationAmbiguous(cleanedSpecificJurisdiction)
+        ? `Which ${cleanedSpecificJurisdiction} do you mean? Add the state, territory, or full jurisdiction name.`
+        : !isLocationSpecificEnough(cleanedSpecificJurisdiction)
+          ? 'Enter a real city and state, county and state, tribal jurisdiction, campus, port, airport, U.S. territory, or other specific operational setting.'
+          : ''
+    : ''
 
   const code = room?.roomCode || ''
   const selectedVisual = SCENARIO_VISUALS[selectedScenario] || SCENARIO_VISUALS[room?.exercise?.scenario]
@@ -157,14 +166,6 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   const takenRoles = roster.map(p => p.role).filter(Boolean)
   const joinTakenRoles = (joinPreview?.players || []).map(p => p.role).filter(Boolean)
   const currentPlayer = roster.find(p => p.id === playerId)
-  const hostPlayer = roster.find(p => p.isHost)
-  const launchPlayer = currentPlayer || (mode === 'host' ? hostPlayer : null)
-
-  useEffect(() => {
-    if (playerId || !code) return
-    const savedSession = readTeamSession(code)
-    if (savedSession?.playerId) setPlayerId(savedSession.playerId)
-  }, [code, playerId])
 
   useEffect(() => {
     if (screen !== 'lobby' || !code) return undefined
@@ -174,7 +175,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
         const next = await fetchRoom(code)
         if (!cancelled) {
           setRoom(next)
-          update?.({ teamRoom:next, roomCode:next.roomCode, playerId:playerId || state?.playerId || null })
+          update?.({ teamRoom:next })
         }
       } catch (err) {
         if (!cancelled) setError(err.message)
@@ -191,7 +192,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
     const load = async () => {
       try {
         const next = await fetchRoom(joinCode)
-        if (!cancelled) { setRoom(next); update?.({ teamRoom:next, roomCode:next.roomCode, playerId:playerId || state?.playerId || null }) }
+        if (!cancelled) setRoom(next)
       } catch (err) {
         if (!cancelled) setError(err.message)
       }
@@ -199,14 +200,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
     load()
     const id = setInterval(load, 2500)
     return () => { cancelled = true; clearInterval(id) }
-  }, [screen, joinCode, playerId, state?.playerId, update])
-
-  useEffect(() => {
-    if (room?.status !== 'active' || launching || !launchPlayer || !onStartExercise) return
-    setLaunching(true)
-    update?.({ teamRoom:room })
-    onStartExercise(room, launchPlayer)
-  }, [room, launching, launchPlayer, onStartExercise, update])
+  }, [screen, joinCode])
 
   useEffect(() => {
     if (screen !== 'join') return undefined
@@ -241,18 +235,17 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   async function createRoom() {
     setBusy(true); setError('')
     try {
-      const data = await apiTeamRoom({ action:'create', scenario:selectedScenario, jurisdiction, difficulty, hostMode, hostName, hostRole })
+      const data = await apiTeamRoom({ action:'create', scenario:selectedScenario, jurisdiction, difficulty, hostMode, hostName, hostRole, specificJurisdiction:useSpecificJurisdiction ? cleanedSpecificJurisdiction : '' })
       setRoom(data.room)
       setPlayerId(data.playerId || null)
-      const createdParticipant = data.room?.players?.find(p => p.id === data.playerId)
-      if (createdParticipant) writeTeamSession(data.room.roomCode, createdParticipant)
       update?.({
         scenario:selectedScenario,
         jurisdiction,
         difficulty,
+        specificJurisdiction:useSpecificJurisdiction ? cleanedSpecificJurisdiction : '',
         role:hostMode === 'host_player' ? hostRole : state?.role,
         playerName:hostMode === 'host_player' ? hostName : state?.playerName,
-        teamRoom:data.room, roomCode:data.room.roomCode, playerId:data.playerId || null,
+        teamRoom:data.room,
       })
       setScreen('lobby')
     } catch (err) { setError(err.message) }
@@ -265,15 +258,6 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
       const data = await apiTeamRoom({ action:'join', code:joinCode, name:joinName, role:joinRole })
       setRoom(data.room)
       setPlayerId(data.playerId)
-      const joinedParticipant = data.player || data.room?.players?.find(p => p.id === data.playerId)
-      if (joinedParticipant) writeTeamSession(data.room.roomCode, joinedParticipant)
-      update?.({
-        teamRoom:data.room,
-        roomCode:data.room.roomCode,
-        playerId:data.playerId,
-        playerName:joinedParticipant?.name || joinName,
-        role:joinedParticipant?.role || joinRole,
-      })
       setScreen('waiting')
     } catch (err) { setError(err.message) }
     finally { setBusy(false) }
@@ -286,19 +270,6 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
       const data = await apiTeamRoom({ action:'updateRole', code, playerId:id, role })
       setRoom(data.room)
       update?.({ teamRoom:data.room })
-    } catch (err) { setError(err.message) }
-    finally { setBusy(false) }
-  }
-
-  async function startExercise() {
-    if (!code || busy || room?.status !== 'lobby' || !onPrepareStart) return
-    setBusy(true); setError('')
-    try {
-      const activeRoom = await onPrepareStart(room, launchPlayer)
-      if (activeRoom) {
-        setRoom(activeRoom)
-        update?.({ teamRoom:activeRoom })
-      }
     } catch (err) { setError(err.message) }
     finally { setBusy(false) }
   }
@@ -355,7 +326,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
           {joinPreview ? (
             <div style={{ display:'grid', gap:12 }}>
               <div style={{ color:DS.text, fontSize:24, fontWeight:950 }}>{roomName}</div>
-              <div style={{ color:DS.muted, fontSize:14, lineHeight:1.7 }}>Jurisdiction: <span style={{ color:DS.text }}>{joinPreview.exercise?.jurisdiction}</span><br />Difficulty: <span style={{ color:DS.text }}>{joinPreview.exercise?.difficulty}</span><br />Host: <span style={{ color:DS.text }}>{joinPreview.host?.name}</span><br />Lobby: <span style={{ color:DS.teal2 }}>{joinPreview.status}</span></div>
+              <div style={{ color:DS.muted, fontSize:14, lineHeight:1.7 }}>Jurisdiction: <span style={{ color:DS.text }}>{joinPreview.exercise?.specificJurisdiction || joinPreview.exercise?.jurisdiction}</span><br />Difficulty: <span style={{ color:DS.text }}>{joinPreview.exercise?.difficulty}</span><br />Host: <span style={{ color:DS.text }}>{joinPreview.host?.name}</span><br />Lobby: <span style={{ color:DS.teal2 }}>{joinPreview.status}</span></div>
               <div style={{ borderTop:`1px solid ${DS.borderSoft}`, paddingTop:12, color:DS.muted, fontSize:13 }}>{joinPreview.players?.length || 0} / 8 active roles. Taken roles are disabled in the role selector.</div>
             </div>
           ) : ['You appear in the host lobby as ready.', 'The host can override or remove roles if needed.', 'When STARTEX begins, everyone enters the normal NEXUS EOC live exercise page.', 'The team sees the same scenario while actions are tracked by role.'].map((line, i) => (
@@ -392,7 +363,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
           <div style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:DS.panel, padding:18 }}>
             <FieldLabel>Exercise Setup</FieldLabel>
             <div style={{ color:DS.text, fontSize:17, fontWeight:950, marginBottom:10 }}>{lobbyVisual?.title || SCENARIOS[exercise.scenario]?.name}</div>
-            <div style={{ color:DS.muted, fontSize:13, lineHeight:1.7 }}>Jurisdiction: <span style={{ color:DS.text }}>{exercise.jurisdiction}</span><br />Difficulty: <span style={{ color:DS.text }}>{exercise.difficulty}</span><br />Host Mode: <span style={{ color:DS.text }}>{exercise.hostMode === 'host_player' ? 'Host plays a role' : 'Facilitator only'}</span></div>
+            <div style={{ color:DS.muted, fontSize:13, lineHeight:1.7 }}>Jurisdiction: <span style={{ color:DS.text }}>{exercise.specificJurisdiction || exercise.jurisdiction}</span>{exercise.specificJurisdiction && <span style={{ color:DS.dim }}> ({exercise.jurisdiction})</span>}<br />Difficulty: <span style={{ color:DS.text }}>{exercise.difficulty}</span><br />Host Mode: <span style={{ color:DS.text }}>{exercise.hostMode === 'host_player' ? 'Host plays a role' : 'Facilitator only'}</span></div>
           </div>
           <div style={{ border:`1px solid ${DS.borderStrong}`, borderRadius:4, background:'rgba(6,23,38,0.92)', padding:18 }}>
             <FieldLabel>Room Information</FieldLabel>
@@ -431,7 +402,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
 
         <section style={{ display:'grid', gridTemplateColumns:'1fr 300px', gap:12 }}>
           <div style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:DS.panel, padding:18 }}><FieldLabel>Team Shared Notes</FieldLabel><div style={{ color:DS.muted, fontSize:14 }}>Shared notes activate during live team play. They stay visible to the team and support coordination, but they do not replace player action submissions.</div></div>
-          <div style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:DS.panel2, padding:18, display:'grid', gap:12 }}><div><FieldLabel>STARTEX</FieldLabel><div style={{ color:DS.muted, fontSize:13, lineHeight:1.5 }}>{activeRoles >= 2 ? 'Start the exercise for everyone in this room.' : 'At least two active player roles are required to start.'}</div></div><PrimaryButton disabled={busy || launching || room?.status !== 'lobby' || activeRoles < 2} onClick={startExercise}>{launching ? 'Launching...' : busy ? 'Starting...' : 'STARTEX'}</PrimaryButton></div>
+          <div style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:DS.panel2, padding:18, display:'grid', gap:12 }}><div><FieldLabel>STARTEX</FieldLabel><div style={{ color:DS.muted, fontSize:13, lineHeight:1.5 }}>Next build wires this button to the normal single-player EOC live page.</div></div><PrimaryButton disabled={true} onClick={() => {}}>STARTEX — Next Build</PrimaryButton></div>
         </section>
       </>
     )
@@ -454,13 +425,47 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
           <div style={{ color:DS.text, fontSize:22, fontWeight:950, marginBottom:16 }}>{selectedVisual?.title || SCENARIOS[selectedScenario]?.name}</div>
           <div style={{ display:'grid', gap:14 }}>
             <label><FieldLabel>Jurisdiction Type</FieldLabel><SelectField value={jurisdiction} onChange={e => setJurisdiction(e.target.value)}>{JURISDICTIONS.map(j => <option key={j} value={j}>{j}</option>)}</SelectField></label>
+            <div style={{ border:`1px solid ${useSpecificJurisdiction ? DS.borderStrong : DS.borderSoft}`, background:useSpecificJurisdiction ? 'rgba(46,131,255,0.10)' : 'rgba(8,19,31,0.48)', borderRadius:5, padding:14 }}>
+              <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={useSpecificJurisdiction}
+                  onChange={e => {
+                    setUseSpecificJurisdiction(e.target.checked)
+                    setError('')
+                  }}
+                  style={{ width:16, height:16, accentColor:DS.teal }}
+                />
+                <span style={{ color:DS.text, fontSize:13, fontWeight:850 }}>Use a specific real jurisdiction?</span>
+              </label>
+              <div style={{ color:DS.muted, fontSize:12, lineHeight:1.55, marginTop:7 }}>
+                NEXUS will adapt the selected scenario to this real location while preserving the original exercise structure.
+              </div>
+              {useSpecificJurisdiction && (
+                <div style={{ marginTop:12 }}>
+                  <FieldLabel>Specific Jurisdiction</FieldLabel>
+                  <TextInput
+                    value={specificJurisdiction}
+                    onChange={e => {
+                      setSpecificJurisdiction(e.target.value)
+                      setError('')
+                    }}
+                    placeholder="Seattle, WA / New Castle County, DE / Port of Long Beach"
+                    style={{ borderColor:specificJurisdictionError ? 'rgba(226,75,74,0.72)' : DS.borderSoft }}
+                  />
+                  <div style={{ color:DS.dim, fontSize:11.5, lineHeight:1.45, marginTop:6 }}>
+                    Use a real city, county, campus, port, airport, tribal jurisdiction, U.S. territory, or other real operational setting.
+                  </div>
+                  {specificJurisdictionError && <div style={{ color:'#FFB4B4', fontSize:12, lineHeight:1.5, marginTop:8 }}>{specificJurisdictionError}</div>}
+                </div>
+              )}
+            </div>
             <label><FieldLabel>Difficulty</FieldLabel><SelectField value={difficulty} onChange={e => setDifficulty(e.target.value)}>{DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}</SelectField></label>
             <label><FieldLabel>Host Mode</FieldLabel><SelectField value={hostMode} onChange={e => setHostMode(e.target.value)}><option value="host_player">Host will play a role</option><option value="facilitator_only">Host will facilitate only</option></SelectField></label>
             <label><FieldLabel>Host Name</FieldLabel><TextInput value={hostName} onChange={e => setHostName(e.target.value)} placeholder="Host" /></label>
             {hostMode === 'host_player' && <label><FieldLabel>Host Role</FieldLabel><SelectField value={hostRole} onChange={e => setHostRole(e.target.value)}><RoleOptions takenRoles={[]} currentRole={hostRole} /></SelectField></label>}
             {ErrorBlock}
-            <div style={{ borderTop:`1px solid ${DS.borderSoft}`, paddingTop:14 }}><PrimaryButton disabled={busy || !selectedScenario || !jurisdiction || !difficulty || (hostMode === 'host_player' && !hostRole)} onClick={createRoom}>{busy ? 'Creating...' : 'Create Team Room'}</PrimaryButton></div>
-            <div style={{ color:DS.dim, fontSize:12, lineHeight:1.5 }}>Custom scenario and advanced room options will be added after the core team flow is stable.</div>
+            <div style={{ borderTop:`1px solid ${DS.borderSoft}`, paddingTop:14 }}><PrimaryButton disabled={busy || !selectedScenario || !jurisdiction || !difficulty || Boolean(specificJurisdictionError) || (hostMode === 'host_player' && !hostRole)} onClick={createRoom}>{busy ? 'Creating...' : 'Create Team Room'}</PrimaryButton></div>
           </div>
         </aside>
       </section>

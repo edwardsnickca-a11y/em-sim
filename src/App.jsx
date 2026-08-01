@@ -3586,12 +3586,27 @@ async function initCustomWorld(customScenario) {
     const sc = SCENARIOS[scenarioKey]
     const jurisdiction = normalizeJurisdictionType(room.exercise.jurisdiction || state.jurisdiction)
     const difficulty = room.exercise.difficulty || state.difficulty
-    const selectedLocation = selectScenarioLocation(scenarioKey, jurisdiction)
-    rememberScenarioLocation(selectedLocation)
+    const specificJurisdiction = String(room.exercise.specificJurisdiction || '').trim()
+    const isLocalizedScenario = Boolean(specificJurisdiction)
+    const selectedLocation = isLocalizedScenario
+      ? {
+          label:specificJurisdiction,
+          name:specificJurisdiction,
+          state:'User-specified real jurisdiction',
+          region:'Localized Team Exercise setting',
+          center:null,
+          radiusMiles:jurisdiction.includes('County') ? 25 : 10,
+          notes:`The host requested that the selected prebuilt scenario be localized to ${specificJurisdiction}. Preserve the base scenario and localize only the context.`,
+          isUserProvided:true,
+        }
+      : selectScenarioLocation(scenarioKey, jurisdiction)
+    if (!isLocalizedScenario) rememberScenarioLocation(selectedLocation)
+    const localization = isLocalizedScenario ? { specificJurisdiction } : null
 
     let world
     try {
-      world = await initWorld(scenarioKey, jurisdiction, selectedLocation, null)
+      world = await initWorld(scenarioKey, jurisdiction, selectedLocation, localization)
+      if (isLocalizedScenario) world.localizedJurisdiction = specificJurisdiction
     } catch (err) {
       world = sanitizeWorldOutput({
         location: selectedLocation?.label || jurisdiction,
@@ -3608,6 +3623,7 @@ async function initCustomWorld(customScenario) {
       difficulty,
       selectedLocation,
       world,
+      specificJurisdiction:isLocalizedScenario ? specificJurisdiction : null,
       generatedAt: new Date().toISOString(),
     }
 
@@ -3673,7 +3689,7 @@ async function initCustomWorld(customScenario) {
         lifelines:INITIAL_LIFELINES_UNKNOWN,
       }],
       customScenario:null,
-      localizedJurisdiction:null,
+      localizedJurisdiction:shared.specificJurisdiction || room.exercise.specificJurisdiction || null,
       teamMode:true,
       roomCode:room.roomCode,
       playerId:participant.id,
