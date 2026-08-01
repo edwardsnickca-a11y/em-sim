@@ -301,7 +301,7 @@ function customInputStyle(multiline=false) {
   }
 }
 
-function CustomScenarioCard({ onClick }) {
+export function CustomScenarioCard({ onClick }) {
   return (
     <button
       onClick={onClick}
@@ -335,7 +335,7 @@ function CustomScenarioCard({ onClick }) {
   )
 }
 
-function CustomScenarioSetupModal({ onClose, onStartCustomScenario }) {
+export function CustomScenarioSetupModal({ onClose, onStartCustomScenario, finalActionLabel='Start Exercise' }) {
   const [form, setForm] = useState(CUSTOM_FORM_DEFAULT)
   const [preview, setPreview] = useState('')
   const [step, setStep] = useState('setup')
@@ -479,7 +479,7 @@ function CustomScenarioSetupModal({ onClose, onStartCustomScenario }) {
           {step === 'setup' ? (
             <button onClick={generatePreview} disabled={loadingPreview} style={{ height:42, minWidth:210, borderRadius:5, border:`1px solid ${DS.borderStrong}`, background:loadingPreview ? 'rgba(87,146,198,0.16)' : 'linear-gradient(180deg, #1455B8, #0E3F91)', color:'#fff', fontWeight:900, cursor:loadingPreview ? 'not-allowed' : 'pointer', boxShadow:'0 0 22px rgba(46,131,255,0.16)' }}>{loadingPreview ? 'Generating Preview...' : 'Generate Exercise Preview'}</button>
           ) : (
-            <button onClick={() => onStartCustomScenario?.({ ...form, preview })} style={{ height:42, minWidth:170, borderRadius:5, border:`1px solid ${DS.teal2}`, background:'linear-gradient(180deg, #168B55, #0D633D)', color:'#fff', fontWeight:900, cursor:'pointer', boxShadow:'0 0 22px rgba(45,226,110,0.14)' }}>Start Exercise</button>
+            <button onClick={() => onStartCustomScenario?.({ ...form, preview })} style={{ height:42, minWidth:170, borderRadius:5, border:`1px solid ${DS.teal2}`, background:'linear-gradient(180deg, #168B55, #0D633D)', color:'#fff', fontWeight:900, cursor:'pointer', boxShadow:'0 0 22px rgba(45,226,110,0.14)' }}>{finalActionLabel}</button>
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import NexusLogo from '../brand/NexusLogo'
+import { CustomScenarioCard, CustomScenarioSetupModal } from '../startExercise/StartExercise'
 import { SCENARIOS, DIFFICULTIES } from '../../data/scenarios'
 import { JURISDICTIONS } from '../../data/jurisdictions'
 import { ROLES, ROLE_GROUPS } from '../../data/roles'
@@ -96,22 +97,6 @@ function ScenarioCard({ scenarioKey, scenario, selected, onSelect }) {
 }
 
 
-function CustomScenarioCard({ selected, onSelect }) {
-  return (
-    <button onClick={onSelect} style={{ textAlign:'left', borderRadius:4, overflow:'hidden', border:`1px solid ${selected ? DS.borderStrong : DS.border}`, background:selected ? 'linear-gradient(180deg, rgba(46,131,255,0.18), rgba(3,14,24,0.92))' : 'rgba(3,14,24,0.84)', color:DS.text, cursor:'pointer', padding:0, minWidth:0, boxShadow:selected ? '0 0 0 1px rgba(69,163,255,0.25), 0 0 28px rgba(46,131,255,0.22)' : '0 16px 34px rgba(0,0,0,0.16)' }}>
-      <div style={{ position:'relative', aspectRatio:'16 / 8', background:'radial-gradient(circle at 28% 28%, rgba(45,226,184,0.24), transparent 38%), linear-gradient(135deg, #0B2B3C 0%, #071421 54%, #10264A 100%)', overflow:'hidden', display:'grid', placeItems:'center' }}>
-        <div style={{ width:70, height:70, borderRadius:18, border:'1px solid rgba(45,226,184,0.52)', background:'rgba(3,14,24,0.68)', display:'grid', placeItems:'center', color:DS.teal2, fontSize:42, fontWeight:300, boxShadow:'0 14px 34px rgba(0,0,0,0.28)' }}>+</div>
-        {selected && <div style={{ position:'absolute', top:9, right:9, fontSize:10, color:'#04101B', background:DS.teal, borderRadius:999, padding:'4px 8px', fontWeight:950, letterSpacing:'0.08em' }}>SELECTED</div>}
-      </div>
-      <div style={{ padding:'11px 12px 13px' }}>
-        <div style={{ color:DS.text, fontSize:15, fontWeight:900, marginBottom:7, lineHeight:1.14 }}>Build Custom Scenario</div>
-        <div style={{ color:DS.muted, fontSize:12, lineHeight:1.42 }}>Create a shared Team Exercise using a real location, event or hazard, starting situation, and training focus.</div>
-        <div style={{ marginTop:10, display:'inline-flex', alignItems:'center', height:22, padding:'0 8px', borderRadius:999, border:`1px solid ${DS.borderSoft}`, color:DS.teal2, fontSize:10, fontWeight:850, letterSpacing:'0.08em', textTransform:'uppercase', background:'rgba(45,226,184,0.08)' }}>Custom</div>
-      </div>
-    </button>
-  )
-}
-
 function RoleOptions({ takenRoles = [], currentRole }) {
   return Object.entries(ROLE_GROUPS).map(([group, roles]) => (
     <optgroup key={group} label={group}>
@@ -155,11 +140,9 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   const [difficulty, setDifficulty] = useState(state?.difficulty || 'Standard')
   const [useSpecificJurisdiction, setUseSpecificJurisdiction] = useState(Boolean(state?.specificJurisdiction))
   const [specificJurisdiction, setSpecificJurisdiction] = useState(state?.specificJurisdiction || '')
-  const [buildCustomScenario, setBuildCustomScenario] = useState(Boolean(state?.customScenario))
-  const [customLocation, setCustomLocation] = useState(state?.customScenario?.location || '')
-  const [customEventHazard, setCustomEventHazard] = useState(state?.customScenario?.eventHazard || '')
-  const [customSituationDescription, setCustomSituationDescription] = useState(state?.customScenario?.situationDescription || '')
-  const [customTrainingFocus, setCustomTrainingFocus] = useState((state?.customScenario?.trainingFocus || []).join(', '))
+  const [customScenario, setCustomScenario] = useState(state?.customScenario || null)
+  const [showCustomScenario, setShowCustomScenario] = useState(false)
+  const buildCustomScenario = Boolean(customScenario)
   const [hostMode, setHostMode] = useState('host_player')
   const [hostRole, setHostRole] = useState(state?.role || 'EOC Director')
   const [hostName, setHostName] = useState(state?.playerName || 'Host')
@@ -184,17 +167,6 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
           : ''
     : ''
 
-  const cleanedCustomLocation = customLocation.trim()
-  const customLocationError = buildCustomScenario
-    ? !cleanedCustomLocation
-      ? 'Enter a real location or jurisdiction for the custom scenario.'
-      : isLocationAmbiguous(cleanedCustomLocation)
-        ? `Which ${cleanedCustomLocation} do you mean? Add the state, territory, or full jurisdiction name.`
-        : !isLocationSpecificEnough(cleanedCustomLocation)
-          ? 'Enter a real city and state, county and state, tribal jurisdiction, campus, port, airport, U.S. territory, or other specific operational setting.'
-          : ''
-    : ''
-  const customScenarioReady = !buildCustomScenario || (cleanedCustomLocation && customEventHazard.trim() && customSituationDescription.trim() && !customLocationError)
 
   const code = room?.roomCode || ''
   const selectedVisual = SCENARIO_VISUALS[selectedScenario] || SCENARIO_VISUALS[room?.exercise?.scenario]
@@ -273,23 +245,19 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   async function createRoom() {
     setBusy(true); setError('')
     try {
-      const customScenario = buildCustomScenario ? {
-        location:cleanedCustomLocation,
-        eventHazard:customEventHazard.trim(),
-        situationDescription:customSituationDescription.trim(),
-        role:hostMode === 'host_player' ? hostRole : 'EOC Director',
+      const roomCustomScenario = buildCustomScenario ? {
+        ...customScenario,
+        role:hostMode === 'host_player' ? hostRole : (customScenario?.role || 'EOC Director'),
         difficulty,
-        trainingFocus:customTrainingFocus.split(',').map(item => item.trim()).filter(Boolean),
-        preview:`${customEventHazard.trim()} in ${cleanedCustomLocation}. ${customSituationDescription.trim()}`,
       } : null
-      const data = await apiTeamRoom({ action:'create', scenario:buildCustomScenario ? 'custom' : selectedScenario, jurisdiction:buildCustomScenario ? cleanedCustomLocation : jurisdiction, difficulty, hostMode, hostName, hostRole, specificJurisdiction:!buildCustomScenario && useSpecificJurisdiction ? cleanedSpecificJurisdiction : '', customScenario })
+      const data = await apiTeamRoom({ action:'create', scenario:buildCustomScenario ? 'custom' : selectedScenario, jurisdiction:buildCustomScenario ? customScenario.location : jurisdiction, difficulty, hostMode, hostName, hostRole, specificJurisdiction:!buildCustomScenario && useSpecificJurisdiction ? cleanedSpecificJurisdiction : '', customScenario:roomCustomScenario })
       setRoom(data.room)
       setPlayerId(data.playerId || null)
       update?.({
         scenario:buildCustomScenario ? 'custom' : selectedScenario,
-        jurisdiction:buildCustomScenario ? cleanedCustomLocation : jurisdiction,
+        jurisdiction:buildCustomScenario ? customScenario.location : jurisdiction,
         difficulty,
-        customScenario,
+        customScenario:roomCustomScenario,
         specificJurisdiction:!buildCustomScenario && useSpecificJurisdiction ? cleanedSpecificJurisdiction : '',
         role:hostMode === 'host_player' ? hostRole : state?.role,
         playerName:hostMode === 'host_player' ? hostName : state?.playerName,
@@ -466,23 +434,21 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
 
       <section style={{ display:'grid', gridTemplateColumns:'minmax(0, 1.58fr) minmax(340px, 0.82fr)', gap:12, alignItems:'start' }}>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:12 }}>
-          {scenarioEntries.map(([key, scenario]) => <ScenarioCard key={key} scenarioKey={key} scenario={scenario} selected={!buildCustomScenario && selectedScenario === key} onSelect={(key) => { setSelectedScenario(key); setBuildCustomScenario(false); setError('') }} />)}
-          <CustomScenarioCard selected={buildCustomScenario} onSelect={() => { setBuildCustomScenario(true); setUseSpecificJurisdiction(false); setError('') }} />
+          {scenarioEntries.map(([key, scenario]) => <ScenarioCard key={key} scenarioKey={key} scenario={scenario} selected={!buildCustomScenario && selectedScenario === key} onSelect={(key) => { setSelectedScenario(key); setCustomScenario(null); setUseSpecificJurisdiction(false); setError('') }} />)}
+          <CustomScenarioCard onClick={() => setShowCustomScenario(true)} />
         </div>
         <aside style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:DS.panel2, padding:18, position:'sticky', top:12 }}>
           <FieldLabel>Team Exercise Setup</FieldLabel>
           <div style={{ color:DS.text, fontSize:22, fontWeight:950, marginBottom:16 }}>{buildCustomScenario ? 'Build Custom Scenario' : (selectedVisual?.title || SCENARIOS[selectedScenario]?.name)}</div>
           <div style={{ display:'grid', gap:14 }}>
-            {buildCustomScenario && <div style={{ border:`1px solid ${DS.borderStrong}`, background:'rgba(46,131,255,0.10)', borderRadius:5, padding:14, display:'grid', gap:12 }}>
-              <div>
-                <div style={{ color:DS.text, fontSize:13, fontWeight:850 }}>Custom Scenario Details</div>
-                <div style={{ color:DS.muted, fontSize:12, lineHeight:1.55, marginTop:5 }}>These settings create one shared scenario for the entire Team Room.</div>
+            {buildCustomScenario && (
+              <div style={{ border:`1px solid ${DS.borderStrong}`, background:'rgba(45,226,184,0.07)', borderRadius:5, padding:14 }}>
+                <FieldLabel>Custom Scenario Ready</FieldLabel>
+                <div style={{ color:DS.text, fontSize:14, fontWeight:900 }}>{customScenario?.eventHazard}</div>
+                <div style={{ color:DS.muted, fontSize:12, lineHeight:1.5, marginTop:6 }}>{customScenario?.location}</div>
+                <button type="button" onClick={() => setShowCustomScenario(true)} style={{ marginTop:10, height:34, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(46,131,255,0.10)', color:DS.text, padding:'0 12px', cursor:'pointer', fontWeight:850 }}>Review / Revise</button>
               </div>
-              <label><FieldLabel>Location / Jurisdiction</FieldLabel><TextInput value={customLocation} onChange={e => { setCustomLocation(e.target.value); setError('') }} placeholder="Seattle, WA / New Castle County, DE / Port of Long Beach" style={{ borderColor:customLocationError ? 'rgba(226,75,74,0.72)' : DS.borderSoft }} />{customLocationError && <div style={{ color:'#FFB4B4', fontSize:12, lineHeight:1.5, marginTop:8 }}>{customLocationError}</div>}</label>
-              <label><FieldLabel>Event / Hazard</FieldLabel><TextInput value={customEventHazard} onChange={e => setCustomEventHazard(e.target.value)} placeholder="Major water-system contamination" /></label>
-              <label><FieldLabel>Situation Description</FieldLabel><TextArea value={customSituationDescription} onChange={e => setCustomSituationDescription(e.target.value)} placeholder="Describe the starting conditions, known impacts, uncertainty, and EOC-level coordination problem." /></label>
-              <label><FieldLabel>Training Focus</FieldLabel><TextInput value={customTrainingFocus} onChange={e => setCustomTrainingFocus(e.target.value)} placeholder="Public information, resource coordination, continuity" /><div style={{ color:DS.dim, fontSize:11.5, lineHeight:1.45, marginTop:6 }}>Separate multiple focus areas with commas.</div></label>
-            </div>}
+            )}
             {!buildCustomScenario && <label><FieldLabel>Jurisdiction Type</FieldLabel><SelectField value={jurisdiction} onChange={e => setJurisdiction(e.target.value)}>{JURISDICTIONS.map(j => <option key={j} value={j}>{j}</option>)}</SelectField></label>}
             {!buildCustomScenario && <div style={{ border:`1px solid ${useSpecificJurisdiction ? DS.borderStrong : DS.borderSoft}`, background:useSpecificJurisdiction ? 'rgba(46,131,255,0.10)' : 'rgba(8,19,31,0.48)', borderRadius:5, padding:14 }}>
               <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
@@ -524,10 +490,26 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
             <label><FieldLabel>Host Name</FieldLabel><TextInput value={hostName} onChange={e => setHostName(e.target.value)} placeholder="Host" /></label>
             {hostMode === 'host_player' && <label><FieldLabel>Host Role</FieldLabel><SelectField value={hostRole} onChange={e => setHostRole(e.target.value)}><RoleOptions takenRoles={[]} currentRole={hostRole} /></SelectField></label>}
             {ErrorBlock}
-            <div style={{ borderTop:`1px solid ${DS.borderSoft}`, paddingTop:14 }}><PrimaryButton disabled={busy || (!buildCustomScenario && !selectedScenario) || !difficulty || (!buildCustomScenario && !jurisdiction) || Boolean(specificJurisdictionError) || !customScenarioReady || (hostMode === 'host_player' && !hostRole)} onClick={createRoom}>{busy ? 'Creating...' : 'Create Team Room'}</PrimaryButton></div>
+            <div style={{ borderTop:`1px solid ${DS.borderSoft}`, paddingTop:14 }}><PrimaryButton disabled={busy || (!buildCustomScenario && !selectedScenario) || !difficulty || (!buildCustomScenario && !jurisdiction) || Boolean(specificJurisdictionError) || (hostMode === 'host_player' && !hostRole)} onClick={createRoom}>{busy ? 'Creating...' : 'Create Team Room'}</PrimaryButton></div>
           </div>
         </aside>
       </section>
+
+      {showCustomScenario && (
+        <CustomScenarioSetupModal
+          onClose={() => setShowCustomScenario(false)}
+          finalActionLabel="Use for Team Room"
+          onStartCustomScenario={(payload) => {
+            setCustomScenario(payload)
+            setSelectedScenario('')
+            setUseSpecificJurisdiction(false)
+            setDifficulty(payload.difficulty || difficulty)
+            if (hostMode === 'host_player' && payload.role) setHostRole(payload.role)
+            setShowCustomScenario(false)
+            setError('')
+          }}
+        />
+      )}
     </>
   )
 }
