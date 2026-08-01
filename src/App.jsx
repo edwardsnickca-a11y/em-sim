@@ -3486,8 +3486,8 @@ async function initCustomWorld(customScenario) {
 }
 
   async function startScenario(scenarioKey, launchOptions={}) {
-    const customScenario = shared.customScenario || room.exercise.customScenario || null
-    const sc = SCENARIOS[scenarioKey] || { name:customScenarioTitle(customScenario), desc:customScenarioSummary(customScenario) }
+    const sc = SCENARIOS[scenarioKey]
+    if (!sc) throw new Error(`Unknown scenario: ${scenarioKey}`)
     const jurisdiction = normalizeJurisdictionType(launchOptions.jurisdiction || state.jurisdiction)
     const launchDifficulty = launchOptions.difficulty || state.difficulty
     const launchRole = launchOptions.role || state.role || 'EOC Director'
@@ -3506,7 +3506,7 @@ async function initCustomWorld(customScenario) {
           isUserProvided: true,
         }
       : selectScenarioLocation(scenarioKey, jurisdiction)
-    if (!isLocalizedScenario && !isCustomScenario) rememberScenarioLocation(selectedLocation)
+    if (!isLocalizedScenario) rememberScenarioLocation(selectedLocation)
     const localization = isLocalizedScenario ? { specificJurisdiction } : null
     setActiveESFs({})
     setInitLoading(true)
@@ -3525,9 +3525,8 @@ async function initCustomWorld(customScenario) {
       notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
       worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:isLocalizedScenario ? specificJurisdiction : null,
       jurisdiction, difficulty:launchDifficulty, role:launchRole, playerName:launchPlayerName,
-      teamMode:Boolean(launchOptions.teamMode), roomCode:launchOptions.roomCode || null,
-      playerId:launchOptions.playerId || null, players:launchOptions.players || [],
-      hostMode:launchOptions.hostMode || null, teamRoom:launchOptions.teamRoom || state.teamRoom || null,
+      teamMode:false, roomCode:null, playerId:null, players:[], hostMode:null, teamRoom:null,
+      teamAar:null, individualAar:null, allIndividualAars:{}, facilitatorAar:null, teamCommunicationsLog:[],
     })
 
     try {
@@ -3742,6 +3741,8 @@ async function startCustomScenario(customScenario) {
     history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
     notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
     worldState:null, aar:null, exerciseTranscript:[],
+    teamMode:false, roomCode:null, playerId:null, players:[], hostMode:null, teamRoom:null,
+    teamAar:null, individualAar:null, allIndividualAars:{}, facilitatorAar:null, teamCommunicationsLog:[],
   })
 
   try {
