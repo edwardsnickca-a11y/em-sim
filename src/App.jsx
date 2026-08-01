@@ -48,6 +48,35 @@ function neutralizeGeneratedText(value='', fallback='') {
   return kept.join(' ').trim() || fallback
 }
 
+const FLASH_CARD_COACHING_PATTERNS = [
+  /\brequest(?:s|ed|ing)?\s+(?:the\s+)?(?:eoc|player|city|county|emergency management|eoc director|operations|planning|pio)\s+to\b/i,
+  /\brequest(?:s|ed|ing)?\s+(?:guidance|direction|approval|authorization|a decision|a briefing|an incident report|a preliminary incident report|activation|establishment|initiation|tasking)\b/i,
+  /\brequest(?:s|ed|ing)?\b.{0,90}\bwithin\s+\d+\s+(?:minutes?|hours?)\b/i,
+  /\brequest(?:s|ed|ing)?\b.{0,90}\bto\s+(?:activate|establish|initiate|stand up|coordinate|notify|issue|decide|approve|authorize|brief|task|deploy)\b/i,
+  /\bwhen\s+to\s+(?:activate|establish|initiate|stand up|notify|issue|request|deploy)\b/i,
+  /\b(?:activation|establishment|initiation)\s+(?:is|remains)\s+(?:a|the)\s+priority\b/i,
+]
+
+function flashCardSource(text='') {
+  const source = String(text || '').split(/\s+(?:is|are|has|have|reports?|advises?|indicates?|states?)\b/i)[0]?.trim()
+  return source && source.length <= 90 ? source : 'A partner agency'
+}
+
+function neutralizeFlashCard(value='') {
+  const text = String(value || '').trim()
+  if (!text) return ''
+
+  const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text]
+  const kept = sentences
+    .map(sentence => sentence.trim())
+    .filter(sentence => sentence && !isCoachingText(sentence) && !FLASH_CARD_COACHING_PATTERNS.some(pattern => pattern.test(sentence)))
+
+  if (kept.length) return kept.join(' ').trim()
+
+  const source = flashCardSource(text)
+  return `${source} reports that coordination requirements and supporting information remain unresolved.`
+}
+
 const VALID_PIN_TYPES = new Set(['EOC','HOSPITAL','STAGING','SHELTER','AFFECTED','FIRE','HAZMAT','DAM','BLOCKED','OTHER'])
 
 function normalizeMapPin(pin, index=0, prefix='pin') {
@@ -86,7 +115,7 @@ function sanitizeWorldOutput(world, fallbackLocation='') {
   const safe = world && typeof world === 'object' ? { ...world } : {}
   safe.location = safe.location || fallbackLocation
   safe.dispatches = Array.isArray(safe.dispatches)
-    ? safe.dispatches.map(item => neutralizeGeneratedText(item)).filter(Boolean).slice(0, 6)
+    ? safe.dispatches.map(item => neutralizeFlashCard(item)).filter(Boolean).slice(0, 6)
     : []
   safe.openingNarrative = neutralizeGeneratedText(
     safe.openingNarrative,
@@ -103,7 +132,7 @@ function sanitizeTurnOutput(turn, currentState) {
     'New information is still being reconciled. Several reports remain incomplete or unconfirmed.'
   )
   safe.dispatches = Array.isArray(safe.dispatches)
-    ? safe.dispatches.map(item => neutralizeGeneratedText(item)).filter(Boolean).slice(0, 4)
+    ? safe.dispatches.map(item => neutralizeFlashCard(item)).filter(Boolean).slice(0, 4)
     : []
   safe.prompt = neutralizeGeneratedText(
     safe.prompt,
@@ -225,6 +254,8 @@ YOUR TASK:
 Generate a specific, realistic opening world state for the approved custom scenario.
 Generate 4-7 initial map pins representing EOC-relevant locations or impacts. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible for the real location. If you are not confident about exact facilities, use generic labels and plausible coordinates near the jurisdiction center.
 Generate 4-6 opening dispatch items that reflect the selected location, event/hazard, training focus, and EOC-level emergency management concerns.
+Each dispatch must read as a neutral status report: what an agency observed, what information is missing, what conflict exists, what capacity is constrained, or what consequence is emerging.
+Do not use a dispatch to request that the player produce a report, activate or establish a structure, approve a course of action, issue guidance, initiate coordination, or meet an invented deadline. Do not phrase a preferred action as an agency request. Convert that material into a factual unresolved condition instead.
 Generate an opening narrative in Deputy Emergency Manager voice that establishes STARTEX, current uncertainty, EOC posture, and unresolved operational pressure. Do not identify the correct priority or tell the player what action to take.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
@@ -342,6 +373,8 @@ Generate a specific, realistic, geographically accurate opening world state for 
 Generate 4-7 initial map pins representing key infrastructure for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible and generally within the operating radius of the selected center point. For named highways, interchanges, airports, hospitals, schools, shelters, and public facilities, place the pin on or very near the named feature when you are confident. If you are not confident, use generic labels and plausible nearby coordinates.
 
 Generate 4-6 opening dispatch items that reflect the selected location, jurisdiction type, realistic resource constraints, and EOC-level emergency management concerns. Keep the player at the EOC level, not the field Incident Commander level.
+Each dispatch must read as a neutral status report: what an agency observed, what information is missing, what conflict exists, what capacity is constrained, or what consequence is emerging.
+Do not use a dispatch to request that the player produce a report, activate or establish a structure, approve a course of action, issue guidance, initiate coordination, or meet an invented deadline. Do not phrase a preferred action as an agency request. Convert that material into a factual unresolved condition instead.
 
 Generate an opening narrative (2-3 sentences) that establishes the selected location, current incident conditions, known gaps, and unresolved coordination pressure. Present the situation without identifying the correct priority, recommending an action, or telling the player what to do.
 
@@ -1008,7 +1041,7 @@ For live turns, keep the Deputy Emergency Manager voice inside the "consequence"
 
 The "consequence" field should be conversational, operational, and human. It should explain what changed, why it matters, what pressure it creates, and what remains unresolved. It must not identify the correct priority, recommend a solution, or tell the player what the EOC must or should do.
 
-Flash-card dispatches must contain only reports, requests, observations, constraints, conflicting information, or status changes. Do not write directives, recommendations, priorities, solutions, or statements that the EOC must act immediately.
+Flash-card dispatches must contain only neutral reports, observations, constraints, conflicting information, unmet resource conditions, or status changes. Do not write directives, recommendations, priorities, solutions, invented deadlines, or statements that the EOC must act immediately. Do not have an agency request that the player produce a report, issue guidance, make a decision, approve an action, activate or establish a structure, initiate coordination, or stand up a specific mechanism. Present those issues as unresolved facts instead.
 
 The "prompt" field should not be a generic question and must not reveal the preferred action. State the unresolved EOC-level issue or competing pressure neutrally in one sentence.
 
