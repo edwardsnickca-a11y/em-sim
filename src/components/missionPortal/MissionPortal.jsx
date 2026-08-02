@@ -76,7 +76,7 @@ function Header({ onStartExercise, onTeamExercise, onGuidedTour, onResources }) 
           <a href="/NEXUS_EOC_Platform_Overview.pdf" target="_blank" rel="noreferrer" style={{ height:42, padding:'0 16px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer', textDecoration:'none' }}>
             <Icon type="file" size={19} color={DS.green} /> Overview
           </a>
-          <a href="/NEXUS_EOC_User_Guide.pdf" target="_blank" rel="noreferrer" style={{ height:42, padding:'0 16px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer', textDecoration:'none' }}>
+          <a href="/NEXUS_EOC_User_Guide_2026_v2.pdf" target="_blank" rel="noreferrer" style={{ height:42, padding:'0 16px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer', textDecoration:'none' }}>
             <Icon type="file" size={19} color={DS.blue2} /> User Guide
           </a>
           <button onClick={onTeamExercise} style={{ height:42, padding:'0 16px', display:'flex', alignItems:'center', gap:9, borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(3,13,23,0.72)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer' }}>

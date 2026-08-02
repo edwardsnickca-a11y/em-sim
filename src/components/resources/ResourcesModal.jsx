@@ -27,7 +27,7 @@ const resources = [
     title:'User Guide',
     eyebrow:'Player handbook',
     body:'How to set up an exercise, use the live interface, submit responses, end the run, and download outputs.',
-    href:'/NEXUS_EOC_User_Guide.pdf',
+    href:'/NEXUS_EOC_User_Guide_2026_v2.pdf',
     accent:DS.blue,
   },
   {

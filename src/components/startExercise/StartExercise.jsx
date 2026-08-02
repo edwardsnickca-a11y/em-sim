@@ -301,7 +301,7 @@ function customInputStyle(multiline=false) {
   }
 }
 
-export function CustomScenarioCard({ onClick }) {
+function CustomScenarioCard({ onClick }) {
   return (
     <button
       onClick={onClick}
@@ -335,7 +335,7 @@ export function CustomScenarioCard({ onClick }) {
   )
 }
 
-export function CustomScenarioSetupModal({ onClose, onStartCustomScenario, finalActionLabel='Start Exercise' }) {
+function CustomScenarioSetupModal({ onClose, onStartCustomScenario }) {
   const [form, setForm] = useState(CUSTOM_FORM_DEFAULT)
   const [preview, setPreview] = useState('')
   const [step, setStep] = useState('setup')
@@ -479,7 +479,7 @@ export function CustomScenarioSetupModal({ onClose, onStartCustomScenario, final
           {step === 'setup' ? (
             <button onClick={generatePreview} disabled={loadingPreview} style={{ height:42, minWidth:210, borderRadius:5, border:`1px solid ${DS.borderStrong}`, background:loadingPreview ? 'rgba(87,146,198,0.16)' : 'linear-gradient(180deg, #1455B8, #0E3F91)', color:'#fff', fontWeight:900, cursor:loadingPreview ? 'not-allowed' : 'pointer', boxShadow:'0 0 22px rgba(46,131,255,0.16)' }}>{loadingPreview ? 'Generating Preview...' : 'Generate Exercise Preview'}</button>
           ) : (
-            <button onClick={() => onStartCustomScenario?.({ ...form, preview })} style={{ height:42, minWidth:170, borderRadius:5, border:`1px solid ${DS.teal2}`, background:'linear-gradient(180deg, #168B55, #0D633D)', color:'#fff', fontWeight:900, cursor:'pointer', boxShadow:'0 0 22px rgba(45,226,110,0.14)' }}>{finalActionLabel}</button>
+            <button onClick={() => onStartCustomScenario?.({ ...form, preview })} style={{ height:42, minWidth:170, borderRadius:5, border:`1px solid ${DS.teal2}`, background:'linear-gradient(180deg, #168B55, #0D633D)', color:'#fff', fontWeight:900, cursor:'pointer', boxShadow:'0 0 22px rgba(45,226,110,0.14)' }}>Start Exercise</button>
           )}
         </div>
       </div>
@@ -552,7 +552,7 @@ export default function StartExercise({ state, update, startScenario, initLoadin
             </div>
             <nav style={{ display:'flex', alignItems:'center', gap:10 }}>
               <button onClick={onMissionPortal} style={{ background:'rgba(3,13,23,0.72)', color:DS.text, border:`1px solid ${DS.borderStrong}`, borderRadius:4, height:40, padding:'0 16px', cursor:'pointer', fontWeight:800, letterSpacing:'0.04em' }}>Mission Portal</button>
-              <a href="/NEXUS_EOC_User_Guide.pdf" target="_blank" rel="noreferrer" style={{ background:'rgba(3,13,23,0.72)', color:DS.text, border:`1px solid ${DS.borderStrong}`, borderRadius:4, height:40, padding:'0 16px', cursor:'pointer', fontWeight:800, letterSpacing:'0.04em', display:'inline-flex', alignItems:'center', textDecoration:'none', boxSizing:'border-box' }}>User Guide</a>
+              <a href="/NEXUS_EOC_User_Guide_2026_v2.pdf" target="_blank" rel="noreferrer" style={{ background:'rgba(3,13,23,0.72)', color:DS.text, border:`1px solid ${DS.borderStrong}`, borderRadius:4, height:40, padding:'0 16px', cursor:'pointer', fontWeight:800, letterSpacing:'0.04em', display:'inline-flex', alignItems:'center', textDecoration:'none', boxSizing:'border-box' }}>User Guide</a>
               <a href="/NEXUS_EOC_Reference_List.pdf" target="_blank" rel="noreferrer" style={{ background:'rgba(3,13,23,0.72)', color:DS.text, border:`1px solid ${DS.borderStrong}`, borderRadius:4, height:40, padding:'0 16px', cursor:'pointer', fontWeight:800, letterSpacing:'0.04em', display:'inline-flex', alignItems:'center', textDecoration:'none', boxSizing:'border-box' }}>Reference List</a>
               <button onClick={() => setShowResources(true)} style={{ background:'rgba(3,13,23,0.72)', color:DS.text, border:`1px solid ${DS.borderStrong}`, borderRadius:4, height:40, padding:'0 16px', cursor:'pointer', fontWeight:800, letterSpacing:'0.04em' }}>Resources</button>
             </nav>
