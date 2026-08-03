@@ -140,7 +140,7 @@ function sanitizeWorldOutput(world, fallbackLocation='') {
   const safe = world && typeof world === 'object' ? { ...world } : {}
   safe.location = safe.location || fallbackLocation
   safe.dispatches = Array.isArray(safe.dispatches)
-    ? safe.dispatches.map(item => neutralizeFlashCard(item)).filter(Boolean).slice(0, 6)
+    ? safe.dispatches.map(item => neutralizeFlashCard(item)).filter(Boolean).slice(0, 3)
     : []
   safe.openingNarrative = neutralizeGeneratedText(
     safe.openingNarrative,
@@ -278,7 +278,8 @@ Selected focus areas should influence the opening operating picture and first pr
 YOUR TASK:
 Generate a specific, realistic opening world state for the approved custom scenario.
 Generate 4-7 initial map pins representing EOC-relevant locations or impacts. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible for the real location. If you are not confident about exact facilities, use generic labels and plausible coordinates near the jurisdiction center.
-Generate 4-6 opening dispatch items that reflect the selected location, event/hazard, training focus, and EOC-level emergency management concerns.
+Generate 2-3 opening dispatch items that reflect only the most immediate EOC-level conditions for the selected location, event/hazard, and training focus.
+At STARTEX, return no more than three dispatches total. Prioritize one immediate operational issue, one coordination or public-information issue, and optionally one unresolved status item. Hold additional consequences, resource gaps, partner requests, infrastructure failures, and media pressure for later turns.
 Each dispatch must read as a neutral status report: what one agency observed, what information is missing, what conflict exists, what capacity is constrained, or what consequence is emerging.
 Keep each dispatch to no more than 2 short sentences and approximately 45 words. Include one source, one condition, and at most one unresolved issue or consequence. Remove background already stated elsewhere.
 Do not describe the missing solution itself. Avoid phrases such as "a unified posture has not been established," "no formal perimeter has been coordinated," or "a joint structure is not operational." Report the observable effect instead, such as inconsistent messages, conflicting access restrictions, or unclear authority.
@@ -406,7 +407,8 @@ Generate a specific, realistic, geographically accurate opening world state for 
 
 Generate 4-7 initial map pins representing key infrastructure for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible and generally within the operating radius of the selected center point. For named highways, interchanges, airports, hospitals, schools, shelters, and public facilities, place the pin on or very near the named feature when you are confident. If you are not confident, use generic labels and plausible nearby coordinates.
 
-Generate 4-6 opening dispatch items that reflect the selected location, jurisdiction type, realistic resource constraints, and EOC-level emergency management concerns. Keep the player at the EOC level, not the field Incident Commander level.
+Generate 2-3 opening dispatch items that reflect only the most immediate EOC-level conditions for the selected location and jurisdiction type. Keep the player at the EOC level, not the field Incident Commander level.
+At STARTEX, return no more than three dispatches total. Prioritize one immediate operational issue, one coordination or public-information issue, and optionally one unresolved status item. Hold additional consequences, resource gaps, partner requests, infrastructure failures, and media pressure for later turns.
 Each dispatch must read as a neutral status report: what one agency observed, what information is missing, what conflict exists, what capacity is constrained, or what consequence is emerging.
 Keep each dispatch to no more than 2 short sentences and approximately 45 words. Include one source, one condition, and at most one unresolved issue or consequence. Remove background already stated elsewhere.
 Do not describe the missing solution itself. Avoid phrases such as "a unified posture has not been established," "no formal perimeter has been coordinated," or "a joint structure is not operational." Report the observable effect instead, such as inconsistent messages, conflicting access restrictions, or unclear authority.
