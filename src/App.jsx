@@ -283,7 +283,14 @@ Each dispatch must read as a neutral status report: what one agency observed, wh
 Keep each dispatch to no more than 2 short sentences and approximately 45 words. Include one source, one condition, and at most one unresolved issue or consequence. Remove background already stated elsewhere.
 Do not describe the missing solution itself. Avoid phrases such as "a unified posture has not been established," "no formal perimeter has been coordinated," or "a joint structure is not operational." Report the observable effect instead, such as inconsistent messages, conflicting access restrictions, or unclear authority.
 Do not use a dispatch to request that the player produce a report, activate or establish a structure, approve a course of action, issue guidance, initiate coordination, or meet an invented deadline. Do not phrase a preferred action as an agency request. Convert that material into a factual unresolved condition instead.
-Generate an opening narrative in Deputy Emergency Manager voice that establishes STARTEX, current uncertainty, EOC posture, and unresolved operational pressure. Do not identify the correct priority or tell the player what action to take.
+Generate an opening narrative in plain Deputy Emergency Manager voice.
+Keep it to 2-3 short paragraphs and no more than 170 words.
+Establish only: the hazard or incident, what is currently known, important uncertainty, and the EOC posture.
+Surface no more than three immediate coordination problems. Hold all other complications for dispatches, flash cards, media reports, map updates, Community Lifeline changes, and later turns.
+Do not summarize the full exercise design, stack every future problem into the opening, or write like an AAR, executive summary, grant narrative, or dramatic trailer.
+Avoid polished filler such as "multiple concurrent demands," "pressing against a narrowing decision window," "critical gaps exist," or similar abstract phrasing when a direct operational statement is possible.
+Separate known facts from unresolved issues. Do not identify the correct priority or tell the player what action to take.
+End with one concise, non-prescriptive question asking for the player's initial priorities or direction.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 {
@@ -405,7 +412,14 @@ Keep each dispatch to no more than 2 short sentences and approximately 45 words.
 Do not describe the missing solution itself. Avoid phrases such as "a unified posture has not been established," "no formal perimeter has been coordinated," or "a joint structure is not operational." Report the observable effect instead, such as inconsistent messages, conflicting access restrictions, or unclear authority.
 Do not use a dispatch to request that the player produce a report, activate or establish a structure, approve a course of action, issue guidance, initiate coordination, or meet an invented deadline. Do not phrase a preferred action as an agency request. Convert that material into a factual unresolved condition instead.
 
-Generate an opening narrative (2-3 sentences) that establishes the selected location, current incident conditions, known gaps, and unresolved coordination pressure. Present the situation without identifying the correct priority, recommending an action, or telling the player what to do.
+Generate an opening narrative in plain Deputy Emergency Manager voice.
+Keep it to 2-3 short paragraphs and no more than 170 words.
+Establish only: the selected location, the hazard or incident, what is currently known, important uncertainty, and the EOC posture.
+Surface no more than three immediate coordination problems. Hold all other complications for dispatches, flash cards, media reports, map updates, Community Lifeline changes, and later turns.
+Do not summarize the full exercise design, stack every future problem into the opening, or write like an AAR, executive summary, grant narrative, or dramatic trailer.
+Avoid polished filler such as "multiple concurrent demands," "pressing against a narrowing decision window," "critical gaps exist," or similar abstract phrasing when a direct operational statement is possible.
+Separate known facts from unresolved issues. Do not identify the correct priority, recommend an action, or tell the player what to do.
+End with one concise, non-prescriptive question asking for the player's initial priorities or direction.
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 {
@@ -734,9 +748,11 @@ When creating a scenario, establish:
 * Political or leadership pressure
 * Immediate EOC-level decision pressure
 
-The opening inject should be realistic and concise. It should give the player enough information to act, but not enough to feel certain.
+The opening inject should be realistic, concise, and written in plain operational language. It should give the player enough information to act, but not enough to feel certain.
 
-Do not overload the opening with every detail. Reveal information through follow-up reports, player questions, field updates, partner coordination, leadership pressure, public information issues, and consequences.
+Limit the opening to the hazard or incident, known facts, uncertainty, EOC posture, and no more than three immediate coordination problems. Do not stack every challenge into the opening or reveal the scenario's future pressure points. Reveal additional information through follow-up reports, player questions, field updates, partner coordination, leadership pressure, public information issues, map changes, Community Lifeline changes, and consequences.
+
+The opening must sound like a real EOC situation update, not an AAR summary, executive brief, academic paragraph, or dramatic narrative. Use direct statements and avoid abstract AI-style phrasing when plain language is available. End with one concise, non-prescriptive request for the player's initial priorities or direction.
 
 INCIDENT REALISM
 
