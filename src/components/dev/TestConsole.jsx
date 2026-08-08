@@ -147,12 +147,22 @@ function getFixture(size = 'long', perspective = 'host') {
 
 function getEnvironment() {
   if (typeof window === 'undefined') return { allowed: false, label: 'UNKNOWN' }
+
   const hostname = window.location.hostname.toLowerCase()
+  const vercelEnvironment = String(import.meta.env.VERCEL_ENV || '').toLowerCase()
   const isLocal = hostname === 'localhost' || hostname === '127.0.0.1'
-  const isProductionDomain = hostname === 'nexuseoc.com' || hostname === 'www.nexuseoc.com'
-  const isVercelPreview = hostname.endsWith('.vercel.app') && !isProductionDomain
+  const isKnownProductionDomain = [
+    'nexuseoc.com',
+    'www.nexuseoc.com',
+    'nexuseoc.ai',
+    'www.nexuseoc.ai',
+  ].includes(hostname)
+  const isVercelPreview = vercelEnvironment === 'preview'
+  const isProduction = vercelEnvironment === 'production' || isKnownProductionDomain
+  const allowed = !isProduction && Boolean(import.meta.env.DEV || isLocal || isVercelPreview)
+
   return {
-    allowed: Boolean(import.meta.env.DEV || isLocal || isVercelPreview),
+    allowed,
     label: isLocal || import.meta.env.DEV ? 'LOCAL' : isVercelPreview ? 'VERCEL PREVIEW' : 'PRODUCTION',
   }
 }
