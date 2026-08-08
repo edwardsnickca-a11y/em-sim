@@ -3349,6 +3349,38 @@ function OnboardingModal({ onClose, ac = '#1D9E75' }) {
   )
 }
 
+const AI_REQUEST_TIMEOUT_MS = 110000
+
+async function requestAiChat({ system, messages, timeoutMs = AI_REQUEST_TIMEOUT_MS }) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const res = await fetch('/api/chat', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      signal:controller.signal,
+      body:JSON.stringify({ system, messages }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      const error = new Error(data?.error || `AI request failed (${res.status})`)
+      error.status = res.status
+      throw error
+    }
+    if (!data?.content?.[0]?.text) throw new Error('The AI service returned an empty response. Please try again.')
+    return data
+  } catch (err) {
+    if (err?.name === 'AbortError') {
+      const timeoutError = new Error('The AI request timed out. Please try again.')
+      timeoutError.name = 'TimeoutError'
+      throw timeoutError
+    }
+    throw err
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 export default function App() {
   const [state, setState]             = useState(null)
   const [loading, setLoading]         = useState(false)
@@ -3477,28 +3509,20 @@ export default function App() {
   const al = settings.alertColor
 
   async function initWorld(scenarioKey, jurisdiction, selectedLocation, localization=null) {
-    const res = await fetch('/api/chat', {
-      method:'POST', headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        system: 'You are a world-building engine for an emergency management training simulator. Respond only in the exact JSON format requested. No preamble, no markdown fences.',
-        messages: [{ role:'user', content: buildWorldInitPrompt(scenarioKey, jurisdiction, selectedLocation, localization) }],
-      }),
+    const data = await requestAiChat({
+      system: 'You are a world-building engine for an emergency management training simulator. Respond only in the exact JSON format requested. No preamble, no markdown fences.',
+      messages: [{ role:'user', content: buildWorldInitPrompt(scenarioKey, jurisdiction, selectedLocation, localization) }],
     })
-    const data = await res.json()
     const raw  = data.content?.[0]?.text || ''
     return sanitizeWorldOutput(JSON.parse(raw.replace(/```json|```/g,'').trim()), selectedLocation?.label || jurisdiction)
   }
 
 
 async function initCustomWorld(customScenario) {
-  const res = await fetch('/api/chat', {
-    method:'POST', headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify({
-      system: 'You are a world-building engine for a custom emergency management training simulator. Respond only in the exact JSON format requested. No preamble, no markdown fences.',
-      messages: [{ role:'user', content: buildCustomWorldInitPrompt(customScenario) }],
-    }),
+  const data = await requestAiChat({
+    system: 'You are a world-building engine for a custom emergency management training simulator. Respond only in the exact JSON format requested. No preamble, no markdown fences.',
+    messages: [{ role:'user', content: buildCustomWorldInitPrompt(customScenario) }],
   })
-  const data = await res.json()
   const raw  = data.content?.[0]?.text || ''
   return sanitizeWorldOutput(JSON.parse(raw.replace(/```json|```/g,'').trim()), customScenario.location)
 }
@@ -3967,14 +3991,10 @@ async function startCustomScenario(customScenario) {
       const combinedAction = submissions.map((item) => `[${item.playerRole} — ${item.playerName}]\n${item.response}`).join('\n\n')
       const teamMessage = `TEAM TURN ${state.turn + 1} RESPONSES\n\n${combinedAction}\n\nEvaluate these responses as the combined actions of the EOC team. Generate one shared consequence update for the entire room. Do not coach the players or identify the correct answer.`
       const msgs = [...state.history, { role:'user', content:teamMessage }]
-      const aiRes = await fetch('/api/chat', {
-        method:'POST', headers:{ 'Content-Type':'application/json' },
-        body:JSON.stringify({
-          system:buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, '', 'EOC Team', state.customScenario),
-          messages:msgs,
-        }),
+      const aiData = await requestAiChat({
+        system:buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, '', 'EOC Team', state.customScenario),
+        messages:msgs,
       })
-      const aiData = await aiRes.json()
       const raw = aiData.content?.[0]?.text || ''
       let parsed
       try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
@@ -4102,19 +4122,8 @@ async function startCustomScenario(customScenario) {
       const sourceMessage = `AAR SOURCE RECORD — treat this as the authoritative record of the completed exercise. Do not invent actions or outcomes. Evaluate only what appears below.\n\n${record}`
 
       const callAar = async messages => {
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 120000)
-        try {
-          const res = await fetch('/api/chat', {
-            method:'POST', headers:{ 'Content-Type':'application/json' }, signal:controller.signal,
-            body:JSON.stringify({ system, messages }),
-          })
-          const data = await res.json().catch(() => ({}))
-          if (!res.ok) throw new Error(data?.error || `${label} request failed (${res.status})`)
-          return data.content?.[0]?.text || ''
-        } finally {
-          clearTimeout(timeoutId)
-        }
+        const data = await requestAiChat({ system, messages, timeoutMs:120000 })
+        return data.content?.[0]?.text || ''
       }
 
       const initialMessages = [
@@ -4282,14 +4291,10 @@ async function startCustomScenario(customScenario) {
     const msgs = [...state.history, { role:'user', content:action }]
 
     try {
-      const res  = await fetch('/api/chat', {
-        method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({
-          system: buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, state.playerName, state.role, state.customScenario),
-          messages: msgs,
-        }),
+      const data = await requestAiChat({
+        system: buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, state.playerName, state.role, state.customScenario),
+        messages: msgs,
       })
-      const data = await res.json()
       const raw  = data.content?.[0]?.text || ''
       let parsed
       try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
