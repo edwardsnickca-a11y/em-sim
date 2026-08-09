@@ -4,6 +4,7 @@ import ResourcesModal from '../resources/ResourcesModal'
 import { SCENARIOS, DIFFICULTIES } from '../../data/scenarios'
 import { JURISDICTIONS, JURISDICTION_CONTEXT } from '../../data/jurisdictions'
 import { ROLES, ROLE_GROUPS } from '../../data/roles'
+import { deleteLocalPlan, LOCAL_PLAN_MAX_BYTES, LOCAL_PLAN_MAX_PAGES, processLocalPlanPdf } from '../../lib/localPlanProcessing'
 
 import hurricaneImage from '../../assets/missionPortal/hurricane-landfall.jpg'
 import mciImage from '../../assets/missionPortal/mass-casualty-incident.jpg'
@@ -309,7 +310,7 @@ function planDisplayName(fileName='') {
 function buildPlanMetadata(file, status='ready', processingError=null) {
   if (!file) return null
   return {
-    planId:`local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    planId:null,
     fileName:file.name,
     displayName:planDisplayName(file.name),
     status,
@@ -327,25 +328,33 @@ export function JurisdictionPlanPanel({ jurisdiction='', value=null, onChange, c
 
   async function handleFile(file) {
     if (!file) return
+    const priorPlan = value
     const initial = buildPlanMetadata(file, 'uploading')
     onChange?.({ ...initial, activeForExercise:false })
     setBusyLabel('Uploading plan...')
 
     try {
-      if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
-        throw new Error('Upload a PDF plan for this exercise.')
-      }
+      if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') throw new Error('Upload a PDF plan for this exercise.')
+      if (file.size > LOCAL_PLAN_MAX_BYTES) throw new Error('PDF is larger than the 30 MB plan limit.')
+
+      if (priorPlan?.planId) await deleteLocalPlan(priorPlan)
 
       onChange?.({ ...initial, status:'processing', activeForExercise:false })
-      setBusyLabel('Analyzing document...')
+      setBusyLabel('Reading document...')
 
-      // Stage 1 performs a real client-side PDF signature check. Text extraction,
-      // storage, and indexing are added in the next build stage.
-      const bytes = new Uint8Array(await file.slice(0, 8).arrayBuffer())
-      const signature = String.fromCharCode(...bytes.slice(0, 5))
-      if (signature !== '%PDF-') throw new Error('This file does not appear to be a valid PDF.')
+      const processed = await processLocalPlanPdf(file, {
+        jurisdiction,
+        displayName:initial.displayName,
+        onProgress:({ message }) => setBusyLabel(message || 'Analyzing document...'),
+      })
 
-      onChange?.({ ...initial, status:'ready', activeForExercise:true, processingError:null })
+      onChange?.({
+        ...initial,
+        ...processed,
+        status:'ready',
+        activeForExercise:true,
+        processingError:null,
+      })
       setBusyLabel('')
     } catch (err) {
       onChange?.({ ...initial, status:'error', activeForExercise:false, processingError:err.message || 'Upload failed. Try again.' })
@@ -353,6 +362,13 @@ export function JurisdictionPlanPanel({ jurisdiction='', value=null, onChange, c
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  async function removePlan() {
+    const current = value
+    onChange?.(null)
+    setBusyLabel('')
+    if (current?.planId) await deleteLocalPlan(current)
   }
 
   const status = value?.status || ''
@@ -383,7 +399,7 @@ export function JurisdictionPlanPanel({ jurisdiction='', value=null, onChange, c
         <div onClick={() => fileInputRef.current?.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files?.[0]) }} style={{ marginTop:12, border:`1px dashed ${DS.borderStrong}`, borderRadius:5, minHeight:78, display:'grid', placeItems:'center', textAlign:'center', padding:12, cursor:'pointer', background:'rgba(46,131,255,0.045)' }}>
           <div>
             <div style={{ color:DS.text, fontSize:12.5, fontWeight:850 }}>Drag and drop PDF</div>
-            <div style={{ color:DS.dim, fontSize:11.5, marginTop:4 }}>or Browse Files · one plan for this exercise</div>
+            <div style={{ color:DS.dim, fontSize:11.5, marginTop:4 }}>or Browse Files · one plan for this exercise · up to 30 MB / 500 pages</div>
           </div>
         </div>
       ) : (
@@ -397,6 +413,7 @@ export function JurisdictionPlanPanel({ jurisdiction='', value=null, onChange, c
               </div>
               <div style={{ color:DS.dim, fontSize:11, marginTop:4 }}>{busyLabel || (status === 'ready' ? 'Plan is ready to use.' : status === 'error' ? (value.processingError || 'Upload failed. Try again.') : '')}</div>
               {uploadedAt && <div style={{ color:DS.dim, fontSize:10.5, marginTop:4 }}>Uploaded {uploadedAt}</div>}
+              {status === 'ready' && value.pageCount && <div style={{ color:DS.dim, fontSize:10.5, marginTop:4 }}>{value.pageCount} pages · {value.chunkCount || 0} searchable sections</div>}
             </div>
           </div>
 
@@ -409,7 +426,7 @@ export function JurisdictionPlanPanel({ jurisdiction='', value=null, onChange, c
 
           <div style={{ display:'flex', gap:8, marginTop:11 }}>
             <button type="button" onClick={() => fileInputRef.current?.click()} style={{ height:32, borderRadius:4, border:`1px solid ${DS.border}`, background:'rgba(7,20,33,0.72)', color:DS.text, padding:'0 10px', cursor:'pointer', fontWeight:800 }}>{status === 'error' ? 'Retry' : 'Replace'}</button>
-            <button type="button" onClick={() => onChange?.(null)} style={{ height:32, borderRadius:4, border:`1px solid rgba(226,75,74,0.34)`, background:'rgba(226,75,74,0.06)', color:'#FFC5C5', padding:'0 10px', cursor:'pointer', fontWeight:800 }}>Remove</button>
+            <button type="button" onClick={removePlan} style={{ height:32, borderRadius:4, border:`1px solid rgba(226,75,74,0.34)`, background:'rgba(226,75,74,0.06)', color:'#FFC5C5', padding:'0 10px', cursor:'pointer', fontWeight:800 }}>Remove</button>
           </div>
         </div>
       )}
