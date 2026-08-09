@@ -212,3 +212,60 @@ export async function deleteLocalPlan(plan) {
     // Best-effort cleanup. Expiration handles abandoned plans.
   }
 }
+
+const PLAN_RETRIEVAL_TRIGGER = /\b(plan|eop|sop|annex|procedure|policy|authority|authorize|authorization|responsib|who owns|who can|who approves|approval|activate|activation|evacuat|contraflow|shelter|animal|pet|livestock|resource request|mutual aid|state assistance|declaration|alternate eoc|continuity|debris|public warning|protective action|notification|procurement|transport|medical support|mass care|public health)\b/i
+const DIRECT_PLAN_QUESTION = /\b(plan|eop|sop|annex|procedure|policy)\b/i
+
+export function shouldRetrieveLocalPlan(action='', plan=null) {
+  if (!plan?.planId || !plan?.accessToken || plan?.status !== 'ready' || !plan?.activeForExercise) return false
+  const text = String(action || '').trim()
+  if (!text || text.toUpperCase() === 'ENDEX') return false
+  return PLAN_RETRIEVAL_TRIGGER.test(text)
+}
+
+function compactLifelineContext(lifelines={}) {
+  return Object.entries(lifelines || {})
+    .filter(([,value]) => value?.status && value.status !== 'GREEN')
+    .slice(0, 4)
+    .map(([key,value]) => `${key}: ${value.status}${value.reason ? ` — ${value.reason}` : ''}`)
+    .join('; ')
+}
+
+export async function retrieveLocalPlanContext(plan, {
+  action='',
+  jurisdiction='',
+  scenario='',
+  role='',
+  situation='',
+  lifelines={},
+  limit=5,
+}={}) {
+  if (!shouldRetrieveLocalPlan(action, plan)) return { queried:false, matched:false, planName:plan?.displayName || '', matches:[] }
+
+  const queryParts = [
+    action,
+    jurisdiction ? `Jurisdiction: ${jurisdiction}` : '',
+    scenario ? `Scenario: ${scenario}` : '',
+    role ? `Role: ${role}` : '',
+    situation ? `Current situation: ${situation}` : '',
+    compactLifelineContext(lifelines) ? `Impacted lifelines: ${compactLifelineContext(lifelines)}` : '',
+  ].filter(Boolean)
+
+  const directQuestion = DIRECT_PLAN_QUESTION.test(String(action || ''))
+  const data = await postPlan({
+    action:'search',
+    planId:plan.planId,
+    accessToken:plan.accessToken,
+    query:queryParts.join('\n').slice(0, 4000),
+    limit:Math.max(3, Math.min(6, Number(limit) || 5)),
+    force:directQuestion,
+  })
+
+  return {
+    queried:true,
+    matched:Boolean(data?.matched),
+    planName:data?.planName || plan.displayName || plan.fileName || 'Local Plan',
+    jurisdiction:data?.jurisdiction || jurisdiction || '',
+    matches:Array.isArray(data?.matches) ? data.matches.slice(0, 6) : [],
+  }
+}

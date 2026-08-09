@@ -192,6 +192,80 @@ async function saveMeta(planId, meta) {
   await redisCommand(['SET', planMetaKey(planId), JSON.stringify(meta), 'EX', PLAN_TTL_SECONDS])
 }
 
+const SEARCH_STOPWORDS = new Set([
+  'the','and','for','that','with','from','this','what','when','where','which','who','why','how','our','your','their','have','has','had','will','would','could','should','into','about','after','before','during','through','under','over','are','was','were','been','being','does','did','not','but','can','may','might','also','than','then','them','they','you','we','its','his','her','all','any','some','more','most','very','just','get','make','tell','need','want','please','plan','eop','sop','annex','section','local','jurisdiction'
+])
+
+function searchTokens(value='') {
+  const normalized = String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return [...new Set(normalized.split(' ').filter(token => token.length >= 3 && !SEARCH_STOPWORDS.has(token)))]
+}
+
+function phraseCandidates(value='') {
+  const words = String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+  const phrases = []
+  for (let size = 3; size >= 2; size -= 1) {
+    for (let i = 0; i <= words.length - size; i += 1) {
+      const phrase = words.slice(i, i + size).join(' ')
+      if (phrase.length >= 9) phrases.push(phrase)
+    }
+  }
+  return [...new Set(phrases)].slice(0, 20)
+}
+
+function scoreChunk(chunk, query, tokens, phrases) {
+  const text = String(chunk?.text || '').toLowerCase()
+  const section = String(chunk?.section || '').toLowerCase()
+  if (!text) return 0
+  let score = 0
+  let matchedTokens = 0
+  for (const token of tokens) {
+    const inText = text.includes(token)
+    const inSection = section.includes(token)
+    if (inText || inSection) {
+      matchedTokens += 1
+      score += inText ? 1 : 0
+      score += inSection ? 2.25 : 0
+      const occurrences = inText ? Math.min(3, text.split(token).length - 1) : 0
+      score += Math.max(0, occurrences - 1) * 0.35
+    }
+  }
+  for (const phrase of phrases) {
+    if (section.includes(phrase)) score += 4
+    else if (text.includes(phrase)) score += 2.5
+  }
+  if (tokens.length) score += (matchedTokens / tokens.length) * 3
+  if (query && section && query.toLowerCase().includes(section)) score += 3
+  return Number(score.toFixed(3))
+}
+
+async function searchPlanChunks(planId, query, limit=5, force=false) {
+  const rawChunks = await redisCommand(['LRANGE', planChunksKey(planId), '0', '-1'])
+  const chunks = (Array.isArray(rawChunks) ? rawChunks : []).map(raw => {
+    try { return JSON.parse(raw) } catch (_) { return null }
+  }).filter(Boolean)
+  const tokens = searchTokens(query)
+  const phrases = phraseCandidates(query)
+  const scored = chunks
+    .map(chunk => ({ ...chunk, relevanceScore:scoreChunk(chunk, query, tokens, phrases) }))
+    .sort((a,b) => b.relevanceScore - a.relevanceScore)
+
+  const floor = force ? 0.75 : 1.4
+  const strong = scored.filter(item => item.relevanceScore >= floor)
+  const selected = strong.slice(0, Math.max(3, Math.min(6, Number(limit) || 5)))
+  return selected
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return sendJson(res, 405, { error:'Method not allowed' })
 
@@ -287,6 +361,28 @@ module.exports = async function handler(req, res) {
         chunkCount:meta.chunkCount,
         extractedChars:meta.extractedChars,
         processedAt:meta.processedAt,
+      })
+    }
+
+    if (action === 'search') {
+      if (meta.status !== 'ready') return sendJson(res, 409, { error:'Plan is not ready for retrieval.' })
+      const query = String(body.query || '').trim().slice(0, 4000)
+      if (!query) return sendJson(res, 400, { error:'A retrieval query is required.' })
+      const matches = await searchPlanChunks(planId, query, body.limit, Boolean(body.force))
+      await redisCommand(['EXPIRE', planMetaKey(planId), PLAN_TTL_SECONDS])
+      await redisCommand(['EXPIRE', planChunksKey(planId), PLAN_TTL_SECONDS])
+      return sendJson(res, 200, {
+        planId,
+        planName:meta.displayName || meta.fileName,
+        jurisdiction:meta.jurisdiction || '',
+        matched:matches.length > 0,
+        matches:matches.map(item => ({
+          id:item.id,
+          page:item.page,
+          section:item.section || '',
+          text:item.text,
+          relevanceScore:item.relevanceScore,
+        })),
       })
     }
 
