@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import NexusLogo from '../brand/NexusLogo'
-import { CustomScenarioCard, CustomScenarioSetupModal } from '../startExercise/StartExercise'
+import { CustomScenarioCard, CustomScenarioSetupModal, JurisdictionPlanPanel } from '../startExercise/StartExercise'
 import { SCENARIOS, DIFFICULTIES } from '../../data/scenarios'
 import { JURISDICTIONS } from '../../data/jurisdictions'
 import { ROLES, ROLE_GROUPS } from '../../data/roles'
@@ -162,6 +162,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   const [difficulty, setDifficulty] = useState(state?.difficulty || 'Standard')
   const [useSpecificJurisdiction, setUseSpecificJurisdiction] = useState(Boolean(state?.specificJurisdiction))
   const [specificJurisdiction, setSpecificJurisdiction] = useState(state?.specificJurisdiction || '')
+  const [localPlan, setLocalPlan] = useState(state?.localPlan || null)
   const [customScenario, setCustomScenario] = useState(state?.customScenario || null)
   const [showCustomScenario, setShowCustomScenario] = useState(false)
   const buildCustomScenario = Boolean(customScenario)
@@ -288,7 +289,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
         role:hostMode === 'host_player' ? hostRole : (customScenario?.role || 'EOC Director'),
         difficulty,
       } : null
-      const data = await apiTeamRoom({ action:'create', scenario:buildCustomScenario ? 'custom' : selectedScenario, jurisdiction:buildCustomScenario ? customScenario.location : jurisdiction, difficulty, hostMode, hostName, hostRole, specificJurisdiction:!buildCustomScenario && useSpecificJurisdiction ? cleanedSpecificJurisdiction : '', customScenario:roomCustomScenario })
+      const data = await apiTeamRoom({ action:'create', scenario:buildCustomScenario ? 'custom' : selectedScenario, jurisdiction:buildCustomScenario ? customScenario.location : jurisdiction, difficulty, hostMode, hostName, hostRole, specificJurisdiction:!buildCustomScenario && useSpecificJurisdiction ? cleanedSpecificJurisdiction : '', localPlan:buildCustomScenario ? (roomCustomScenario?.localPlan || null) : (useSpecificJurisdiction && localPlan?.status === 'ready' && localPlan.activeForExercise ? localPlan : null), customScenario:roomCustomScenario })
       setRoom(data.room)
       setPlayerId(data.playerId || null)
       const createdParticipant = data.player || data.room?.players?.find(p => p.id === data.playerId)
@@ -299,6 +300,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
         difficulty,
         customScenario:roomCustomScenario,
         specificJurisdiction:!buildCustomScenario && useSpecificJurisdiction ? cleanedSpecificJurisdiction : '',
+        localPlan:buildCustomScenario ? (roomCustomScenario?.localPlan || null) : (useSpecificJurisdiction && localPlan?.status === 'ready' && localPlan.activeForExercise ? localPlan : null),
         role:hostMode === 'host_player' ? hostRole : state?.role,
         playerName:hostMode === 'host_player' ? hostName : state?.playerName,
         teamRoom:data.room, roomCode:data.room.roomCode, playerId:data.playerId || null,
@@ -441,7 +443,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
           <div style={{ border:`1px solid ${DS.border}`, borderRadius:4, background:DS.panel, padding:18 }}>
             <FieldLabel>Exercise Setup</FieldLabel>
             <div style={{ color:DS.text, fontSize:17, fontWeight:950, marginBottom:10 }}>{lobbyVisual?.title || SCENARIOS[exercise.scenario]?.name}</div>
-            <div style={{ color:DS.muted, fontSize:13, lineHeight:1.7 }}>Jurisdiction: <span style={{ color:DS.text }}>{exercise.specificJurisdiction || exercise.jurisdiction}</span>{exercise.specificJurisdiction && <span style={{ color:DS.dim }}> ({exercise.jurisdiction})</span>}<br />Difficulty: <span style={{ color:DS.text }}>{exercise.difficulty}</span><br />Host Mode: <span style={{ color:DS.text }}>{exercise.hostMode === 'host_player' ? 'Host plays a role' : 'Facilitator only'}</span></div>
+            <div style={{ color:DS.muted, fontSize:13, lineHeight:1.7 }}>Jurisdiction: <span style={{ color:DS.text }}>{exercise.specificJurisdiction || exercise.jurisdiction}</span>{exercise.specificJurisdiction && <span style={{ color:DS.dim }}> ({exercise.jurisdiction})</span>}<br />Difficulty: <span style={{ color:DS.text }}>{exercise.difficulty}</span><br />Local Plan: <span style={{ color:exercise.localPlan?.activeForExercise ? DS.teal2 : DS.dim }}>{exercise.localPlan?.activeForExercise ? exercise.localPlan.displayName : 'None'}</span><br />Host Mode: <span style={{ color:DS.text }}>{exercise.hostMode === 'host_player' ? 'Host plays a role' : 'Facilitator only'}</span></div>
           </div>
           <div style={{ border:`1px solid ${DS.borderStrong}`, borderRadius:4, background:'rgba(6,23,38,0.92)', padding:18 }}>
             <FieldLabel>Room Information</FieldLabel>
@@ -544,6 +546,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
                     Use a real city, county, campus, port, airport, tribal jurisdiction, U.S. territory, or other real operational setting.
                   </div>
                   {specificJurisdictionError && <div style={{ color:'#FFB4B4', fontSize:12, lineHeight:1.5, marginTop:8 }}>{specificJurisdictionError}</div>}
+                  <div style={{ marginTop:14 }}><JurisdictionPlanPanel jurisdiction={cleanedSpecificJurisdiction} value={localPlan} onChange={setLocalPlan} compact /></div>
                 </div>
               )}
             </div>}
@@ -563,6 +566,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
           finalActionLabel="Use for Team Room"
           onStartCustomScenario={(payload) => {
             setCustomScenario(payload)
+            setLocalPlan(payload.localPlan || null)
             setSelectedScenario('')
             setUseSpecificJurisdiction(false)
             setDifficulty(payload.difficulty || difficulty)

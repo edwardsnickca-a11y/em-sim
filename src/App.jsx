@@ -3508,6 +3508,10 @@ export default function App() {
   const ac = settings.accentColor
   const al = settings.alertColor
 
+  function isUsableLocalPlan(plan) {
+    return Boolean(plan && plan.status === 'ready' && plan.activeForExercise)
+  }
+
   async function initWorld(scenarioKey, jurisdiction, selectedLocation, localization=null) {
     const data = await requestAiChat({
       system: 'You are a world-building engine for an emergency management training simulator. Respond only in the exact JSON format requested. No preamble, no markdown fences.',
@@ -3535,6 +3539,7 @@ async function initCustomWorld(customScenario) {
     const launchRole = launchOptions.role || state.role || 'EOC Director'
     const launchPlayerName = launchOptions.playerName ?? state.playerName ?? ''
     const specificJurisdiction = String(launchOptions?.specificJurisdiction || '').trim()
+    const localPlan = isUsableLocalPlan(launchOptions?.localPlan) ? launchOptions.localPlan : null
     const isLocalizedScenario = Boolean(specificJurisdiction)
     const selectedLocation = isLocalizedScenario
       ? {
@@ -3565,7 +3570,7 @@ async function initCustomWorld(customScenario) {
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
       notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
-      worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:isLocalizedScenario ? specificJurisdiction : null,
+      worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:isLocalizedScenario ? specificJurisdiction : null, localPlan,
       jurisdiction, difficulty:launchDifficulty, role:launchRole, playerName:launchPlayerName,
       teamMode:false, roomCode:null, playerId:null, players:[], hostMode:null, teamRoom:null,
       teamAar:null, individualAar:null, allIndividualAars:{}, facilitatorAar:null, teamCommunicationsLog:[],
@@ -3626,6 +3631,7 @@ async function initCustomWorld(customScenario) {
 
     const scenarioKey = room.exercise.scenario
     const customScenario = room.exercise.customScenario || null
+    const localPlan = isUsableLocalPlan(customScenario?.localPlan || room.exercise.localPlan) ? (customScenario?.localPlan || room.exercise.localPlan) : null
     const sc = SCENARIOS[scenarioKey] || { name:customScenarioTitle(customScenario), desc:customScenarioSummary(customScenario) }
     const jurisdiction = customScenario?.location || normalizeJurisdictionType(room.exercise.jurisdiction || state.jurisdiction)
     const difficulty = customScenario?.difficulty || room.exercise.difficulty || state.difficulty
@@ -3673,6 +3679,7 @@ async function initCustomWorld(customScenario) {
       world,
       specificJurisdiction:isLocalizedScenario ? specificJurisdiction : null,
       customScenario:isCustomScenario ? customScenario : null,
+      localPlan,
       generatedAt: new Date().toISOString(),
     }
 
@@ -3740,6 +3747,7 @@ async function initCustomWorld(customScenario) {
       }],
       customScenario,
       localizedJurisdiction:shared.specificJurisdiction || room.exercise.specificJurisdiction || null,
+      localPlan:isUsableLocalPlan(shared.localPlan || customScenario?.localPlan || room.exercise.localPlan) ? (shared.localPlan || customScenario?.localPlan || room.exercise.localPlan) : null,
       teamMode:true,
       roomCode:room.roomCode,
       playerId:participant.id,
@@ -3758,6 +3766,7 @@ async function startCustomScenario(customScenario) {
   const scenarioName = customScenarioTitle(customScenario)
   const role = customScenario.role || state.role || 'EOC Director'
   const difficulty = customScenario.difficulty || state.difficulty || 'Adaptive'
+  const localPlan = isUsableLocalPlan(customScenario.localPlan) ? customScenario.localPlan : null
 
   setActiveESFs({})
   setInitLoading(true)
@@ -3772,7 +3781,7 @@ async function startCustomScenario(customScenario) {
   })
 
   update({
-    screen:'game', scenario:scenarioKey, customScenario,
+    screen:'game', scenario:scenarioKey, customScenario, localPlan,
     jurisdiction:customScenario.location,
     difficulty,
     role,

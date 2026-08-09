@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import NexusLogo from '../brand/NexusLogo'
 import ResourcesModal from '../resources/ResourcesModal'
 import { SCENARIOS, DIFFICULTIES } from '../../data/scenarios'
@@ -301,6 +301,124 @@ function customInputStyle(multiline=false) {
   }
 }
 
+
+function planDisplayName(fileName='') {
+  return String(fileName || '').replace(/\.pdf$/i, '').trim() || 'Jurisdiction Emergency Plan'
+}
+
+function buildPlanMetadata(file, status='ready', processingError=null) {
+  if (!file) return null
+  return {
+    planId:`local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    fileName:file.name,
+    displayName:planDisplayName(file.name),
+    status,
+    activeForExercise:status === 'ready',
+    uploadedAt:new Date().toISOString(),
+    processingError,
+    sizeBytes:file.size,
+    mimeType:file.type || 'application/pdf',
+  }
+}
+
+export function JurisdictionPlanPanel({ jurisdiction='', value=null, onChange, compact=false }) {
+  const fileInputRef = useRef(null)
+  const [busyLabel, setBusyLabel] = useState('')
+
+  async function handleFile(file) {
+    if (!file) return
+    const initial = buildPlanMetadata(file, 'uploading')
+    onChange?.({ ...initial, activeForExercise:false })
+    setBusyLabel('Uploading plan...')
+
+    try {
+      if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+        throw new Error('Upload a PDF plan for this exercise.')
+      }
+
+      onChange?.({ ...initial, status:'processing', activeForExercise:false })
+      setBusyLabel('Analyzing document...')
+
+      // Stage 1 performs a real client-side PDF signature check. Text extraction,
+      // storage, and indexing are added in the next build stage.
+      const bytes = new Uint8Array(await file.slice(0, 8).arrayBuffer())
+      const signature = String.fromCharCode(...bytes.slice(0, 5))
+      if (signature !== '%PDF-') throw new Error('This file does not appear to be a valid PDF.')
+
+      onChange?.({ ...initial, status:'ready', activeForExercise:true, processingError:null })
+      setBusyLabel('')
+    } catch (err) {
+      onChange?.({ ...initial, status:'error', activeForExercise:false, processingError:err.message || 'Upload failed. Try again.' })
+      setBusyLabel('')
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const status = value?.status || ''
+  const statusColors = {
+    uploading:DS.teal,
+    processing:DS.amber,
+    ready:DS.teal2,
+    error:'#FF8F8F',
+  }
+  const statusLabels = { uploading:'UPLOADING', processing:'PROCESSING', ready:'READY', error:'ERROR' }
+  const uploadedAt = value?.uploadedAt ? new Date(value.uploadedAt).toLocaleString() : ''
+
+  return (
+    <div style={{ border:`1px solid ${value?.activeForExercise ? DS.borderStrong : DS.borderSoft}`, borderRadius:6, background:value ? 'rgba(5,21,34,0.72)' : 'rgba(2,11,19,0.42)', padding:compact ? 13 : 16 }}>
+      <input ref={fileInputRef} type="file" accept="application/pdf,.pdf" onChange={e => handleFile(e.target.files?.[0])} style={{ display:'none' }} />
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:14, marginBottom:value ? 12 : 0 }}>
+        <div>
+          <div style={{ color:DS.teal2, fontSize:10.5, fontWeight:950, letterSpacing:'0.14em', textTransform:'uppercase' }}>Jurisdiction Plans</div>
+          <div style={{ color:DS.muted, fontSize:12, lineHeight:1.5, marginTop:5 }}>Use local emergency plans to guide AI staff responses and plan-alignment evaluation.</div>
+          {jurisdiction && <div style={{ color:DS.dim, fontSize:11.5, marginTop:6 }}>Selected jurisdiction: <span style={{ color:DS.text }}>{jurisdiction}</span></div>}
+        </div>
+        {!value && (
+          <button type="button" onClick={() => fileInputRef.current?.click()} style={{ height:36, flex:'0 0 auto', borderRadius:4, border:`1px solid ${DS.borderStrong}`, background:'rgba(46,131,255,0.12)', color:DS.text, padding:'0 12px', cursor:'pointer', fontWeight:850 }}>Upload Plan</button>
+        )}
+      </div>
+
+      {!value ? (
+        <div onClick={() => fileInputRef.current?.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files?.[0]) }} style={{ marginTop:12, border:`1px dashed ${DS.borderStrong}`, borderRadius:5, minHeight:78, display:'grid', placeItems:'center', textAlign:'center', padding:12, cursor:'pointer', background:'rgba(46,131,255,0.045)' }}>
+          <div>
+            <div style={{ color:DS.text, fontSize:12.5, fontWeight:850 }}>Drag and drop PDF</div>
+            <div style={{ color:DS.dim, fontSize:11.5, marginTop:4 }}>or Browse Files · one plan for this exercise</div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ border:`1px solid ${status === 'error' ? 'rgba(226,75,74,0.45)' : DS.border}`, borderRadius:5, background:'rgba(2,11,19,0.58)', padding:12 }}>
+          <div style={{ display:'flex', alignItems:'flex-start', gap:11 }}>
+            <div style={{ width:34, height:40, borderRadius:4, border:`1px solid ${DS.border}`, display:'grid', placeItems:'center', color:DS.teal2, fontSize:10, fontWeight:950, background:'rgba(45,226,184,0.06)', flex:'0 0 auto' }}>PDF</div>
+            <div style={{ minWidth:0, flex:1 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', gap:12, alignItems:'center' }}>
+                <div style={{ color:DS.text, fontSize:12.5, fontWeight:850, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{value.fileName}</div>
+                <span style={{ color:statusColors[status] || DS.dim, fontSize:9.5, fontWeight:950, letterSpacing:'0.11em', whiteSpace:'nowrap' }}>{statusLabels[status] || status.toUpperCase()}</span>
+              </div>
+              <div style={{ color:DS.dim, fontSize:11, marginTop:4 }}>{busyLabel || (status === 'ready' ? 'Plan is ready to use.' : status === 'error' ? (value.processingError || 'Upload failed. Try again.') : '')}</div>
+              {uploadedAt && <div style={{ color:DS.dim, fontSize:10.5, marginTop:4 }}>Uploaded {uploadedAt}</div>}
+            </div>
+          </div>
+
+          {status === 'ready' && (
+            <label style={{ marginTop:12, paddingTop:11, borderTop:`1px solid ${DS.borderSoft}`, display:'flex', alignItems:'center', gap:9, cursor:'pointer' }}>
+              <input type="checkbox" checked={Boolean(value.activeForExercise)} onChange={e => onChange?.({ ...value, activeForExercise:e.target.checked })} style={{ width:15, height:15, accentColor:DS.teal2 }} />
+              <span style={{ color:DS.text, fontSize:12, fontWeight:800 }}>Use this plan for exercise</span>
+            </label>
+          )}
+
+          <div style={{ display:'flex', gap:8, marginTop:11 }}>
+            <button type="button" onClick={() => fileInputRef.current?.click()} style={{ height:32, borderRadius:4, border:`1px solid ${DS.border}`, background:'rgba(7,20,33,0.72)', color:DS.text, padding:'0 10px', cursor:'pointer', fontWeight:800 }}>{status === 'error' ? 'Retry' : 'Replace'}</button>
+            <button type="button" onClick={() => onChange?.(null)} style={{ height:32, borderRadius:4, border:`1px solid rgba(226,75,74,0.34)`, background:'rgba(226,75,74,0.06)', color:'#FFC5C5', padding:'0 10px', cursor:'pointer', fontWeight:800 }}>Remove</button>
+          </div>
+        </div>
+      )}
+
+      {!value && <div style={{ color:DS.dim, fontSize:11.5, lineHeight:1.45, marginTop:9 }}>Plans are optional. Continue without one to use standard NEXUS doctrine and general emergency-management practices.</div>}
+    </div>
+  )
+}
+
 export function CustomScenarioCard({ onClick }) {
   return (
     <button
@@ -341,6 +459,7 @@ export function CustomScenarioSetupModal({ onClose, onStartCustomScenario }) {
   const [step, setStep] = useState('setup')
   const [loadingPreview, setLoadingPreview] = useState(false)
   const [error, setError] = useState('')
+  const [localPlan, setLocalPlan] = useState(null)
 
   const updateForm = patch => setForm(prev => ({ ...prev, ...patch }))
   const toggleFocus = value => setForm(prev => {
@@ -415,6 +534,7 @@ export function CustomScenarioSetupModal({ onClose, onStartCustomScenario }) {
                 <CustomField label="Situation Description" helper="Write this in plain language. NEXUS will convert it into a structured EOC exercise.">
                   <textarea value={form.situationDescription} onChange={e => updateForm({ situationDescription:e.target.value })} placeholder="Large national celebration with major crowds, federal and local coordination, VIP presence, transportation disruption, high media attention, and extreme heat risk." style={customInputStyle(true)} />
                 </CustomField>
+                <JurisdictionPlanPanel jurisdiction={form.location.trim()} value={localPlan} onChange={setLocalPlan} />
               </div>
 
               <div style={{ display:'grid', gap:16, border:`1px solid ${DS.border}`, borderRadius:6, background:'rgba(2,11,19,0.40)', padding:18 }}>
@@ -463,12 +583,19 @@ export function CustomScenarioSetupModal({ onClose, onStartCustomScenario }) {
                   ['Role', form.role],
                   ['Difficulty', form.difficulty],
                   ['Training Focus', form.trainingFocus.join('; ')],
+                  ['Local Plan', localPlan?.status === 'ready' && localPlan.activeForExercise ? `${localPlan.displayName} — ACTIVE` : 'None — standard NEXUS doctrine will be used'],
                 ].map(([label, value]) => (
                   <div key={label} style={{ padding:'10px 0', borderBottom:`1px solid ${DS.border}` }}>
                     <div style={{ color:DS.dim, fontSize:10, textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:4 }}>{label}</div>
                     <div style={{ color:DS.text, fontSize:12.5, lineHeight:1.45 }}>{value}</div>
                   </div>
                 ))}
+                {localPlan?.status === 'ready' && localPlan.activeForExercise && (
+                  <div style={{ marginTop:12, border:`1px solid ${DS.borderSoft}`, borderRadius:5, background:'rgba(45,226,184,0.05)', padding:11 }}>
+                    <div style={{ color:DS.teal2, fontSize:10, fontWeight:950, letterSpacing:'0.11em', textTransform:'uppercase', marginBottom:6 }}>What This Means</div>
+                    <div style={{ color:DS.muted, fontSize:11.5, lineHeight:1.55 }}>This plan is selected for this exercise and will appear with the exercise setup.</div>
+                  </div>
+                )}
               </aside>
             </div>
           )}
@@ -479,7 +606,7 @@ export function CustomScenarioSetupModal({ onClose, onStartCustomScenario }) {
           {step === 'setup' ? (
             <button onClick={generatePreview} disabled={loadingPreview} style={{ height:42, minWidth:210, borderRadius:5, border:`1px solid ${DS.borderStrong}`, background:loadingPreview ? 'rgba(87,146,198,0.16)' : 'linear-gradient(180deg, #1455B8, #0E3F91)', color:'#fff', fontWeight:900, cursor:loadingPreview ? 'not-allowed' : 'pointer', boxShadow:'0 0 22px rgba(46,131,255,0.16)' }}>{loadingPreview ? 'Generating Preview...' : 'Generate Exercise Preview'}</button>
           ) : (
-            <button onClick={() => onStartCustomScenario?.({ ...form, preview })} style={{ height:42, minWidth:170, borderRadius:5, border:`1px solid ${DS.teal2}`, background:'linear-gradient(180deg, #168B55, #0D633D)', color:'#fff', fontWeight:900, cursor:'pointer', boxShadow:'0 0 22px rgba(45,226,110,0.14)' }}>Start Exercise</button>
+            <button onClick={() => onStartCustomScenario?.({ ...form, preview, localPlan:localPlan?.status === 'ready' ? localPlan : null })} style={{ height:42, minWidth:170, borderRadius:5, border:`1px solid ${DS.teal2}`, background:'linear-gradient(180deg, #168B55, #0D633D)', color:'#fff', fontWeight:900, cursor:'pointer', boxShadow:'0 0 22px rgba(45,226,110,0.14)' }}>Start Exercise</button>
           )}
         </div>
       </div>
@@ -495,6 +622,7 @@ export default function StartExercise({ state, update, startScenario, initLoadin
   const [useSpecificJurisdiction, setUseSpecificJurisdiction] = useState(false)
   const [specificJurisdiction, setSpecificJurisdiction] = useState('')
   const [localizedLaunchError, setLocalizedLaunchError] = useState('')
+  const [localPlan, setLocalPlan] = useState(null)
 
   const scenarioEntries = useMemo(() => Object.entries(SCENARIOS).filter(([key]) => Boolean(SCENARIO_VISUALS[key])), [])
   const scenarioTypes = ['All', 'Natural Hazard', 'Infrastructure', 'Security / CBRN', 'HazMat', 'MCI', 'MCI / HazMat']
@@ -537,7 +665,7 @@ export default function StartExercise({ state, update, startScenario, initLoadin
       setLocalizedLaunchError(localizedJurisdictionError)
       return
     }
-    startScenario(state.scenario, isLocalizedScenario ? { specificJurisdiction: cleanedSpecificJurisdiction } : {})
+    startScenario(state.scenario, isLocalizedScenario ? { specificJurisdiction: cleanedSpecificJurisdiction, localPlan:localPlan?.status === 'ready' && localPlan.activeForExercise ? localPlan : null } : {})
   }
 
   return (
@@ -651,6 +779,7 @@ export default function StartExercise({ state, update, startScenario, initLoadin
                     NEXUS will adapt the selected scenario to this real location while preserving the original exercise structure.
                   </div>
                   {useSpecificJurisdiction && (
+                    <>
                     <div style={{ marginTop:12 }}>
                       <FieldLabel>Specific Jurisdiction</FieldLabel>
                       <input
@@ -668,6 +797,8 @@ export default function StartExercise({ state, update, startScenario, initLoadin
                       </div>
                       {localizedLaunchError && <div style={{ color:'#FFB4B4', fontSize:12, lineHeight:1.5, marginTop:8 }}>{localizedLaunchError}</div>}
                     </div>
+                    <div style={{ marginTop:14 }}><JurisdictionPlanPanel jurisdiction={cleanedSpecificJurisdiction} value={localPlan} onChange={setLocalPlan} compact /></div>
+                    </>
                   )}
                 </div>
 
@@ -705,6 +836,7 @@ export default function StartExercise({ state, update, startScenario, initLoadin
                   <div style={{ fontSize:10, color:DS.dim, textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:4 }}>Jurisdiction Context</div>
                   <div style={{ fontSize:13, color:DS.text, lineHeight:1.55 }}>{state.jurisdiction}</div>
                   {isLocalizedScenario && <div style={{ fontSize:13, color:DS.teal2, lineHeight:1.55, marginTop:5 }}>Specific Jurisdiction: {cleanedSpecificJurisdiction}</div>}
+                  {isLocalizedScenario && <div style={{ fontSize:12, color:localPlan?.status === 'ready' && localPlan.activeForExercise ? DS.teal2 : DS.dim, lineHeight:1.55, marginTop:5 }}>Local Plan: {localPlan?.status === 'ready' && localPlan.activeForExercise ? `${localPlan.displayName} — ACTIVE` : 'None — standard NEXUS doctrine will be used'}</div>}
                   <div style={{ fontSize:12, color:DS.muted, lineHeight:1.55, marginTop:7 }}>{jurisdiction?.desc}</div>
                   <div style={{ fontSize:12, color:DS.dim, lineHeight:1.55, marginTop:7 }}><span style={{ color:DS.amber }}>Constraints:</span> {jurisdiction?.constraints}</div>
                 </div>
