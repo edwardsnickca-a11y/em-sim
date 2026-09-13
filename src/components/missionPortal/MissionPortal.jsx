@@ -190,6 +190,57 @@ function HowItWorks() {
   )
 }
 
+function DevelopmentNotice() {
+  return (
+    <section style={{ borderTop:`1px solid ${DS.border}`, borderBottom:`1px solid ${DS.border}`, background:'rgba(3,13,23,0.42)', padding:'11px 18px', color:DS.muted, fontSize:12.5, lineHeight:1.45, textAlign:'center' }}>
+      NEXUS EOC is currently under development. Platform access may be limited for practitioner review, pilot discussions, and training evaluation.
+    </section>
+  )
+}
+
+const LEGAL_CONTENT = {
+  privacy: {
+    title:'Privacy Policy',
+    body:'NEXUS EOC may use analytics and technical information to understand platform usage, improve training flows, identify errors, and evaluate product performance.',
+  },
+  terms: {
+    title:'Terms of Use',
+    body:'NEXUS EOC is provided as a training and exercise simulation platform. It is not intended for real-world operational decision-making or emergency response command.',
+  },
+  contact: {
+    title:'Contact',
+    body:'Contact: edwardsnick.ca@gmail.com',
+    email:true,
+  },
+  access: {
+    title:'Request Access',
+    body:'Interested in reviewing NEXUS EOC or discussing a pilot? Contact Nick Edwards at edwardsnick.ca@gmail.com.',
+    email:true,
+  },
+}
+
+function LegalInfoModal({ page, onClose }) {
+  const content = LEGAL_CONTENT[page]
+  if (!content) return null
+  return (
+    <div role="dialog" aria-modal="true" aria-label={content.title} style={{ position:'fixed', inset:0, zIndex:10000, display:'flex', alignItems:'center', justifyContent:'center', padding:24, background:'rgba(1,7,13,0.78)', backdropFilter:'blur(7px)', WebkitBackdropFilter:'blur(7px)' }}>
+      <div style={{ width:'min(660px, 94vw)', border:`1px solid ${DS.borderStrong}`, borderRadius:8, background:'linear-gradient(135deg, rgba(4,17,29,0.99), rgba(2,9,16,0.99))', boxShadow:'0 28px 90px rgba(0,0,0,0.62)', color:DS.text, overflow:'hidden' }}>
+        <div style={{ padding:'17px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', gap:16, borderBottom:`1px solid ${DS.border}`, background:'linear-gradient(90deg, rgba(46,131,255,0.14), rgba(45,226,184,0.05), transparent)' }}>
+          <div style={{ fontSize:20, fontWeight:950, letterSpacing:'0.025em' }}>{content.title}</div>
+          <button onClick={onClose} aria-label={`Close ${content.title}`} style={{ width:34, height:34, borderRadius:6, border:`1px solid ${DS.border}`, background:'rgba(2,11,19,0.58)', color:DS.text, cursor:'pointer', fontSize:20 }}>×</button>
+        </div>
+        <div style={{ padding:'24px 22px 26px' }}>
+          <p style={{ margin:0, color:DS.muted, fontSize:15, lineHeight:1.65 }}>{content.body}</p>
+          {content.email && (
+            <a href="mailto:edwardsnick.ca@gmail.com" style={{ display:'inline-block', marginTop:18, color:DS.blue2, fontWeight:850, textDecoration:'none' }}>edwardsnick.ca@gmail.com</a>
+          )}
+          <div style={{ marginTop:24, color:DS.muted, fontSize:12 }}>nexuseoc.com</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 
 const tourSteps = [
   {
@@ -749,6 +800,7 @@ export default function MissionPortal({ onStartExercise, onTeamExercise }) {
   const [showGuidedTour, setShowGuidedTour] = useState(false)
   const [showResources, setShowResources] = useState(false)
   const [showTeamChoice, setShowTeamChoice] = useState(false)
+  const [legalPage, setLegalPage] = useState(null)
   return (
     <div style={{ width:'100vw', minHeight:'100vh', background:`radial-gradient(circle at 22% 18%, rgba(46,131,255,0.12), transparent 34%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`, color:DS.text, fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif', overflow:'hidden' }}>
       <style>{`
@@ -763,43 +815,30 @@ export default function MissionPortal({ onStartExercise, onTeamExercise }) {
           <CapabilityBand />
           <FeaturedScenarios />
           <HowItWorks />
-          <footer style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:26, color:DS.muted, fontSize:14, padding:'18px 20px 24px' }}>
-        <span>© 2026 NEXUS EOC. All rights reserved.</span>
-        <button
-          onClick={() => setShowResources(true)}
-          style={{
-            background:'transparent',
-            border:'none',
-            color:DS.blue2,
-            fontSize:14,
-            fontWeight:800,
-            cursor:'pointer',
-            textDecoration:'none',
-            padding:0,
-          }}
-        >
-          Resources
-        </button>
-        <button
-          onClick={() => setShowAboutNexus(true)}
-          style={{
-            border:'none',
-            background:'transparent',
-            color:DS.green || '#2DE2B8',
-            font:'inherit',
-            fontWeight:800,
-            cursor:'pointer',
-            padding:0
-          }}
-        >
-          About NEXUS EOC
-        </button>
-      </footer>
+          <DevelopmentNotice />
+          <footer style={{ color:DS.muted, fontSize:12, padding:'14px 20px 20px', borderTop:`1px solid ${DS.border}`, textAlign:'center' }}>
+            <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'center', gap:'8px 18px', marginBottom:10 }}>
+              <button onClick={() => setShowResources(true)} style={{ background:'transparent', border:'none', color:DS.blue2, font:'inherit', fontWeight:800, cursor:'pointer', padding:0 }}>Resources</button>
+              <button onClick={() => setShowAboutNexus(true)} style={{ background:'transparent', border:'none', color:DS.green, font:'inherit', fontWeight:800, cursor:'pointer', padding:0 }}>About NEXUS EOC</button>
+              <button onClick={() => setLegalPage('privacy')} style={{ background:'transparent', border:'none', color:DS.blue2, font:'inherit', fontWeight:800, cursor:'pointer', padding:0 }}>Privacy Policy</button>
+              <button onClick={() => setLegalPage('terms')} style={{ background:'transparent', border:'none', color:DS.blue2, font:'inherit', fontWeight:800, cursor:'pointer', padding:0 }}>Terms of Use</button>
+              <button onClick={() => setLegalPage('contact')} style={{ background:'transparent', border:'none', color:DS.blue2, font:'inherit', fontWeight:800, cursor:'pointer', padding:0 }}>Contact</button>
+              <button onClick={() => setLegalPage('access')} style={{ background:'transparent', border:'none', color:DS.blue2, font:'inherit', fontWeight:800, cursor:'pointer', padding:0 }}>Request Access</button>
+            </div>
+            <div style={{ lineHeight:1.55 }}>
+              <div>NEXUS EOC is a product of Nexus Resilience Group LLC.</div>
+              <div>© 2026 Nexus Resilience Group LLC. All rights reserved.</div>
+              <div style={{ marginTop:8 }}>NEXUS EOC is a training and exercise simulation platform. It is not an operational incident command system, emergency notification system, public warning platform, or substitute for official emergency management procedures, legal requirements, or agency policy.</div>
+              <div style={{ marginTop:6 }}>NEXUS EOC, platform content, software, interface materials, scenario materials, documentation, and related assets are owned by Nexus Resilience Group LLC unless otherwise stated.</div>
+              <div style={{ marginTop:8, color:DS.blue2, fontWeight:850 }}>nexuseoc.com</div>
+            </div>
+          </footer>
         </div>
       </main>
           {showGuidedTour && <GuidedTourModal onClose={() => setShowGuidedTour(false)} />}
       {showAboutNexus && <AboutNexusModal onClose={() => setShowAboutNexus(false)} />}
       {showResources && <ResourcesModal onClose={() => setShowResources(false)} />}
+      {legalPage && <LegalInfoModal page={legalPage} onClose={() => setLegalPage(null)} />}
       {showTeamChoice && (
         <TeamExerciseChoiceModal
           onClose={() => setShowTeamChoice(false)}
