@@ -5204,7 +5204,11 @@ async function startCustomScenario(customScenario) {
               )}
               <div style={{ position:'relative', flex:1, minHeight:0 }}>
                 <MapContainer center={center} zoom={mapZoom} style={{ height:'100%', width:'100%' }}>
-                  <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO'/>
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; OpenStreetMap contributors'
+                    maxZoom={19}
+                  />
                   <ScaleControl position="bottomright" imperial={true} metric={true} />
                   <MapResizeHandler watchKey={`${rightWidth}-${rightSplit}-${center?.[0]}-${center?.[1]}`} />
                   <MapUpdater center={center}/>
