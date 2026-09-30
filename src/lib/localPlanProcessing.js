@@ -101,11 +101,13 @@ function splitPageIntoChunks(pageText, pageNumber, inheritedSection='') {
   return { chunks, lastSection:currentSection }
 }
 
+const LOCAL_PLAN_API_URL = String(import.meta.env.VITE_LOCAL_PLAN_API_URL || '/api/local-plan').replace(/\/$/, '')
+
 async function postPlan(payload) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 30000)
   try {
-    const response = await fetch('/api/local-plan', {
+    const response = await fetch(LOCAL_PLAN_API_URL, {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body:JSON.stringify(payload),
