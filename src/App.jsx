@@ -339,7 +339,17 @@ Selected focus areas should influence the opening operating picture and first pr
 
 YOUR TASK:
 Generate a specific, realistic opening world state for the approved custom scenario.
-Generate 4-7 initial map pins representing EOC-relevant locations or impacts. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible for the real location. If you are not confident about exact facilities, use generic labels and plausible coordinates near the jurisdiction center.
+Generate 4-7 initial map pins representing EOC-relevant locations or impacts. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible for the real location and must match the semantic feature represented by the pin. Apply these placement rules:
+- EOC: place at a plausible emergency-management or government facility on land; if an exact facility is not known, use a generic EOC label at a plausible government-site location.
+- HOSPITAL: place at or immediately adjacent to a hospital, medical center, or healthcare facility. Do not place a hospital marker at an airport, generic commercial site, open water, or unrelated point of interest.
+- SHELTER: place on a plausible land-based shelter facility or public building site.
+- STAGING: place on a plausible accessible land site suitable for logistics or resource staging.
+- BLOCKED: place on or immediately adjacent to the affected roadway, bridge approach, intersection, or transportation feature. Never place a road-closure marker in open water unless the incident specifically concerns a bridge or causeway and the marker is at that structure.
+- AFFECTED: may represent an approximate impact area rather than a precise facility. For coastal storm-surge or shoreline impacts, it may sit slightly offshore if that best represents the affected waterfront area.
+- FIRE: place at a plausible land-based incident location unless the scenario explicitly describes a marine or vessel fire.
+- HAZMAT: may be on land or water only when the scenario context supports that location.
+- DAM: place at or immediately adjacent to the dam or impoundment feature.
+If you are not confident that a point matches the described feature, omit that pin rather than placing it at a generic nearby coordinate.
 Generate 2-3 opening dispatch items that reflect only the most immediate EOC-level conditions for the selected location, event/hazard, and training focus.
 At STARTEX, return no more than three dispatches total. Prioritize one immediate operational issue, one coordination or public-information issue, and optionally one unresolved status item. Hold additional consequences, resource gaps, partner requests, infrastructure failures, and media pressure for later turns.
 Each dispatch must read as a neutral status report: what one agency observed, what information is missing, what conflict exists, what capacity is constrained, or what consequence is emerging.
@@ -468,7 +478,17 @@ For RDD, CBRN, security-sensitive, special event, suspicious activity, civil unr
 YOUR TASK:
 Generate a specific, realistic, geographically accurate opening world state for the selected scenario, location, and jurisdiction type. Preserve the selected base scenario; do not rewrite it into a different hazard or event.
 
-Generate 4-7 initial map pins representing key infrastructure for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible and generally within the operating radius of the selected center point.
+Generate 4-7 initial map pins representing key infrastructure or impacts for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible and must match the semantic feature represented by the pin. The operating radius is context only; do not use proximity to the center as a substitute for correct feature placement. Apply these placement rules:
+- EOC: plausible emergency-management or government facility on land.
+- HOSPITAL: at or immediately adjacent to a hospital, medical center, or healthcare facility; never at an airport or unrelated point of interest.
+- SHELTER: plausible land-based shelter or public-building site.
+- STAGING: plausible accessible land site suitable for logistics/resource staging.
+- BLOCKED: on or immediately adjacent to the affected roadway, bridge approach, intersection, or transportation feature; do not place a road closure in open water unless it is specifically tied to a bridge/causeway structure.
+- AFFECTED: may be approximate; for coastal surge or shoreline impacts it may sit slightly offshore when that appropriately represents the affected area.
+- FIRE: plausible land incident location unless explicitly marine.
+- HAZMAT: land or water only when supported by the scenario context.
+- DAM: at or immediately adjacent to the dam/impoundment feature.
+If you cannot place a pin confidently and plausibly, omit it rather than using a generic nearby coordinate.
 
 Generate 2-3 opening dispatch items that reflect only the most immediate EOC-level conditions for the selected location and jurisdiction type. Keep the player at the EOC level, not the field Incident Commander level.
 At STARTEX, return no more than three dispatches total. Prioritize one immediate operational issue, one coordination or public-information issue, and optionally one unresolved status item. Hold additional consequences, resource gaps, partner requests, infrastructure failures, and media pressure for later turns.
@@ -613,7 +633,7 @@ function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playe
   const locationBlock = worldState
     ? `LOCATION: ${worldState.location}
 MAP CENTER: lat ${worldState.center[0]}, lng ${worldState.center[1]}
-All coordinates must be geographically plausible within ~5 miles of this center point. For named highways, interchanges, airports, hospitals, schools, shelters, and public facilities, place the pin on or very near the named feature.`
+Use the map center only as geographic context; do not force every pin into a fixed-distance ring around it. Coordinates must be geographically plausible for the active jurisdiction and must match the semantic feature represented by the pin. Named highways, interchanges, airports, hospitals, schools, shelters, roads, bridges, and public facilities must be placed on or immediately adjacent to the named feature. A BLOCKED pin must sit on the affected roadway/transportation feature, and a HOSPITAL pin must sit at a real or plausible healthcare facility. AFFECTED pins may be approximate and may sit slightly offshore for coastal/surge impacts when that accurately represents the affected area. If a point cannot be placed confidently and plausibly, omit it rather than inventing a nearby coordinate.`
     : `JURISDICTION: ${normalizedJurisdiction}`
 
   return `CURRENT EXERCISE CONFIGURATION
@@ -1250,6 +1270,7 @@ The "prompt" field should not be a generic question and must not reveal the pref
 Avoid coaching phrases including: "the EOC must," "you should," "needs to be established," "is the priority," "the first action is," and "immediately" when used to prescribe a response.
 
 Continue generating dispatches, headlines, pins, and lifeline updates so the app UI can update correctly.
+For every generated pin, match the coordinate to the semantic feature type: BLOCKED on the affected road/bridge/intersection; HOSPITAL at a healthcare facility; SHELTER/EOC/STAGING on plausible land sites; DAM at the dam/impoundment; AFFECTED may be approximate and may be slightly offshore for coastal/surge impacts; HAZMAT may be on land or water only when supported by the incident. Do not use a broad distance-from-center rule as a substitute for feature placement. If you cannot place a point confidently and plausibly, omit it.
 If this is a localized exercise, every generated pin must remain inside the selected jurisdiction. A point across a county/state boundary is invalid even if it is on land. For New Castle County, Delaware, do not place exercise pins across the Delaware River in New Jersey. If you cannot place the point confidently inside the jurisdiction, omit it.
 
 If LOCAL PLAN CONTEXT was supplied and you materially rely on it, set "planGrounded" to true and place the exact [[PLAN_SOURCE_n]] Citation token after each material plan-based claim. Always return "sources": [] yourself; the application will populate verified source metadata from the retrieved excerpts actually cited. These tokens are normally hidden from the Deputy dialogue and retained only for internal grounding, Plan Info/AAR, or explicit player source requests. If no local plan passage was used, set "planGrounded" to false. Never type a plan section/page citation yourself.
