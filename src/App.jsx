@@ -20,6 +20,14 @@ import NexusLogo from './components/brand/NexusLogo'
 import TestConsole from './components/dev/TestConsole'
 import { retrieveLocalPlanContext } from './lib/localPlanProcessing'
 
+const CARTO_BASEMAP_KEY = import.meta.env.VITE_CARTO_BASEMAP_KEY?.trim() || ''
+const CARTO_DARK_TILE_URL = CARTO_BASEMAP_KEY
+  ? `https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(CARTO_BASEMAP_KEY)}`
+  : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+const CARTO_ATTRIBUTION = CARTO_BASEMAP_KEY
+  ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attribution/">CARTO</a>'
+  : '&copy; OpenStreetMap contributors'
+
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -5312,9 +5320,9 @@ async function startCustomScenario(customScenario) {
               <div style={{ position:'relative', flex:1, minHeight:0 }}>
                 <MapContainer center={center} zoom={mapZoom} style={{ height:'100%', width:'100%' }}>
                   <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; OpenStreetMap contributors'
-                    maxZoom={19}
+                    url={CARTO_DARK_TILE_URL}
+                    attribution={CARTO_ATTRIBUTION}
+                    maxZoom={20}
                   />
                   <ScaleControl position="bottomright" imperial={true} metric={true} />
                   <MapResizeHandler watchKey={`${rightWidth}-${rightSplit}-${center?.[0]}-${center?.[1]}`} />
