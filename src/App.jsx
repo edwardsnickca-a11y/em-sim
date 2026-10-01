@@ -104,16 +104,15 @@ function neutralizeFlashCard(value='') {
 }
 
 const VALID_PIN_TYPES = new Set(['EOC','HOSPITAL','STAGING','SHELTER','AFFECTED','FIRE','HAZMAT','DAM','BLOCKED','OTHER'])
+const LAND_ONLY_PIN_TYPES = new Set(['EOC','HOSPITAL','STAGING','SHELTER','BLOCKED','FIRE'])
 
+// Verified jurisdiction facts are deliberately narrow. They may correct a known facility
+// name/address, but they must never force scenario-generated pins to a fixed location.
 const VERIFIED_JURISDICTION_FACTS = [
   {
     matches: [/new castle county/i],
     eocName: 'New Castle County Office of Emergency Management',
     eocAddress: '3601 N. DuPont Highway, New Castle, DE 19720',
-    eocCenter: [39.7090, -75.56825],
-    knownPins: [
-      { match:/route\s*13|dupont highway/i, lat:39.7055, lng:-75.5668 },
-    ],
   },
 ]
 
@@ -128,39 +127,41 @@ function applyVerifiedJurisdictionFacts(world, jurisdiction='') {
   if (!facts || !world || typeof world !== 'object') return world
 
   const next = { ...world }
-  if (Array.isArray(next.center) && next.center.length >= 2) {
-    const lat = Number(next.center[0])
-    const lng = Number(next.center[1])
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) next.center = [...facts.eocCenter]
-  } else {
-    next.center = [...facts.eocCenter]
-  }
-
   if (typeof next.openingNarrative === 'string') {
     next.openingNarrative = next.openingNarrative
-      .replace(/New Castle City-County EOC(?:\s+on Delaware Street)?/gi, facts.eocName)
-      .replace(/\bon Delaware Street\b/gi, `at ${facts.eocAddress}`)
+      .replace(/New Castle City-County EOC(?:\s+on Delaware Street)?/gi, `${facts.eocName} at ${facts.eocAddress}`)
+      .replace(/\bthe City-County EOC on Delaware Street\b/gi, `${facts.eocName} at ${facts.eocAddress}`)
   }
 
   next.pins = (Array.isArray(next.pins) ? next.pins : []).map(pin => {
-    const normalized = { ...pin }
-    const label = String(normalized.label || '')
-    if (String(normalized.type || '').toUpperCase() === 'EOC') {
-      normalized.label = facts.eocName
-      normalized.lat = facts.eocCenter[0]
-      normalized.lng = facts.eocCenter[1]
-      if (!normalized.note) normalized.note = `County emergency management facility at ${facts.eocAddress}.`
-      return normalized
-    }
-    const known = facts.knownPins.find(item => item.match.test(label))
-    if (known) {
-      normalized.lat = known.lat
-      normalized.lng = known.lng
-    }
-    return normalized
+    if (String(pin?.type || '').toUpperCase() !== 'EOC') return pin
+    return { ...pin, label: facts.eocName }
   })
-
   return next
+}
+
+function normalizePinConfidence(value='') {
+  const confidence = String(value || '').trim().toLowerCase()
+  return ['high','medium','low'].includes(confidence) ? confidence : ''
+}
+
+function sanitizeGeneratedMapPins(pins, prefix='pin') {
+  return (Array.isArray(pins) ? pins : [])
+    .map((pin, index) => {
+      const normalized = normalizeMapPin(pin, index, prefix)
+      return {
+        ...normalized,
+        coordinateConfidence: normalizePinConfidence(pin?.coordinateConfidence ?? pin?.coordinate_confidence),
+        locationBasis: String(pin?.locationBasis ?? pin?.location_basis ?? '').trim().toLowerCase(),
+      }
+    })
+    .filter(pin => Number.isFinite(pin.lat) && Number.isFinite(pin.lng))
+    .filter(pin => {
+      if (!LAND_ONLY_PIN_TYPES.has(pin.type)) return true
+      // For land-only features, do not render a guessed coordinate. The generator is
+      // instructed to omit the pin unless it can place it confidently on land.
+      return pin.coordinateConfidence === 'high'
+    })
 }
 
 function normalizeMapPin(pin, index=0, prefix='pin') {
@@ -205,7 +206,7 @@ function sanitizeWorldOutput(world, fallbackLocation='') {
     safe.openingNarrative,
     `STARTEX. Initial reports are still being reconciled for ${safe.location || 'the jurisdiction'}, and the operating picture remains incomplete.`
   )
-  safe.pins = normalizeMapPins(safe.pins, 'init')
+  safe.pins = sanitizeGeneratedMapPins(safe.pins, 'init')
   return safe
 }
 
@@ -224,7 +225,7 @@ function sanitizeTurnOutput(turn, currentState) {
   )
   safe.lifelines = safe.lifelines || currentState?.lifelines
   safe.headlines = Array.isArray(safe.headlines) ? safe.headlines : []
-  safe.pins = normalizeMapPins(safe.pins, 'turn')
+  safe.pins = sanitizeGeneratedMapPins(safe.pins, 'turn')
   safe.planGrounded = Boolean(safe.planGrounded)
   safe.sources = Array.isArray(safe.sources)
     ? safe.sources.slice(0, 2).map(source => ({
@@ -333,6 +334,7 @@ Do not choose, substitute, or invent another city, county, tribal nation, territ
 Do not say the location was randomly selected.
 If you do not know exact local agency names, use generic but realistic labels such as City Emergency Management, County Emergency Management, Public Works, Local Law Enforcement, Local Fire Department, Regional Healthcare Coalition, Utility Provider, Mayor's Office, County Executive's Office, Tribal Emergency Management Office, Transit Agency, Joint Information Center, or School District.
 Avoid unsupported claims about exact local capabilities, elected officials, facility names, local plans, security plans, or agency structures unless the platform provided them.
+Never invent an EOC building name, street, address, or facility location. If the platform has not supplied a verified facility, refer to the jurisdiction's EOC or Emergency Management office generically.
 
 EOC FOCUS RULES:
 This is an EOC exercise. The user is not the Incident Commander.
@@ -344,7 +346,7 @@ Selected focus areas should influence the opening operating picture and first pr
 
 YOUR TASK:
 Generate a specific, realistic opening world state for the approved custom scenario.
-Generate 4-7 initial map pins representing EOC-relevant locations or impacts. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible for the real location. If you are not confident about exact facilities, use generic labels and plausible coordinates near the jurisdiction center.
+Generate up to 4-7 initial map pins representing EOC-relevant locations or impacts. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible for the real location. For EOC, HOSPITAL, STAGING, SHELTER, BLOCKED, and FIRE pins, emit the pin only when you are highly confident the coordinate is on land and on/near the named feature. Never guess a coordinate for a named road, corridor, facility, shelter, staging area, or hospital. If confidence is not high, omit the pin rather than placing it approximately or in open water. Random scenario generation may vary the selected location, but coordinate placement must remain accurate. Set coordinateConfidence to high only when this standard is met and state locationBasis as known_named_feature or generic_land_area.
 Generate 2-3 opening dispatch items that reflect only the most immediate EOC-level conditions for the selected location, event/hazard, and training focus.
 At STARTEX, return no more than three dispatches total. Prioritize one immediate operational issue, one coordination or public-information issue, and optionally one unresolved status item. Hold additional consequences, resource gaps, partner requests, infrastructure failures, and media pressure for later turns.
 Each dispatch must read as a neutral status report: what one agency observed, what information is missing, what conflict exists, what capacity is constrained, or what consequence is emerging.
@@ -365,7 +367,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
   "location": "${customScenario.location}",
   "center": [latitude, longitude],
   "pins": [
-    { "id": "eoc", "label": "Name of EOC or generic EOC label", "type": "EOC", "lat": 0.000, "lng": 0.000, "note": "One sentence status note specific to this custom scenario" }
+    { "id": "eoc", "label": "Name of EOC or generic EOC label", "type": "EOC", "lat": 0.000, "lng": 0.000, "coordinateConfidence": "high", "locationBasis": "known_named_feature", "note": "One sentence status note specific to this custom scenario" }
   ],
   "dispatches": [
     "Dispatch item specific to this location, event/hazard, and EOC-level coordination problem"
@@ -456,7 +458,7 @@ Jurisdiction Type: ${normalizedJurisdiction}
 Exercise Position / Function: localization is applied to the selected user role at launch
 Difficulty: localization is applied to the selected difficulty at launch
 Broad Local Context: Use broad, cautious context for ${loc.label}. Do not invent local plans, named officials, exact facilities, exact routes, local SOPs, or specific agency capabilities.
-${getVerifiedJurisdictionFacts(loc.label) ? `VERIFIED JURISDICTION FACILITY: ${getVerifiedJurisdictionFacts(loc.label).eocName}, ${getVerifiedJurisdictionFacts(loc.label).eocAddress}. If you mention or map the EOC, use only this verified facility and do not invent another EOC location.` : ''}
+${getVerifiedJurisdictionFacts(loc.label) ? `VERIFIED EOC FACILITY: ${getVerifiedJurisdictionFacts(loc.label).eocName}, ${getVerifiedJurisdictionFacts(loc.label).eocAddress}. If the opening names the county EOC or Emergency Management office, use this verified facility. This verified fact does not constrain any other scenario-generated location or map pin.` : ''}
 Boundaries: Preserve the selected base scenario. Localize only the setting, coordination environment, lifeline impacts, public information pressure, leadership concerns, role-specific injects, media injects, map context, and AAR observations. Do not rewrite the exercise into a different scenario.` : ''}
 
 SCENARIO PLACEMENT NOTES: ${scenarioNotes[scenario] || ''}
@@ -468,13 +470,13 @@ Do not use Pueblo, Dayton, Springfield, Spokane, Fresno, or any other familiar d
 Do not say the location was randomly selected.
 If you do not know exact local agency names, use generic but realistic labels such as City Emergency Management, County Emergency Management, Public Works, Local Law Enforcement, Local Fire Department, Regional Healthcare Coalition, Utility Provider, Mayor's Office, County Executive's Office, Tribal Emergency Management Office, Port Authority, Campus Emergency Management, Transit Agency, or Joint Information Center.
 Avoid unsupported claims about exact local capabilities, elected officials, facility names, local plans, security plans, evacuation routes, tactical details, or agency structures unless the platform provided them.
-Never invent an EOC building name, street, address, or facility location. If the platform has not supplied a verified facility, refer only to the jurisdiction's EOC or Emergency Management office generically.
+Never invent an EOC building name, street, address, or facility location. Use a named EOC location only when supplied by verified platform/source data; otherwise use a generic EOC reference.
 For RDD, CBRN, security-sensitive, special event, suspicious activity, civil unrest, or terrorism-related scenarios, stay focused on consequence management, public protective messaging, rumor control, medical/public health coordination, leadership support, state/federal coordination, Community Lifelines, continuity, and recovery. Do not create tactical law enforcement tasks, suspect tracking, security route planning, tactical unit placement, tactical CBRN response, or field-unit command decisions.
 
 YOUR TASK:
 Generate a specific, realistic, geographically accurate opening world state for the selected scenario, location, and jurisdiction type. Preserve the selected base scenario; do not rewrite it into a different hazard or event.
 
-Generate 4-7 initial map pins representing key infrastructure for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible and generally within the operating radius of the selected center point. For named highways, interchanges, airports, hospitals, schools, shelters, and public facilities, place the pin on or very near the named feature when you are confident. Never place a land-based facility, road, staging area, shelter, EOC, hospital, or blocked-road marker in open water. If coordinate confidence is low, use a generic area label on known land near the jurisdiction center or omit the pin rather than guessing. If you are not confident, use generic labels and plausible nearby coordinates.
+Generate up to 4-7 initial map pins representing key infrastructure for this specific location. Pin types: EOC, HOSPITAL, STAGING, SHELTER, AFFECTED, FIRE, HAZMAT, DAM, BLOCKED. Coordinates must be geographically plausible and generally within the operating radius of the selected center point. For EOC, HOSPITAL, STAGING, SHELTER, BLOCKED, and FIRE pins, emit the pin only when you are highly confident the coordinate is on land and on/near the named feature. Never guess a coordinate for a named highway, corridor, interchange, facility, shelter, staging area, hospital, or road closure. If coordinate confidence is not high, omit the pin rather than placing it approximately or in open water. Random scenario generation may vary the selected location, but coordinate placement must remain accurate. Set coordinateConfidence to high only when this standard is met and state locationBasis as known_named_feature or generic_land_area.
 
 Generate 2-3 opening dispatch items that reflect only the most immediate EOC-level conditions for the selected location and jurisdiction type. Keep the player at the EOC level, not the field Incident Commander level.
 At STARTEX, return no more than three dispatches total. Prioritize one immediate operational issue, one coordination or public-information issue, and optionally one unresolved status item. Hold additional consequences, resource gaps, partner requests, infrastructure failures, and media pressure for later turns.
@@ -497,7 +499,7 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
   "location": "${loc.label}",
   "center": ${hasKnownCenter ? `[${center[0]}, ${center[1]}]` : '[0.000, 0.000]'},
   "pins": [
-    { "id": "eoc", "label": "Name of EOC or generic EOC label", "type": "EOC", "lat": 0.000, "lng": 0.000, "note": "One sentence status note specific to this jurisdiction" }
+    { "id": "eoc", "label": "Name of EOC or generic EOC label", "type": "EOC", "lat": 0.000, "lng": 0.000, "coordinateConfidence": "high", "locationBasis": "known_named_feature", "note": "One sentence status note specific to this jurisdiction" }
   ],
   "dispatches": [
     "Dispatch item specific to this location and jurisdiction"
@@ -1198,8 +1200,8 @@ The "prompt" field should not be a generic question and must not reveal the pref
 Avoid coaching phrases including: "the EOC must," "you should," "needs to be established," "is the priority," "the first action is," and "immediately" when used to prescribe a response.
 
 Continue generating dispatches, headlines, pins, and lifeline updates so the app UI can update correctly.
-For every generated map pin, verify that a land-based facility, road, staging area, shelter, EOC, hospital, or blocked-road marker is on plausible land and on/near the named feature. Never place those markers in open water. If exact coordinates are uncertain, use a generic land-area marker or omit the pin rather than guessing.
-Do not invent a named EOC facility, street, or address. Use a named EOC location only when it was supplied by verified platform/source data.
+For EOC, HOSPITAL, STAGING, SHELTER, BLOCKED, and FIRE pins, emit a pin only when you are highly confident its coordinate is on land and on/near the named feature. Never guess coordinates for named roads, corridors, facilities, shelters, staging areas, or hospitals. If coordinate confidence is not high, omit the pin rather than placing it approximately or in open water. Do not reuse a fixed fallback coordinate merely to keep a pin visible. Set coordinateConfidence to high only when this standard is met, and include locationBasis as known_named_feature or generic_land_area.
+Do not invent a named EOC facility, street, or address. Use a named EOC location only when supplied by verified platform/source data.
 
 If LOCAL PLAN CONTEXT was supplied and you materially rely on it, set "planGrounded" to true and return one or two source objects in "sources". If no local plan passage was used, set "planGrounded" to false and "sources" to an empty array. Never fabricate source metadata.
 
@@ -1216,7 +1218,7 @@ STANDARD TURN RESPONSE FORMAT — no preamble, no markdown:
     { "source": "Local news outlet name", "text": "Headline text", "time": "simulated time" }
   ],
   "pins": [
-    { "label": "Location name", "type": "AFFECTED | STAGING | SHELTER | HOSPITAL | EOC | BLOCKED | FIRE | HAZMAT | OTHER", "lat": 0.000, "lng": 0.000, "note": "one sentence status note" }
+    { "label": "Location name", "type": "AFFECTED | STAGING | SHELTER | HOSPITAL | EOC | BLOCKED | FIRE | HAZMAT | OTHER", "lat": 0.000, "lng": 0.000, "coordinateConfidence": "high", "locationBasis": "known_named_feature", "note": "one sentence status note" }
   ],
   "lifelines": {
     "safety":    { "status": "GREEN | YELLOW | RED", "reason": "one sentence" },
