@@ -229,6 +229,14 @@ function sanitizeTurnOutput(turn, currentState) {
         excerpt:String(source?.excerpt || '').trim().slice(0, 1400),
       })).filter(source => source.planName)
     : []
+  safe.planEvidence = Array.isArray(safe.planEvidence)
+    ? safe.planEvidence.slice(0, 6).map(source => ({
+        planName:String(source?.planName || '').trim(),
+        section:String(source?.section || '').trim(),
+        page:Number.isFinite(Number(source?.page)) ? Number(source.page) : null,
+        excerpt:String(source?.excerpt || '').trim().slice(0, 1400),
+      })).filter(source => source.planName && source.excerpt)
+    : []
   return safe
 }
 
@@ -577,6 +585,19 @@ function applyVerifiedPlanCitations(turn, localPlanContext, action='') {
     }
   })
   safe.planGrounded = safe.sources.length > 0 ? true : Boolean(safe.planGrounded)
+
+  // Preserve the exact retrieved evidence for any turn the model says relied on the plan,
+  // even if it forgot to emit a citation token. `sources` remains the stricter record of
+  // passages explicitly token-cited; `planEvidence` is internal-only evidence available
+  // to ENDEX so the AAR can review alignment without reconstructing or inventing doctrine.
+  safe.planEvidence = safe.planGrounded
+    ? matches.map(match => ({
+        planName,
+        section:String(match?.section || '').trim(),
+        page:Number.isFinite(Number(match?.page)) ? Number(match.page) : null,
+        excerpt:String(match?.text || '').trim().slice(0, 1400),
+      })).filter(source => source.excerpt)
+    : []
   return safe
 }
 
@@ -616,7 +637,10 @@ async function getTurnLocalPlanContext(state, action, roleOverride='') {
 
 
 function buildAarPlanEvidence(transcript=[]) {
-  const groundedTurns = (transcript || []).filter(entry => entry?.type === 'turn' && entry?.planGrounded && Array.isArray(entry?.sources) && entry.sources.length)
+  const groundedTurns = (transcript || []).filter(entry => {
+    if (entry?.type !== 'turn' || !entry?.planGrounded) return false
+    return (Array.isArray(entry?.sources) && entry.sources.length) || (Array.isArray(entry?.planEvidence) && entry.planEvidence.length)
+  })
   if (!groundedTurns.length) return ''
 
   const lines = [
@@ -630,7 +654,8 @@ function buildAarPlanEvidence(transcript=[]) {
     lines.push(`TURN ${entry.turn || '?'} — ${entry.simTime || 'time not recorded'}`)
     lines.push(`PLAYER ACTION: ${String(entry.playerInput || '').trim() || '(none)'}`)
     lines.push(`NEXUS CONSEQUENCE: ${String(entry.aiResponse || '').trim() || '(none)'}`)
-    entry.sources.forEach((source, index) => {
+    const evidence = Array.isArray(entry?.sources) && entry.sources.length ? entry.sources : (entry.planEvidence || [])
+    evidence.forEach((source, index) => {
       const parts = [String(source?.planName || 'Local Jurisdiction Plan').trim()]
       if (source?.section) parts.push(String(source.section).trim())
       if (Number.isFinite(Number(source?.page))) parts.push(`Page ${Number(source.page)}`)
@@ -2050,6 +2075,25 @@ async function renderAarPdfV8(filename, rawText) {
     }
   }
 
+  const footerSafeY = 38
+  const cardHeight = (w, body, size = 8, leading = 9.55) => {
+    const bodyW = w - 18 - 34
+    return Math.max(58, 38 + paraHeight(body, bodyW, size, leading))
+  }
+  const fitColumnCards = (yTop, cards, gap = 8) => {
+    const available = Math.max(120, yTop - footerSafeY)
+    let scale = 1
+    const minScale = 0.78
+    const totalHeight = currentScale => cards.reduce((sum, card, index) => {
+      const size = card.size * currentScale
+      const leading = card.leading * currentScale
+      return sum + cardHeight(card.w, card.body, size, leading) + (index < cards.length - 1 ? gap : 0)
+    }, 0)
+    while (scale > minScale && totalHeight(scale) > available) scale -= 0.02
+    if (totalHeight(scale) > available) scale = minScale
+    return Math.max(minScale, scale)
+  }
+
   const drawCard = (x, yTop, w, title, body, accent, icon, size = 8, leading = 9.55, fillColor = colors.panel) => {
     const bodyW = w - 18 - 34
     const bodyH = paraHeight(body, bodyW, size, leading)
@@ -2146,23 +2190,44 @@ async function renderAarPdfV8(filename, rawText) {
 
   let leftY = y
   let rightY = y
-  leftY = drawCard(leftX, leftY, colW, 'Situation Summary', sections['SITUATION SUMMARY'], colors.cyan, 'pin', 8.0, 9.55, colors.panel) - 8
-  leftY = drawCard(leftX, leftY, colW, 'Decision Log Review', sections['DECISION LOG REVIEW'], colors.blue, 'clipboard', 8.0, 9.55, colors.panel)
-  rightY = drawCard(rightX, rightY, colW, 'Strengths', sections.STRENGTHS, colors.green, 'check', 7.95, 9.5, colors.panel2) - 8
-  rightY = drawCard(rightX, rightY, colW, 'Critical Gaps', sections['CRITICAL GAPS'], colors.red, 'warn', 7.95, 9.5, colors.panel2)
+  const page1LeftCards = [
+    { w:colW, body:sections['SITUATION SUMMARY'], size:8.0, leading:9.55 },
+    { w:colW, body:sections['DECISION LOG REVIEW'], size:8.0, leading:9.55 },
+  ]
+  const page1RightCards = [
+    { w:colW, body:sections.STRENGTHS, size:7.95, leading:9.5 },
+    { w:colW, body:sections['CRITICAL GAPS'], size:7.95, leading:9.5 },
+  ]
+  const page1LeftScale = fitColumnCards(y, page1LeftCards)
+  const page1RightScale = fitColumnCards(y, page1RightCards)
+  leftY = drawCard(leftX, leftY, colW, 'Situation Summary', sections['SITUATION SUMMARY'], colors.cyan, 'pin', 8.0 * page1LeftScale, 9.55 * page1LeftScale, colors.panel) - 8
+  leftY = drawCard(leftX, leftY, colW, 'Decision Log Review', sections['DECISION LOG REVIEW'], colors.blue, 'clipboard', 8.0 * page1LeftScale, 9.55 * page1LeftScale, colors.panel)
+  rightY = drawCard(rightX, rightY, colW, 'Strengths', sections.STRENGTHS, colors.green, 'check', 7.95 * page1RightScale, 9.5 * page1RightScale, colors.panel2) - 8
+  rightY = drawCard(rightX, rightY, colW, 'Critical Gaps', sections['CRITICAL GAPS'], colors.red, 'warn', 7.95 * page1RightScale, 9.5 * page1RightScale, colors.panel2)
   finishPage(1)
 
   startPage(2)
   y = top - 52
   leftY = y
   rightY = y
-  leftY = drawCard(leftX, leftY, colW, 'Resource & Coordination Effectiveness', sections['RESOURCE & COORDINATION EFFECTIVENESS'], colors.teal, 'chain', 8.0, 9.55, colors.panel) - 8
-  leftY = drawCard(leftX, leftY, colW, 'Communications & Information Management', sections['COMMUNICATIONS & INFORMATION MANAGEMENT'], colors.cyan, 'comms', 8.0, 9.55, colors.panel) - 8
-  leftY = drawCard(leftX, leftY, colW, 'Doctrine / Reference Notes', sections['DOCTRINE / REFERENCE NOTES'], colors.purple, 'book', 7.8, 9.3, colors.panel)
+  const page2LeftCards = [
+    { w:colW, body:sections['RESOURCE & COORDINATION EFFECTIVENESS'], size:8.0, leading:9.55 },
+    { w:colW, body:sections['COMMUNICATIONS & INFORMATION MANAGEMENT'], size:8.0, leading:9.55 },
+    { w:colW, body:sections['DOCTRINE / REFERENCE NOTES'], size:7.8, leading:9.3 },
+  ]
+  const page2RightCards = [
+    ...(sections['PLAN ALIGNMENT']?.trim() ? [{ w:colW, body:sections['PLAN ALIGNMENT'], size:7.8, leading:9.3 }] : []),
+    { w:colW, body:sections.RECOMMENDATIONS, size:8.0, leading:9.55 },
+  ]
+  const page2LeftScale = fitColumnCards(y, page2LeftCards)
+  const page2RightScale = fitColumnCards(y, page2RightCards)
+  leftY = drawCard(leftX, leftY, colW, 'Resource & Coordination Effectiveness', sections['RESOURCE & COORDINATION EFFECTIVENESS'], colors.teal, 'chain', 8.0 * page2LeftScale, 9.55 * page2LeftScale, colors.panel) - 8
+  leftY = drawCard(leftX, leftY, colW, 'Communications & Information Management', sections['COMMUNICATIONS & INFORMATION MANAGEMENT'], colors.cyan, 'comms', 8.0 * page2LeftScale, 9.55 * page2LeftScale, colors.panel) - 8
+  leftY = drawCard(leftX, leftY, colW, 'Doctrine / Reference Notes', sections['DOCTRINE / REFERENCE NOTES'], colors.purple, 'book', 7.8 * page2LeftScale, 9.3 * page2LeftScale, colors.panel)
   if (sections['PLAN ALIGNMENT']?.trim()) {
-    rightY = drawCard(rightX, rightY, colW, 'Plan Alignment', sections['PLAN ALIGNMENT'], colors.teal, 'clipboard', 7.8, 9.3, colors.panel2) - 8
+    rightY = drawCard(rightX, rightY, colW, 'Plan Alignment', sections['PLAN ALIGNMENT'], colors.teal, 'clipboard', 7.8 * page2RightScale, 9.3 * page2RightScale, colors.panel2) - 8
   }
-  rightY = drawCard(rightX, rightY, colW, 'Recommendations', sections.RECOMMENDATIONS, colors.amber, 'bulb', 8.0, 9.55, colors.panel2)
+  rightY = drawCard(rightX, rightY, colW, 'Recommendations', sections.RECOMMENDATIONS, colors.amber, 'bulb', 8.0 * page2RightScale, 9.55 * page2RightScale, colors.panel2)
   finishPage(2)
 
   // Team-mode appendices use the same NEXUS card language as the original AAR.
@@ -2909,7 +2974,8 @@ function AARDisplay({ aar, teamMode=false, teamAar=null, individualAar=null, all
   const verifiedPlanSources = []
   const seenPlanSources = new Set()
   planGroundedTurns.forEach(entry => {
-    ;(entry.sources || []).forEach(source => {
+    const evidenceSources = (Array.isArray(entry?.sources) && entry.sources.length) ? entry.sources : (entry.planEvidence || [])
+    ;(evidenceSources || []).forEach(source => {
       const planName = String(source?.planName || 'Local Jurisdiction Plan').trim()
       const section = String(source?.section || '').trim()
       const page = Number.isFinite(Number(source?.page)) ? Number(source.page) : null
@@ -4377,7 +4443,7 @@ async function startCustomScenario(customScenario) {
         type:'turn', turn:nextTurn, simTime:parsed.time || state.simTime, situation:resolvedSituation,
         playerInput:combinedAction, aiResponse:parsed.consequence || '', prompt:resolvedSituation !== 'ENDEX' ? (parsed.prompt || '') : '',
         dispatches:parsed.dispatches || [], headlines:parsed.headlines || [], pins:parsed.pins || [], lifelines:parsed.lifelines || state.lifelines,
-        planGrounded:Boolean(parsed.planGrounded), sources:parsed.sources || [],
+        planGrounded:Boolean(parsed.planGrounded), sources:parsed.sources || [], planEvidence:parsed.planEvidence || [],
       }
       const sharedTurnState = {
         turn:nextTurn,
@@ -4726,6 +4792,7 @@ async function startCustomScenario(customScenario) {
         lifelines: parsed.lifelines || state.lifelines,
         planGrounded:Boolean(parsed.planGrounded),
         sources:parsed.sources || [],
+        planEvidence:parsed.planEvidence || [],
       }
 
       update({
