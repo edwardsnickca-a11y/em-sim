@@ -3734,6 +3734,8 @@ export default function App() {
   const [activeInfo, setActiveInfo]   = useState(null)
   const [activeESFs, setActiveESFs]   = useState({})
   const [showEndDialog, setShowEndDialog] = useState(false)
+  const [endDialogMode, setEndDialogMode] = useState('choose')
+  const [soloAarGenerating, setSoloAarGenerating] = useState(false)
   const [teamLiveRoom, setTeamLiveRoom] = useState(null)
   const [teamSyncError, setTeamSyncError] = useState('')
   const [showTeamChat, setShowTeamChat] = useState(false)
@@ -4632,15 +4634,18 @@ async function startCustomScenario(customScenario) {
     setLoading(false)
   }
 
-  async function sendAction() {
-    if (!input.trim() || loading || !state) return
-    const action = input.trim()
+  async function sendAction(actionOverride=null, options={}) {
+    const overrideAction = typeof actionOverride === 'string' ? actionOverride.trim() : ''
+    if ((!overrideAction && !input.trim()) || loading || !state) return
+    const action = overrideAction || input.trim()
+    const silentPlayerInput = Boolean(options?.silentPlayerInput)
     if (state.teamMode) {
       await submitTeamResponse(action)
       return
     }
     const isEndex = action.toUpperCase() === 'ENDEX'
-    setInput(''); setLoading(true)
+    if (!overrideAction) setInput('')
+    setLoading(true)
 
     posthog.capture(isEndex ? 'scenario_ended' : 'action_submitted', {
       scenario: state.scenario, jurisdiction: state.jurisdiction,
@@ -4648,7 +4653,9 @@ async function startCustomScenario(customScenario) {
       ...(state.playerName ? { player: state.playerName } : {}),
     })
 
-    const newTerm = [...state.terminal, { type:'player', text:`> ${action}` }]
+    const newTerm = silentPlayerInput
+      ? [...state.terminal]
+      : [...state.terminal, { type:'player', text:`> ${action}` }]
     update({ terminal:newTerm })
     const aarPlanEvidence = isEndex ? buildAarPlanEvidence(state.exerciseTranscript || []) : ''
     const msgs = [
@@ -4743,6 +4750,17 @@ async function startCustomScenario(customScenario) {
     }
     setLoading(false)
     setTimeout(() => inputRef.current?.focus(), 50)
+  }
+
+  async function endSoloExerciseWithAar() {
+    if (loading || !state || state.teamMode) return
+    setShowEndDialog(false)
+    setSoloAarGenerating(true)
+    try {
+      await sendAction('ENDEX', { silentPlayerInput:true })
+    } finally {
+      setSoloAarGenerating(false)
+    }
   }
 
   function handleKey(e) {
@@ -5023,11 +5041,11 @@ async function startCustomScenario(customScenario) {
 
       {activeInfo?.key && activeInfo?.anchor && <InfoCallout panelKey={activeInfo.key} anchorEl={activeInfo.anchor} onClose={() => setActiveInfo(null)} />}
 
-      {state.teamMode && teamLiveRoom?.status === 'ending' && (
+      {(soloAarGenerating || (state.teamMode && teamLiveRoom?.status === 'ending')) && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Generating Team AAR"
+          aria-label="Generating After-Action Review"
           style={{
             position:'fixed',
             inset:0,
@@ -5060,13 +5078,15 @@ async function startCustomScenario(customScenario) {
               animation:'nexus-aar-spin 1s linear infinite',
             }} />
             <div style={{ color:UI.text, fontSize:fs+7, fontWeight:950, letterSpacing:'0.02em', marginBottom:12 }}>
-              Generating Team AAR
+              {state.teamMode ? 'Generating Team AAR' : 'Generating After-Action Review'}
             </div>
             <div style={{ color:UI.muted, fontSize:fs+1, lineHeight:1.65 }}>
-              This may take several minutes. Take a short break while NEXUS reviews the team’s decisions, coordination, and role performance.
+              {state.teamMode
+                ? 'This may take several minutes. Take a short break while NEXUS reviews the team’s decisions, coordination, and role performance.'
+                : 'NEXUS is reviewing the exercise record, decisions, coordination, and outcomes. This may take a few minutes. Take a quick break while the AAR is prepared.'}
             </div>
             <div style={{ color:UI.dim, fontSize:Math.max(11, fs-1), marginTop:18 }}>
-              All participants will open the completed report automatically.
+              {state.teamMode ? 'All participants will open the completed report automatically.' : 'The completed AAR will open automatically when it is ready.'}
             </div>
           </div>
         </div>
@@ -5076,8 +5096,8 @@ async function startCustomScenario(customScenario) {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="End Exercise"
-          onClick={() => setShowEndDialog(false)}
+          aria-label={endDialogMode === 'choose' ? 'End Exercise' : 'Confirm End Exercise'}
+          onClick={() => { setShowEndDialog(false); setEndDialogMode('choose') }}
           style={{
             position:'fixed',
             inset:0,
@@ -5114,11 +5134,19 @@ async function startCustomScenario(customScenario) {
               background:'linear-gradient(90deg, rgba(226,75,74,0.13), rgba(69,163,255,0.04), transparent)'
             }}>
               <div>
-                <div style={{ color:'#FFD2D2', fontSize:18, fontWeight:950, letterSpacing:'0.05em', textTransform:'uppercase' }}>End Exercise</div>
-                <div style={{ color:UI.muted, fontSize:12, marginTop:5 }}>Choose how to close this scenario.</div>
+                <div style={{ color:'#FFD2D2', fontSize:18, fontWeight:950, letterSpacing:'0.05em', textTransform:'uppercase' }}>
+                  {endDialogMode === 'confirm-aar' ? 'End Exercise and Generate AAR?' : endDialogMode === 'confirm-no-aar' ? 'End Exercise?' : 'End Exercise'}
+                </div>
+                <div style={{ color:UI.muted, fontSize:12, marginTop:5 }}>
+                  {endDialogMode === 'confirm-aar'
+                    ? 'This will end the exercise and begin generating the After-Action Review.'
+                    : endDialogMode === 'confirm-no-aar'
+                      ? 'This will end the exercise without generating an After-Action Review.'
+                      : 'Choose how to close this scenario.'}
+                </div>
               </div>
               <button
-                onClick={() => setShowEndDialog(false)}
+                onClick={() => { setShowEndDialog(false); setEndDialogMode('choose') }}
                 aria-label="Close end exercise dialog"
                 style={{
                   width:34,
@@ -5138,62 +5166,121 @@ async function startCustomScenario(customScenario) {
               </button>
             </div>
 
-            <div style={{ padding:20, display:'grid', gap:12 }}>
-              <button
-                onClick={() => { setShowEndDialog(false); if (state.teamMode) endTeamExerciseWithAar(); else { setInput('ENDEX'); setTimeout(() => sendAction(), 50) } }}
-                style={{
-                  width:'100%',
-                  minHeight:48,
-                  borderRadius:6,
-                  border:`1px solid ${UI.amber}`,
-                  background:'linear-gradient(180deg, rgba(245,155,34,0.16), rgba(2,11,19,0.78))',
-                  color:UI.amber,
-                  cursor:'pointer',
-                  fontWeight:950,
-                  fontSize:14,
-                  textAlign:'left',
-                  padding:'0 16px'
-                }}
-              >
-                End with AAR
-              </button>
+            {endDialogMode === 'choose' ? (
+              <div style={{ padding:20, display:'grid', gap:12 }}>
+                <button
+                  onClick={() => setEndDialogMode('confirm-aar')}
+                  style={{
+                    width:'100%',
+                    minHeight:48,
+                    borderRadius:6,
+                    border:`1px solid ${UI.amber}`,
+                    background:'linear-gradient(180deg, rgba(245,155,34,0.16), rgba(2,11,19,0.78))',
+                    color:UI.amber,
+                    cursor:'pointer',
+                    fontWeight:950,
+                    fontSize:14,
+                    textAlign:'left',
+                    padding:'0 16px'
+                  }}
+                >
+                  End with AAR
+                </button>
 
-              {!state.teamMode && <button
-                onClick={() => { setShowEndDialog(false); reset() }}
-                style={{
-                  width:'100%',
-                  minHeight:48,
-                  borderRadius:6,
-                  border:`1px solid ${UI.borderStrong}`,
-                  background:'rgba(6,23,38,0.48)',
-                  color:UI.text,
-                  cursor:'pointer',
-                  fontWeight:900,
-                  fontSize:14,
-                  textAlign:'left',
-                  padding:'0 16px'
-                }}
-              >
-                End without AAR
-              </button>}
+                {!state.teamMode && <button
+                  onClick={() => setEndDialogMode('confirm-no-aar')}
+                  style={{
+                    width:'100%',
+                    minHeight:48,
+                    borderRadius:6,
+                    border:`1px solid ${UI.borderStrong}`,
+                    background:'rgba(6,23,38,0.48)',
+                    color:UI.text,
+                    cursor:'pointer',
+                    fontWeight:900,
+                    fontSize:14,
+                    textAlign:'left',
+                    padding:'0 16px'
+                  }}
+                >
+                  End without AAR
+                </button>}
 
-              <button
-                onClick={() => setShowEndDialog(false)}
-                style={{
-                  width:'100%',
-                  minHeight:42,
-                  borderRadius:6,
-                  border:`1px solid ${UI.borderSoft}`,
-                  background:'transparent',
-                  color:UI.muted,
-                  cursor:'pointer',
-                  fontWeight:800,
-                  fontSize:13
-                }}
-              >
-                Cancel
-              </button>
-            </div>
+                <button
+                  onClick={() => { setShowEndDialog(false); setEndDialogMode('choose') }}
+                  style={{
+                    width:'100%',
+                    minHeight:42,
+                    borderRadius:6,
+                    border:`1px solid ${UI.borderSoft}`,
+                    background:'transparent',
+                    color:UI.muted,
+                    cursor:'pointer',
+                    fontWeight:800,
+                    fontSize:13
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div style={{ padding:20 }}>
+                {endDialogMode === 'confirm-aar' && (
+                  <div style={{ color:UI.muted, fontSize:13, lineHeight:1.65, marginBottom:18 }}>
+                    You will not be able to continue the scenario after ENDEX. Once confirmed, NEXUS will end the exercise immediately and prepare the AAR — no additional response or Submit click is required.
+                  </div>
+                )}
+                <div style={{ display:'flex', justifyContent:'flex-end', gap:10, flexWrap:'wrap' }}>
+                  <button
+                    onClick={() => setEndDialogMode('choose')}
+                    style={{
+                      minWidth:96,
+                      minHeight:42,
+                      borderRadius:6,
+                      border:`1px solid ${UI.borderSoft}`,
+                      background:'transparent',
+                      color:UI.muted,
+                      cursor:'pointer',
+                      fontWeight:850,
+                      fontSize:13
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (endDialogMode === 'confirm-aar') {
+                        if (state.teamMode) {
+                          setShowEndDialog(false)
+                          setEndDialogMode('choose')
+                          endTeamExerciseWithAar()
+                        } else {
+                          setEndDialogMode('choose')
+                          endSoloExerciseWithAar()
+                        }
+                      } else {
+                        setShowEndDialog(false)
+                        setEndDialogMode('choose')
+                        reset()
+                      }
+                    }}
+                    style={{
+                      minWidth:128,
+                      minHeight:42,
+                      borderRadius:6,
+                      border:`1px solid ${endDialogMode === 'confirm-aar' ? UI.amber : UI.danger}`,
+                      background:endDialogMode === 'confirm-aar' ? 'rgba(245,155,34,0.14)' : 'rgba(226,75,74,0.14)',
+                      color:endDialogMode === 'confirm-aar' ? UI.amber : '#FFD2D2',
+                      cursor:'pointer',
+                      fontWeight:950,
+                      fontSize:13
+                    }}
+                  >
+                    End Exercise
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -5235,7 +5322,7 @@ async function startCustomScenario(customScenario) {
             </button>
             {!isEndex && (!state.teamMode || currentPlayerIsHost) && (
               <div style={{ position:'relative' }}>
-                <button className="nexus-live-button" onClick={() => setShowEndDialog(s => !s)}
+                <button className="nexus-live-button" onClick={() => { setEndDialogMode('choose'); setShowEndDialog(true) }}
                   style={{ height:38, padding:'0 14px', borderRadius:4, border:`1px solid rgba(226,75,74,0.70)`, background:'rgba(226,75,74,0.10)', color:'#FFD2D2', cursor:'pointer', fontWeight:900 }}>
                   End Exercise
                 </button>
