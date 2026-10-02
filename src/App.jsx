@@ -1646,12 +1646,52 @@ function difficultyDescriptionForPdf(difficultyName = '') {
   return desc || `${difficultyName || 'Selected'} exercise pressure with realistic incident consequences and decision trade-offs.`
 }
 
+function normalizeJurisdictionDisplayName(value = '') {
+  const raw = String(value || '').trim().replace(/\s+/g, ' ')
+  if (!raw) return ''
+
+  const canonicalTerms = new Map([
+    ['county', 'County'],
+    ['city', 'City'],
+    ['town', 'Town'],
+    ['township', 'Township'],
+    ['borough', 'Borough'],
+    ['village', 'Village'],
+    ['parish', 'Parish'],
+    ['municipality', 'Municipality'],
+    ['district', 'District'],
+  ])
+  const lowerConnectors = new Set(['of', 'the', 'and'])
+
+  let wordIndex = 0
+  const normalized = raw.replace(/[A-Za-z]+(?:['’][A-Za-z]+)?\.?/g, token => {
+    const bare = token.replace(/\.$/, '')
+    const suffix = token.endsWith('.') ? '.' : ''
+    const lower = bare.toLowerCase()
+    const canonical = canonicalTerms.get(lower)
+    if (canonical) { wordIndex += 1; return canonical + suffix }
+
+    // Preserve intentional mixed-case names/acronyms (McHenry, DC, MS-ISAC, etc.).
+    if (/[A-Z]/.test(bare.slice(1)) && /[a-z]/.test(bare)) { wordIndex += 1; return token }
+    if (/^[A-Z]{2,5}$/.test(bare)) { wordIndex += 1; return token }
+
+    const isConnector = lowerConnectors.has(lower) && wordIndex > 0
+    wordIndex += 1
+    if (isConnector) return lower + suffix
+    return lower.charAt(0).toUpperCase() + lower.slice(1) + suffix
+  })
+
+  // U.S. state/territory abbreviations are conventionally uppercase after a comma.
+  return normalized.replace(/,\s*([A-Za-z]{2})(?=\s*(?:$|\d{5}(?:-\d{4})?))/g, (_, abbr) => `, ${abbr.toUpperCase()}`)
+}
+
 function jurisdictionDescriptionForPdf(jurisdictionName = '') {
+  const displayName = normalizeJurisdictionDisplayName(jurisdictionName)
   const context = JURISDICTION_CONTEXT?.[jurisdictionName]
     || Object.entries(JURISDICTION_CONTEXT || {}).find(([key]) => normalizePdfScenarioName(key) === normalizePdfScenarioName(jurisdictionName))?.[1]
   return firstTextField(context, ['description', 'summary', 'context'])
     || (typeof context === 'string' ? context : '')
-    || `${jurisdictionName || 'Selected jurisdiction'} operating environment with local capabilities, constraints, mutual aid considerations, and jurisdiction-specific incident impacts.`
+    || `${displayName || 'Selected jurisdiction'} operating environment with local capabilities, constraints, mutual aid considerations, and jurisdiction-specific incident impacts.`
 }
 
 function scenarioDescriptionForPdf(scenarioName = '') {
@@ -2772,7 +2812,7 @@ function AARDisplay({ aar, teamMode=false, teamAar=null, individualAar=null, all
   const endTime = simTime || 'ENDEX'
   const duration = `${turns || 0} turn${turns === 1 ? '' : 's'}`
   const clean = value => value || 'Not captured in this exercise record.'
-  const displayJurisdiction = worldState?.localizedJurisdiction || worldState?.location || jurisdiction || 'Unspecified'
+  const displayJurisdiction = normalizeJurisdictionDisplayName(worldState?.localizedJurisdiction || worldState?.location || jurisdiction) || 'Unspecified'
   const participantLabel = String(playerName || '').trim() || 'Name not entered'
   const planGroundedTurns = (transcript || []).filter(entry => entry?.type === 'turn' && entry?.planGrounded)
   const verifiedPlanSources = []
@@ -3746,7 +3786,7 @@ async function initCustomWorld(customScenario) {
     const launchDifficulty = launchOptions.difficulty || state.difficulty
     const launchRole = launchOptions.role || state.role || 'EOC Director'
     const launchPlayerName = launchOptions.playerName ?? state.playerName ?? ''
-    const specificJurisdiction = String(launchOptions?.specificJurisdiction || '').trim()
+    const specificJurisdiction = normalizeJurisdictionDisplayName(launchOptions?.specificJurisdiction)
     const localPlan = isUsableLocalPlan(launchOptions?.localPlan) ? launchOptions.localPlan : null
     const isLocalizedScenario = Boolean(specificJurisdiction)
     const selectedLocation = isLocalizedScenario
@@ -3843,7 +3883,7 @@ async function initCustomWorld(customScenario) {
     const sc = SCENARIOS[scenarioKey] || { name:customScenarioTitle(customScenario), desc:customScenarioSummary(customScenario) }
     const jurisdiction = customScenario?.location || normalizeJurisdictionType(room.exercise.jurisdiction || state.jurisdiction)
     const difficulty = customScenario?.difficulty || room.exercise.difficulty || state.difficulty
-    const specificJurisdiction = String(room.exercise.specificJurisdiction || '').trim()
+    const specificJurisdiction = normalizeJurisdictionDisplayName(room.exercise.specificJurisdiction)
     const isCustomScenario = scenarioKey === 'custom' && Boolean(customScenario)
     const isLocalizedScenario = !isCustomScenario && Boolean(specificJurisdiction)
     const selectedLocation = isCustomScenario
