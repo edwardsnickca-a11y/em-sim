@@ -1328,7 +1328,8 @@ ENDEX RESPONSE FORMAT — use this exact format when player types ENDEX:
     "communications": "Accuracy, timeliness, interoperability, public information, warning, and rumor control — what worked and what failed.",
     "strengths": "Specific things the player did well, grounded in their actual actions this session.",
     "criticalGaps": "Specific failures, delays, tactical-command drift, or missed emergency management actions — no softening.",
-    "doctrineReferences": "Relevant NIMS/ICS/NRF/ESF/community lifeline references tied directly to what happened in this scenario.",
+    "doctrineReferences": "Relevant NIMS/ICS/NRF/ESF/community lifeline references tied directly to what happened in this scenario. If local plan grounding was used during the exercise, local plan guidance takes precedence over generic doctrine for jurisdiction-specific findings.",
+    "planAlignment": "If any prior turn used local-plan grounding, provide a concise Plan Alignment assessment based only on plan-grounded claims and verified source metadata already present in the exercise history. Organize findings as plan-supported action, missed plan requirement, justified deviation, or plan silent/ambiguous as applicable. Do not invent plan language, sections, or requirements. If no local plan was used, return an empty string.",
     "recommendations": "Specific, actionable improvements calibrated to this role and jurisdiction. Not generic."
   }
 }`
@@ -1537,6 +1538,7 @@ function parseAarForPdf(rawText = '') {
     'RESOURCE & COORDINATION EFFECTIVENESS',
     'COMMUNICATIONS & INFORMATION MANAGEMENT',
     'DOCTRINE / REFERENCE NOTES',
+    'PLAN ALIGNMENT',
     'STRENGTHS',
     'CRITICAL GAPS',
     'RECOMMENDATIONS',
@@ -2026,6 +2028,9 @@ async function renderAarPdfV8(filename, rawText) {
   leftY = drawCard(leftX, leftY, colW, 'Resource & Coordination Effectiveness', sections['RESOURCE & COORDINATION EFFECTIVENESS'], colors.teal, 'chain', 8.0, 9.55, colors.panel) - 8
   leftY = drawCard(leftX, leftY, colW, 'Communications & Information Management', sections['COMMUNICATIONS & INFORMATION MANAGEMENT'], colors.cyan, 'comms', 8.0, 9.55, colors.panel) - 8
   leftY = drawCard(leftX, leftY, colW, 'Doctrine / Reference Notes', sections['DOCTRINE / REFERENCE NOTES'], colors.purple, 'book', 7.8, 9.3, colors.panel)
+  if (sections['PLAN ALIGNMENT']?.trim()) {
+    rightY = drawCard(rightX, rightY, colW, 'Plan Alignment', sections['PLAN ALIGNMENT'], colors.teal, 'clipboard', 7.8, 9.3, colors.panel2) - 8
+  }
   rightY = drawCard(rightX, rightY, colW, 'Recommendations', sections.RECOMMENDATIONS, colors.amber, 'bulb', 8.0, 9.55, colors.panel2)
   finishPage(2)
 
@@ -2767,15 +2772,35 @@ function AARDisplay({ aar, teamMode=false, teamAar=null, individualAar=null, all
   const endTime = simTime || 'ENDEX'
   const duration = `${turns || 0} turn${turns === 1 ? '' : 's'}`
   const clean = value => value || 'Not captured in this exercise record.'
+  const displayJurisdiction = worldState?.localizedJurisdiction || worldState?.location || jurisdiction || 'Unspecified'
+  const participantLabel = String(playerName || '').trim() || 'Name not entered'
+  const planGroundedTurns = (transcript || []).filter(entry => entry?.type === 'turn' && entry?.planGrounded)
+  const verifiedPlanSources = []
+  const seenPlanSources = new Set()
+  planGroundedTurns.forEach(entry => {
+    ;(entry.sources || []).forEach(source => {
+      const planName = String(source?.planName || 'Local Jurisdiction Plan').trim()
+      const section = String(source?.section || '').trim()
+      const page = Number.isFinite(Number(source?.page)) ? Number(source.page) : null
+      const key = `${planName}|${section}|${page ?? ''}`
+      if (seenPlanSources.has(key)) return
+      seenPlanSources.add(key)
+      verifiedPlanSources.push({ planName, section, page })
+    })
+  })
+  const fallbackPlanAlignment = planGroundedTurns.length
+    ? `Local plan grounding informed ${planGroundedTurns.length} exercise turn${planGroundedTurns.length === 1 ? '' : 's'}. ${verifiedPlanSources.length ? `Verified references used during live play: ${verifiedPlanSources.map(source => `${source.planName}${source.section ? ` — ${source.section}` : ''}${source.page !== null ? `, p. ${source.page}` : ''}`).join('; ')}.` : 'No verified source metadata was retained for the grounded turns.'} Specific alignment findings were not returned by the AAR model; no additional plan requirement is inferred here.`
+    : ''
+  const planAlignmentText = String(aar?.planAlignment || '').trim() || fallbackPlanAlignment
 
   function downloadAAR() {
     let report = `NEXUS EOC — AFTER-ACTION REVIEW\n`
     report += `${'='.repeat(72)}\n\n`
     report += `SCENARIO:        ${scenarioName}\n`
-    report += `JURISDICTION:    ${jurisdiction || 'Unspecified'}\n`
+    report += `JURISDICTION:    ${displayJurisdiction}\n`
     report += `ROLE:            ${role || 'EOC Director'}\n`
     report += `DIFFICULTY:      ${difficulty || 'Unspecified'}\n`
-    if (playerName) report += `PLAYER:          ${playerName}\n`
+    report += `PLAYER:          ${participantLabel}\n`
     if (worldState?.location) report += `LOCATION:        ${worldState.location}\n`
     report += `SESSION START:   ${startTime}\n`
     report += `SESSION END:     ${endTime}\n`
@@ -2789,6 +2814,7 @@ function AARDisplay({ aar, teamMode=false, teamAar=null, individualAar=null, all
       ['RESOURCE & COORDINATION EFFECTIVENESS', aar?.resourceCoordination],
       ['COMMUNICATIONS & INFORMATION MANAGEMENT', aar?.communications],
       ['DOCTRINE / REFERENCE NOTES', aar?.doctrineReferences],
+      ...(planAlignmentText ? [['PLAN ALIGNMENT', planAlignmentText]] : []),
       ['STRENGTHS', aar?.strengths],
       ['CRITICAL GAPS', aar?.criticalGaps],
       ['RECOMMENDATIONS', aar?.recommendations],
@@ -2952,7 +2978,7 @@ ${message.text}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(140px, 1fr))', gap:0 }}>
               {metaBox('Scenario', scenarioName, worldState?.location)}
               {metaBox('Position / Function', role || 'EOC Director')}
-              {metaBox('Jurisdiction', jurisdiction || 'Unspecified')}
+              {metaBox('Jurisdiction', displayJurisdiction)}
               {metaBox('Difficulty', difficulty || 'Unspecified')}
             </div>
 
@@ -2991,6 +3017,7 @@ ${message.text}
               {sectionCard({ title:'Resource & Coordination Effectiveness', icon:'⛓', accent:UI.cyan, content:aar?.resourceCoordination })}
               {sectionCard({ title:'Communications & Information Management', icon:'⌁', accent:UI.cyan, content:aar?.communications })}
               {sectionCard({ title:'Doctrine / Reference Notes', icon:'▰', accent:UI.purple, content:aar?.doctrineReferences })}
+              {planAlignmentText && sectionCard({ title:'Plan Alignment', icon:'▣', accent:UI.teal, content:planAlignmentText })}
             </div>
 
             <div style={{ display:'grid', gap:12 }}>
@@ -4260,6 +4287,7 @@ async function startCustomScenario(customScenario) {
     let began = false
 
     const AAR_KEYS = ['situationSummary','decisionLog','resourceCoordination','communications','strengths','criticalGaps','doctrineReferences','recommendations']
+    const OPTIONAL_AAR_KEYS = ['planAlignment']
     const AAR_ALIASES = {
       situationSummary:['situationSummary','situation_summary','summary','overview','roleContribution','role_contribution'],
       decisionLog:['decisionLog','decision_log','decisions','decisionReview','decision_review','roleDecisions','role_decisions'],
@@ -4269,6 +4297,7 @@ async function startCustomScenario(customScenario) {
       criticalGaps:['criticalGaps','critical_gaps','gaps','areasForImprovement','areas_for_improvement','individualGaps','individual_gaps'],
       doctrineReferences:['doctrineReferences','doctrine_references','doctrine','references','doctrineNotes','doctrine_notes'],
       recommendations:['recommendations','correctiveActions','corrective_actions','improvements','roleRecommendations','role_recommendations'],
+      planAlignment:['planAlignment','plan_alignment','localPlanAlignment','local_plan_alignment'],
     }
 
     const aarText = value => {
@@ -4279,7 +4308,7 @@ async function startCustomScenario(customScenario) {
 
     const normalizeAar = candidate => {
       const source = candidate && typeof candidate === 'object' ? candidate : {}
-      return Object.fromEntries(AAR_KEYS.map(key => {
+      return Object.fromEntries([...AAR_KEYS, ...OPTIONAL_AAR_KEYS].map(key => {
         const alias = AAR_ALIASES[key].find(name => aarText(source[name]))
         return [key, alias ? aarText(source[alias]) : '']
       }))
