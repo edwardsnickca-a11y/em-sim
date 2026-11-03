@@ -2,7 +2,7 @@ const net = require('node:net');
 const tls = require('node:tls');
 const crypto = require('node:crypto');
 
-const OPENAI_TIMEOUT_MS = 105000;
+const ANTHROPIC_TIMEOUT_MS = 105000;
 const RATE_WINDOW_SECONDS = 10 * 60;
 const RATE_LIMIT_REQUESTS = 120;
 const REDIS_TIMEOUT_MS = 5000;
@@ -154,8 +154,8 @@ function validateRequestBody(body) {
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
 
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('chat error: OPENAI_API_KEY is not configured');
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('chat error: ANTHROPIC_API_KEY is not configured');
     return sendJson(res, 500, { error: 'AI service is not configured for this deployment.' });
   }
 
@@ -174,58 +174,42 @@ module.exports = async function handler(req, res) {
 
   const { system, messages } = req.body;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), ANTHROPIC_TIMEOUT_MS);
 
   try {
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-5.6',
-        max_output_tokens: 4000,
-        input: [
-          { role: 'developer', content: system },
-          ...messages,
-        ],
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4000,
+        system,
+        messages,
       }),
     });
 
     const data = await response.json().catch(() => ({}));
-
     if (!response.ok) {
-      console.error('OpenAI request failed', { status: response.status, type: data?.error?.type });
-      if (response.status === 429) {
-        return sendJson(res, 503, { error: 'The AI service is temporarily rate limited. Please try again shortly.' });
-      }
-      if (response.status >= 500) {
-        return sendJson(res, 502, { error: 'The AI service is temporarily unavailable. Please try again.' });
-      }
+      console.error('Anthropic request failed', { status: response.status, type: data?.error?.type });
+      if (response.status === 429) return sendJson(res, 503, { error: 'The AI service is temporarily rate limited. Please try again shortly.' });
+      if (response.status >= 500) return sendJson(res, 502, { error: 'The AI service is temporarily unavailable. Please try again.' });
       return sendJson(res, 502, { error: 'The AI service rejected the request. Please try again.' });
     }
 
-    const outputText = (data?.output || [])
-      .flatMap(item => item?.content || [])
-      .filter(item => item?.type === 'output_text' && typeof item?.text === 'string')
-      .map(item => item.text)
-      .join('')
-      .trim();
-
-    if (!outputText) {
-      console.error('OpenAI returned an empty response');
+    if (!data?.content?.[0]?.text) {
+      console.error('Anthropic returned an empty response');
       return sendJson(res, 502, { error: 'The AI service returned an empty response. Please try again.' });
     }
 
-    // Keep the existing NEXUS frontend contract unchanged.
-    return sendJson(res, 200, {
-      content: [{ type: 'text', text: outputText }],
-    });
+    return sendJson(res, 200, data);
   } catch (err) {
     if (err?.name === 'AbortError') {
-      console.error('OpenAI request timed out');
+      console.error('Anthropic request timed out');
       return sendJson(res, 504, { error: 'The AI request timed out. Please try again.' });
     }
     console.error('chat error', err);
