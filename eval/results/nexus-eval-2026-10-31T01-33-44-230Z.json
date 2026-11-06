@@ -1,0 +1,750 @@
+{
+  "generatedAt": "2026-10-31T01:33:44.231Z",
+  "summary": [
+    {
+      "key": "mock:mock-nexus-1",
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "runs": 12,
+      "passRate": 1,
+      "avgLatency": 5,
+      "jsonRate": 1,
+      "avgInputTokens": 0,
+      "avgOutputTokens": 0
+    }
+  ],
+  "rows": [
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "std-001",
+      "category": "standard-turn",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"Wake County Emergency Management Duty Officer reports approximately 1,200 residents need transportation assistance; only two accessible transit vehicles are confirmed as of 0830, with remaining fleet status unverified.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "Wake County Emergency Management Duty Officer reports approximately 1,200 residents need transportation assistance; only two accessible transit vehicles are confirmed as of 0830, with remaining fleet status unverified."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "std-002",
+      "category": "standard-turn",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"County operations reports conditions remain constrained while partner agencies verify current resource status.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County operations reports conditions remain constrained while partner agencies verify current resource status."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "std-003",
+      "category": "standard-turn",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"County operations reports conditions remain constrained while partner agencies verify current resource status.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County operations reports conditions remain constrained while partner agencies verify current resource status."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "std-004",
+      "category": "standard-turn",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"County operations reports conditions remain constrained while partner agencies verify current resource status.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County operations reports conditions remain constrained while partner agencies verify current resource status."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"Wake County Emergency Management Duty Officer reports approximately 1,200 residents need transportation assistance; only two accessible transit vehicles are confirmed as of 0830, with remaining fleet status unverified.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "Wake County Emergency Management Duty Officer reports approximately 1,200 residents need transportation assistance; only two accessible transit vehicles are confirmed as of 0830, with remaining fleet status unverified."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "flash-002",
+      "category": "flash-card",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"County operations reports conditions remain constrained while partner agencies verify current resource status.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County operations reports conditions remain constrained while partner agencies verify current resource status."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "flash-003",
+      "category": "flash-card",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"County operations reports conditions remain constrained while partner agencies verify current resource status.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County operations reports conditions remain constrained while partner agencies verify current resource status."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "flash-004",
+      "category": "flash-card",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"County operations reports conditions remain constrained while partner agencies verify current resource status.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "Okay, here is what we are getting back. Conditions are still developing and the resource picture remains incomplete. The current action improves situational awareness, but unresolved coordination pressure remains.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County operations reports conditions remain constrained while partner agencies verify current resource status."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "plan-001",
+      "category": "local-plan",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"The supplied plan language addresses the cited responsibility, but it does not establish requirements beyond that text. Operational judgment still applies where the plan is silent. [[PLAN_SOURCE_1]]\",\"situation\":\"DEVELOPING\",\"planGrounded\":true,\"sources\":[],\"dispatches\":[\"County operations reports conditions remain constrained while partner agencies verify current resource status.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "The supplied plan language addresses the cited responsibility, but it does not establish requirements beyond that text. Operational judgment still applies where the plan is silent. [[PLAN_SOURCE_1]]",
+        "situation": "DEVELOPING",
+        "planGrounded": true,
+        "sources": [],
+        "dispatches": [
+          "County operations reports conditions remain constrained while partner agencies verify current resource status."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "plan-002",
+      "category": "local-plan",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"The supplied plan language addresses the cited responsibility, but it does not establish requirements beyond that text. Operational judgment still applies where the plan is silent. [[PLAN_SOURCE_1]]\",\"situation\":\"DEVELOPING\",\"planGrounded\":true,\"sources\":[],\"dispatches\":[\"County operations reports conditions remain constrained while partner agencies verify current resource status.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "The supplied plan language addresses the cited responsibility, but it does not establish requirements beyond that text. Operational judgment still applies where the plan is silent. [[PLAN_SOURCE_1]]",
+        "situation": "DEVELOPING",
+        "planGrounded": true,
+        "sources": [],
+        "dispatches": [
+          "County operations reports conditions remain constrained while partner agencies verify current resource status."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "plan-003",
+      "category": "local-plan",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"The supplied plan language addresses the cited responsibility, but it does not establish requirements beyond that text. Operational judgment still applies where the plan is silent. [[PLAN_SOURCE_1]]\",\"situation\":\"DEVELOPING\",\"planGrounded\":true,\"sources\":[],\"dispatches\":[\"County operations reports conditions remain constrained while partner agencies verify current resource status.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "The supplied plan language addresses the cited responsibility, but it does not establish requirements beyond that text. Operational judgment still applies where the plan is silent. [[PLAN_SOURCE_1]]",
+        "situation": "DEVELOPING",
+        "planGrounded": true,
+        "sources": [],
+        "dispatches": [
+          "County operations reports conditions remain constrained while partner agencies verify current resource status."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "model": "mock-nexus-1",
+      "caseId": "plan-004",
+      "category": "local-plan",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 5,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "failures": [],
+      "rawText": "{\"time\":\"0900\",\"consequence\":\"The supplied plan language addresses the cited responsibility, but it does not establish requirements beyond that text. Operational judgment still applies where the plan is silent. [[PLAN_SOURCE_1]]\",\"situation\":\"DEVELOPING\",\"planGrounded\":true,\"sources\":[],\"dispatches\":[\"County operations reports conditions remain constrained while partner agencies verify current resource status.\"],\"prompt\":\"Resource availability and coordination remain unresolved at the EOC level.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Conditions developing.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Capacity pressure under review.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Primary systems available.\"},\"transport\":{\"status\":\"YELLOW\",\"reason\":\"Resource constraints reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No major impact reported.\"}}}",
+      "parsed": {
+        "time": "0900",
+        "consequence": "The supplied plan language addresses the cited responsibility, but it does not establish requirements beyond that text. Operational judgment still applies where the plan is silent. [[PLAN_SOURCE_1]]",
+        "situation": "DEVELOPING",
+        "planGrounded": true,
+        "sources": [],
+        "dispatches": [
+          "County operations reports conditions remain constrained while partner agencies verify current resource status."
+        ],
+        "prompt": "Resource availability and coordination remain unresolved at the EOC level.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Conditions developing."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Capacity pressure under review."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Primary systems available."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Resource constraints reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No major impact reported."
+          }
+        }
+      }
+    }
+  ]
+}

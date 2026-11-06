@@ -1,0 +1,69 @@
+{
+  "generatedAt": "2026-10-31T01:43:29.261Z",
+  "summary": [
+    {
+      "key": "openai:unknown",
+      "provider": "openai",
+      "model": "unknown",
+      "runs": 3,
+      "passRate": 0,
+      "avgLatency": 0,
+      "jsonRate": 0,
+      "avgInputTokens": 0,
+      "avgOutputTokens": 0
+    }
+  ],
+  "rows": [
+    {
+      "provider": "openai",
+      "model": "unknown",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 1,
+      "pass": false,
+      "jsonValid": false,
+      "latencyMs": 0,
+      "inputTokens": null,
+      "outputTokens": null,
+      "failures": [
+        "provider error: OPENAI_EVAL_MODEL is not set. Pin the exact model ID you want to evaluate."
+      ],
+      "rawText": "",
+      "parsed": null
+    },
+    {
+      "provider": "openai",
+      "model": "unknown",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 2,
+      "pass": false,
+      "jsonValid": false,
+      "latencyMs": 0,
+      "inputTokens": null,
+      "outputTokens": null,
+      "failures": [
+        "provider error: OPENAI_EVAL_MODEL is not set. Pin the exact model ID you want to evaluate."
+      ],
+      "rawText": "",
+      "parsed": null
+    },
+    {
+      "provider": "openai",
+      "model": "unknown",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 3,
+      "pass": false,
+      "jsonValid": false,
+      "latencyMs": 0,
+      "inputTokens": null,
+      "outputTokens": null,
+      "failures": [
+        "provider error: OPENAI_EVAL_MODEL is not set. Pin the exact model ID you want to evaluate."
+      ],
+      "rawText": "",
+      "parsed": null
+    }
+  ]
+}

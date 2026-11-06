@@ -1,0 +1,2525 @@
+{
+  "generatedAt": "2026-10-31T01:54:00.545Z",
+  "summary": [
+    {
+      "key": "openai:gpt-5.6",
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "runs": 40,
+      "passRate": 1,
+      "avgLatency": 10271,
+      "jsonRate": 1,
+      "avgInputTokens": 996,
+      "avgOutputTokens": 750
+    }
+  ],
+  "rows": [
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 13220,
+      "inputTokens": 1014,
+      "outputTokens": 904,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"0830\",\n  \"consequence\": \"Confirmed accessible transportation capacity is substantially below the approximately 1,200 residents listed as needing assistance. The registry total may not reflect current locations, individual mobility requirements, or residents who have already made other arrangements. Unverified fleet status limits reliable evacuation planning and creates pressure on transportation, shelter access, and public messaging. The number of residents who will require an accessible vehicle remains unresolved.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance; current individual needs and locations have not been verified.\",\n    \"The transit agency confirms two accessible vehicles available as of 0830. The status of the remaining accessible fleet is unverified.\"\n  ],\n  \"prompt\": \"The EOC lacks a verified accessible transportation capacity estimate while potential evacuation demand remains uncertain.\",\n  \"headlines\": [],\n  \"pins\": [\n    {\n      \"label\": \"Wake County\",\n      \"type\": \"AFFECTED\",\n      \"lat\": 35.8032,\n      \"lng\": -78.5661,\n      \"note\": \"Countywide accessible transportation shortfall under assessment.\"\n    }\n  ],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Residents requiring transportation assistance may face delayed evacuation.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food supply disruption has been reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Transportation uncertainty may affect residents with medical or mobility needs.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption has been reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruption has been reported.\"\n    },\n    \"transport\": {\n      \"status\": \"RED\",\n      \"reason\": \"Only two accessible vehicles are confirmed against a registry of approximately 1,200 residents needing assistance.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous materials issue has been reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water system disruption has been reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "0830",
+        "consequence": "Confirmed accessible transportation capacity is substantially below the approximately 1,200 residents listed as needing assistance. The registry total may not reflect current locations, individual mobility requirements, or residents who have already made other arrangements. Unverified fleet status limits reliable evacuation planning and creates pressure on transportation, shelter access, and public messaging. The number of residents who will require an accessible vehicle remains unresolved.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance; current individual needs and locations have not been verified.",
+          "The transit agency confirms two accessible vehicles available as of 0830. The status of the remaining accessible fleet is unverified."
+        ],
+        "prompt": "The EOC lacks a verified accessible transportation capacity estimate while potential evacuation demand remains uncertain.",
+        "headlines": [],
+        "pins": [
+          {
+            "label": "Wake County",
+            "type": "AFFECTED",
+            "lat": 35.8032,
+            "lng": -78.5661,
+            "note": "Countywide accessible transportation shortfall under assessment."
+          }
+        ],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents requiring transportation assistance may face delayed evacuation."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply disruption has been reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Transportation uncertainty may affect residents with medical or mobility needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption has been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption has been reported."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible vehicles are confirmed against a registry of approximately 1,200 residents needing assistance."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous materials issue has been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water system disruption has been reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 2,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 13831,
+      "inputTokens": 1014,
+      "outputTokens": 910,
+      "failures": [],
+      "rawText": "{\"time\":\"0845\",\"consequence\":\"The transportation-assistance population remains far larger than the currently confirmed accessible fleet. The registry total is a planning figure, and current pickup needs, vehicle capacities, and trip turnaround times have not been verified. That uncertainty is compressing the evacuation timeline and increasing pressure on transportation, sheltering, and health coordination. Additional fleet availability and the number of residents needing immediate movement remain unresolved.\",\"situation\":\"DETERIORATING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"The Emergency Management Duty Officer reports approximately 1,200 residents on the Special Needs Registry require transportation assistance; current pickup needs have not been verified.\",\"The transit agency confirms two accessible vehicles available as of 0830. The status of the remaining fleet is unverified.\"],\"prompt\":\"The unresolved EOC issue is the widening gap between registered transportation needs, confirmed accessible capacity, and the remaining evacuation window.\",\"headlines\":[],\"pins\":[{\"label\":\"Wake County\",\"type\":\"AFFECTED\",\"lat\":35.7796,\"lng\":-78.6382,\"note\":\"Accessible evacuation transportation capacity remains substantially unverified.\"}],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Residents needing transportation assistance may face delayed evacuation.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No food-system disruption is currently reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Transportation uncertainty may affect residents with access and functional needs.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No energy disruption is currently reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"No communications disruption is currently reported.\"},\"transport\":{\"status\":\"RED\",\"reason\":\"Only two accessible vehicles are confirmed against approximately 1,200 registered transportation-assistance needs.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No hazardous-materials issue is currently reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No water-system disruption is currently reported.\"}}}",
+      "parsed": {
+        "time": "0845",
+        "consequence": "The transportation-assistance population remains far larger than the currently confirmed accessible fleet. The registry total is a planning figure, and current pickup needs, vehicle capacities, and trip turnaround times have not been verified. That uncertainty is compressing the evacuation timeline and increasing pressure on transportation, sheltering, and health coordination. Additional fleet availability and the number of residents needing immediate movement remain unresolved.",
+        "situation": "DETERIORATING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 residents on the Special Needs Registry require transportation assistance; current pickup needs have not been verified.",
+          "The transit agency confirms two accessible vehicles available as of 0830. The status of the remaining fleet is unverified."
+        ],
+        "prompt": "The unresolved EOC issue is the widening gap between registered transportation needs, confirmed accessible capacity, and the remaining evacuation window.",
+        "headlines": [],
+        "pins": [
+          {
+            "label": "Wake County",
+            "type": "AFFECTED",
+            "lat": 35.7796,
+            "lng": -78.6382,
+            "note": "Accessible evacuation transportation capacity remains substantially unverified."
+          }
+        ],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents needing transportation assistance may face delayed evacuation."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system disruption is currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Transportation uncertainty may affect residents with access and functional needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption is currently reported."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible vehicles are confirmed against approximately 1,200 registered transportation-assistance needs."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue is currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system disruption is currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 3,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 12344,
+      "inputTokens": 1014,
+      "outputTokens": 848,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"0835\",\n  \"consequence\": \"Confirmed accessible transportation capacity is far below the registry’s estimated demand, although unverified vehicles cannot yet be counted as unavailable. The gap creates uncertainty around evacuation timing for residents who cannot use standard transportation. Delays could increase pressure on shelters, caregivers, and public information as conditions worsen. The number of registrants currently ready to evacuate and the usable capacity of the remaining fleet remain unresolved.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The Emergency Management Duty Officer reports approximately 1,200 registry residents require transportation assistance; the number currently ready to evacuate has not been validated.\",\n    \"The transit agency confirms two accessible vehicles available as of 0830; the status of the remaining fleet is unverified.\"\n  ],\n  \"prompt\": \"The EOC faces an unresolved accessible-transportation gap while both immediate demand and additional fleet capacity remain uncertain.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Residents needing transportation assistance may face delayed evacuation.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food supply disruption is currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Delayed movement may affect residents with medical or accessibility needs.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption is currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications outage is currently reported.\"\n    },\n    \"transport\": {\n      \"status\": \"RED\",\n      \"reason\": \"Only two accessible transit vehicles are confirmed against approximately 1,200 registered residents requiring assistance.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous materials issue is currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water system disruption is currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "0835",
+        "consequence": "Confirmed accessible transportation capacity is far below the registry’s estimated demand, although unverified vehicles cannot yet be counted as unavailable. The gap creates uncertainty around evacuation timing for residents who cannot use standard transportation. Delays could increase pressure on shelters, caregivers, and public information as conditions worsen. The number of registrants currently ready to evacuate and the usable capacity of the remaining fleet remain unresolved.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 registry residents require transportation assistance; the number currently ready to evacuate has not been validated.",
+          "The transit agency confirms two accessible vehicles available as of 0830; the status of the remaining fleet is unverified."
+        ],
+        "prompt": "The EOC faces an unresolved accessible-transportation gap while both immediate demand and additional fleet capacity remain uncertain.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents needing transportation assistance may face delayed evacuation."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply disruption is currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Delayed movement may affect residents with medical or accessibility needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications outage is currently reported."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible transit vehicles are confirmed against approximately 1,200 registered residents requiring assistance."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous materials issue is currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water system disruption is currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 4,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 11412,
+      "inputTokens": 1014,
+      "outputTokens": 821,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"0830\",\n  \"consequence\": \"The confirmed accessible transportation capacity is far below the approximately 1,200 registry entries indicating transportation assistance. The actual gap remains uncertain because the registry does not confirm who currently intends to evacuate, while most of the transit fleet has not been verified. This uncertainty puts pressure on evacuation timing, public messaging, and support for residents who cannot use standard transportation. Fleet availability and current resident demand remain unresolved.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry entries requiring transportation assistance; current evacuation intent has not been confirmed.\",\n    \"The transit agency confirms two accessible vehicles available as of 0830. The status of the remaining fleet is unverified.\"\n  ],\n  \"prompt\": \"The unresolved EOC issue is the scale and timing of the accessible transportation shortfall while both fleet availability and current resident demand remain uncertain.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Residents needing accessible transportation may face delayed evacuation.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food supply disruption is currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Transportation uncertainty may affect residents with medical or mobility needs.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption is currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruption is currently reported.\"\n    },\n    \"transport\": {\n      \"status\": \"RED\",\n      \"reason\": \"Only two accessible vehicles are confirmed against approximately 1,200 registry entries requiring transportation assistance.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous materials issue is currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water system disruption is currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "0830",
+        "consequence": "The confirmed accessible transportation capacity is far below the approximately 1,200 registry entries indicating transportation assistance. The actual gap remains uncertain because the registry does not confirm who currently intends to evacuate, while most of the transit fleet has not been verified. This uncertainty puts pressure on evacuation timing, public messaging, and support for residents who cannot use standard transportation. Fleet availability and current resident demand remain unresolved.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry entries requiring transportation assistance; current evacuation intent has not been confirmed.",
+          "The transit agency confirms two accessible vehicles available as of 0830. The status of the remaining fleet is unverified."
+        ],
+        "prompt": "The unresolved EOC issue is the scale and timing of the accessible transportation shortfall while both fleet availability and current resident demand remain uncertain.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents needing accessible transportation may face delayed evacuation."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply disruption is currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Transportation uncertainty may affect residents with medical or mobility needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption is currently reported."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible vehicles are confirmed against approximately 1,200 registry entries requiring transportation assistance."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous materials issue is currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water system disruption is currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 5,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 12687,
+      "inputTokens": 1014,
+      "outputTokens": 932,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"0845\",\n  \"consequence\": \"Confirmed accessible transportation capacity remains far below the approximately 1,200 registry entries indicating transportation assistance needs. The registry count may not reflect current locations, evacuation intentions, or the type of assistance each resident requires, so the operational gap is not yet measurable with confidence. Unverified fleet status is increasing pressure on evacuation timelines, public messaging, and coordination with human-services partners. It remains unclear how much additional accessible capacity exists or when it will be confirmed.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry entries indicating transportation assistance, but current evacuation intentions have not been verified.\",\n    \"The transit agency confirms two accessible vehicles available as of 0830; the status of the remaining fleet is unverified.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level issue is how the county will frame evacuation commitments while accessible transportation demand and available capacity remain uncertain.\",\n  \"headlines\": [],\n  \"pins\": [\n    {\n      \"label\": \"Wake County\",\n      \"type\": \"AFFECTED\",\n      \"lat\": 35.8032,\n      \"lng\": -78.5661,\n      \"note\": \"Accessible evacuation transportation capacity remains substantially unverified.\"\n    }\n  ],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Residents needing accessible transportation may face delayed evacuation.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system disruption is currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Some registry residents may have medical or functional needs that complicate transportation.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption is currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Resident status and transportation intentions have not been fully verified.\"\n    },\n    \"transport\": {\n      \"status\": \"RED\",\n      \"reason\": \"Only two accessible transit vehicles are confirmed against a registry of approximately 1,200 residents requiring assistance.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials issue is currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system disruption is currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "0845",
+        "consequence": "Confirmed accessible transportation capacity remains far below the approximately 1,200 registry entries indicating transportation assistance needs. The registry count may not reflect current locations, evacuation intentions, or the type of assistance each resident requires, so the operational gap is not yet measurable with confidence. Unverified fleet status is increasing pressure on evacuation timelines, public messaging, and coordination with human-services partners. It remains unclear how much additional accessible capacity exists or when it will be confirmed.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry entries indicating transportation assistance, but current evacuation intentions have not been verified.",
+          "The transit agency confirms two accessible vehicles available as of 0830; the status of the remaining fleet is unverified."
+        ],
+        "prompt": "The unresolved EOC-level issue is how the county will frame evacuation commitments while accessible transportation demand and available capacity remain uncertain.",
+        "headlines": [],
+        "pins": [
+          {
+            "label": "Wake County",
+            "type": "AFFECTED",
+            "lat": 35.8032,
+            "lng": -78.5661,
+            "note": "Accessible evacuation transportation capacity remains substantially unverified."
+          }
+        ],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents needing accessible transportation may face delayed evacuation."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system disruption is currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Some registry residents may have medical or functional needs that complicate transportation."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is currently reported."
+          },
+          "comms": {
+            "status": "YELLOW",
+            "reason": "Resident status and transportation intentions have not been fully verified."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible transit vehicles are confirmed against a registry of approximately 1,200 residents requiring assistance."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue is currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system disruption is currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 6,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 12869,
+      "inputTokens": 1014,
+      "outputTokens": 920,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"0830\",\n  \"consequence\": \"Confirmed accessible transportation capacity is far below the approximately 1,200 residents listed as needing assistance. The unverified fleet status prevents the EOC from determining the actual size and duration of the shortfall. Evacuation timing, public messaging, and support for residents with mobility needs are now under pressure. It remains unclear how many listed residents still require transportation or what additional accessible vehicles are available.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance; current individual transportation needs have not been validated.\",\n    \"The transit agency confirms two accessible vehicles available as of 0830. The status of the remaining fleet is unverified.\"\n  ],\n  \"prompt\": \"The EOC faces an unresolved accessible transportation gap while both actual demand and remaining fleet capacity are uncertain.\",\n  \"headlines\": [],\n  \"pins\": [\n    {\n      \"label\": \"Wake County\",\n      \"type\": \"AFFECTED\",\n      \"lat\": 35.8032,\n      \"lng\": -78.5661,\n      \"note\": \"Accessible evacuation transportation capacity remains uncertain.\"\n    }\n  ],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Residents requiring transportation assistance may face delayed evacuation.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system disruption is currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Transportation uncertainty may affect residents with access and functional needs.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption is currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruption is currently reported.\"\n    },\n    \"transport\": {\n      \"status\": \"RED\",\n      \"reason\": \"Only two accessible transit vehicles are confirmed against approximately 1,200 listed residents needing assistance.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials issue is currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system disruption is currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "0830",
+        "consequence": "Confirmed accessible transportation capacity is far below the approximately 1,200 residents listed as needing assistance. The unverified fleet status prevents the EOC from determining the actual size and duration of the shortfall. Evacuation timing, public messaging, and support for residents with mobility needs are now under pressure. It remains unclear how many listed residents still require transportation or what additional accessible vehicles are available.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance; current individual transportation needs have not been validated.",
+          "The transit agency confirms two accessible vehicles available as of 0830. The status of the remaining fleet is unverified."
+        ],
+        "prompt": "The EOC faces an unresolved accessible transportation gap while both actual demand and remaining fleet capacity are uncertain.",
+        "headlines": [],
+        "pins": [
+          {
+            "label": "Wake County",
+            "type": "AFFECTED",
+            "lat": 35.8032,
+            "lng": -78.5661,
+            "note": "Accessible evacuation transportation capacity remains uncertain."
+          }
+        ],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents requiring transportation assistance may face delayed evacuation."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system disruption is currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Transportation uncertainty may affect residents with access and functional needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption is currently reported."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible transit vehicles are confirmed against approximately 1,200 listed residents needing assistance."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue is currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system disruption is currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 7,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 10127,
+      "inputTokens": 1014,
+      "outputTokens": 772,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"0830\",\n  \"consequence\": \"The confirmed accessible transportation capacity is far below the approximately 1,200 residents listed as needing assistance. Because the remaining fleet status is unverified, the size and duration of the shortfall are still uncertain. This creates immediate pressure on evacuation planning, public messaging, and coordination with transportation partners. It remains unclear how many registrants will require service during the evacuation window.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance.\",\n    \"The Duty Officer confirms only two accessible transit vehicles are available at 0830; the status of the remaining transit fleet is unverified.\"\n  ],\n  \"prompt\": \"Accessible evacuation demand is substantially higher than confirmed capacity, while both actual demand and additional fleet availability remain unresolved.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Residents requiring accessible transportation may face evacuation delays.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system disruption is identified in the current update.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Transportation uncertainty may affect residents with access and functional needs.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption is identified in the current update.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruption is identified in the current update.\"\n    },\n    \"transport\": {\n      \"status\": \"RED\",\n      \"reason\": \"Only two accessible vehicles are confirmed against approximately 1,200 registered residents needing transportation assistance.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials issue is identified in the current update.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system disruption is identified in the current update.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "0830",
+        "consequence": "The confirmed accessible transportation capacity is far below the approximately 1,200 residents listed as needing assistance. Because the remaining fleet status is unverified, the size and duration of the shortfall are still uncertain. This creates immediate pressure on evacuation planning, public messaging, and coordination with transportation partners. It remains unclear how many registrants will require service during the evacuation window.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance.",
+          "The Duty Officer confirms only two accessible transit vehicles are available at 0830; the status of the remaining transit fleet is unverified."
+        ],
+        "prompt": "Accessible evacuation demand is substantially higher than confirmed capacity, while both actual demand and additional fleet availability remain unresolved.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents requiring accessible transportation may face evacuation delays."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system disruption is identified in the current update."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Transportation uncertainty may affect residents with access and functional needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is identified in the current update."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption is identified in the current update."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible vehicles are confirmed against approximately 1,200 registered residents needing transportation assistance."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue is identified in the current update."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system disruption is identified in the current update."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 8,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 13571,
+      "inputTokens": 1014,
+      "outputTokens": 909,
+      "failures": [],
+      "rawText": "{\"time\":\"0845\",\"consequence\":\"The accessible transportation picture remains materially incomplete. Approximately 1,200 registry entries may represent transportation needs, but the number requiring movement during this evacuation is not yet confirmed. With only two accessible vehicles verified, evacuation planning faces a potentially significant capacity gap and growing coordination pressure. The availability of the remaining fleet and any outside capacity remains unresolved.\",\"situation\":\"DETERIORATING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance. The number needing immediate evacuation remains unverified.\",\"The transit agency confirms two accessible vehicles are available as of 0830. Status of the remainder of the accessible fleet is still unknown.\"],\"prompt\":\"The unresolved EOC-level issue is how to size and coordinate accessible evacuation capacity while both actual demand and fleet availability remain uncertain.\",\"headlines\":[],\"pins\":[{\"label\":\"Wake County\",\"type\":\"AFFECTED\",\"lat\":35.8032,\"lng\":-78.5661,\"note\":\"Accessible evacuation transportation capacity remains unconfirmed.\"}],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Residents needing accessible transportation may face evacuation delays.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No food-system disruption is currently reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Transportation uncertainty may affect residents with medical or functional needs.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No energy-system disruption is currently reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"No communications outage is currently reported.\"},\"transport\":{\"status\":\"RED\",\"reason\":\"Only two accessible vehicles are confirmed against a registry of approximately 1,200 residents needing transportation assistance.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No hazardous-materials issue is currently reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No water-system disruption is currently reported.\"}}}",
+      "parsed": {
+        "time": "0845",
+        "consequence": "The accessible transportation picture remains materially incomplete. Approximately 1,200 registry entries may represent transportation needs, but the number requiring movement during this evacuation is not yet confirmed. With only two accessible vehicles verified, evacuation planning faces a potentially significant capacity gap and growing coordination pressure. The availability of the remaining fleet and any outside capacity remains unresolved.",
+        "situation": "DETERIORATING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance. The number needing immediate evacuation remains unverified.",
+          "The transit agency confirms two accessible vehicles are available as of 0830. Status of the remainder of the accessible fleet is still unknown."
+        ],
+        "prompt": "The unresolved EOC-level issue is how to size and coordinate accessible evacuation capacity while both actual demand and fleet availability remain uncertain.",
+        "headlines": [],
+        "pins": [
+          {
+            "label": "Wake County",
+            "type": "AFFECTED",
+            "lat": 35.8032,
+            "lng": -78.5661,
+            "note": "Accessible evacuation transportation capacity remains unconfirmed."
+          }
+        ],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents needing accessible transportation may face evacuation delays."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system disruption is currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Transportation uncertainty may affect residents with medical or functional needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system disruption is currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications outage is currently reported."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible vehicles are confirmed against a registry of approximately 1,200 residents needing transportation assistance."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue is currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system disruption is currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 9,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 10844,
+      "inputTokens": 1014,
+      "outputTokens": 824,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"0845\",\n  \"consequence\": \"Confirmed accessible transportation capacity remains far below the approximately 1,200 residents listed for assistance. The registry count indicates potential demand, but it does not confirm who currently intends to evacuate or what level of accommodation each person requires. This uncertainty is increasing pressure on evacuation timelines, public messaging, and resource coordination. The status of the remaining transit fleet is still unresolved.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The Emergency Management Duty Officer reports approximately 1,200 registry entries indicating transportation assistance needs. Current evacuation intent among those residents is not confirmed.\",\n    \"The transit agency confirms two accessible vehicles are available as of 0830. Availability and serviceability of the remaining fleet remain unverified.\"\n  ],\n  \"prompt\": \"The EOC faces a large potential accessible transportation gap while both actual demand and remaining fleet capacity remain uncertain.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Residents needing accessible transportation may face delayed evacuation if demand approaches the registry count.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food supply disruption is currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Transportation uncertainty may affect residents with medical, mobility, or functional needs.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption is currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications outage is currently reported.\"\n    },\n    \"transport\": {\n      \"status\": \"RED\",\n      \"reason\": \"Only two accessible vehicles are confirmed against a registry population of approximately 1,200.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous materials issue is currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water system disruption is currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "0845",
+        "consequence": "Confirmed accessible transportation capacity remains far below the approximately 1,200 residents listed for assistance. The registry count indicates potential demand, but it does not confirm who currently intends to evacuate or what level of accommodation each person requires. This uncertainty is increasing pressure on evacuation timelines, public messaging, and resource coordination. The status of the remaining transit fleet is still unresolved.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 registry entries indicating transportation assistance needs. Current evacuation intent among those residents is not confirmed.",
+          "The transit agency confirms two accessible vehicles are available as of 0830. Availability and serviceability of the remaining fleet remain unverified."
+        ],
+        "prompt": "The EOC faces a large potential accessible transportation gap while both actual demand and remaining fleet capacity remain uncertain.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents needing accessible transportation may face delayed evacuation if demand approaches the registry count."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply disruption is currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Transportation uncertainty may affect residents with medical, mobility, or functional needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications outage is currently reported."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible vehicles are confirmed against a registry population of approximately 1,200."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous materials issue is currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water system disruption is currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 10,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 13489,
+      "inputTokens": 1014,
+      "outputTokens": 976,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"0845\",\n  \"consequence\": \"Confirmed accessible transportation capacity remains far below the approximately 1,200 residents listed as needing assistance. The gap could delay movement of residents with mobility or medical support needs as evacuation operations continue. Because most fleet status is still unverified, the EOC cannot yet distinguish a temporary information gap from an actual resource shortage. The number of residents who will ultimately require transport also remains uncertain.\",\n  \"situation\": \"DETERIORATING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The Emergency Management Duty Officer reports approximately 1,200 residents on the Special Needs Registry require transportation assistance; actual demand during this evacuation remains uncertain.\",\n    \"The transit agency confirms only two accessible vehicles available as of 0830. Status of the remaining accessible fleet is unverified.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level issue is how to address the accessible transportation gap while both fleet availability and actual evacuation demand remain uncertain.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Residents needing accessible transportation may face delayed evacuation.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system disruption is reported in the current update.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Transportation delays may affect residents with medical or functional support needs.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system disruption is reported in the current update.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications-system failure is reported, though fleet status remains incomplete.\"\n    },\n    \"transport\": {\n      \"status\": \"RED\",\n      \"reason\": \"Only two accessible transit vehicles are confirmed against approximately 1,200 registered transportation needs.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impact is reported in the current update.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system disruption is reported in the current update.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "0845",
+        "consequence": "Confirmed accessible transportation capacity remains far below the approximately 1,200 residents listed as needing assistance. The gap could delay movement of residents with mobility or medical support needs as evacuation operations continue. Because most fleet status is still unverified, the EOC cannot yet distinguish a temporary information gap from an actual resource shortage. The number of residents who will ultimately require transport also remains uncertain.",
+        "situation": "DETERIORATING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 residents on the Special Needs Registry require transportation assistance; actual demand during this evacuation remains uncertain.",
+          "The transit agency confirms only two accessible vehicles available as of 0830. Status of the remaining accessible fleet is unverified."
+        ],
+        "prompt": "The unresolved EOC-level issue is how to address the accessible transportation gap while both fleet availability and actual evacuation demand remain uncertain.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents needing accessible transportation may face delayed evacuation."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system disruption is reported in the current update."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Transportation delays may affect residents with medical or functional support needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system disruption is reported in the current update."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications-system failure is reported, though fleet status remains incomplete."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible transit vehicles are confirmed against approximately 1,200 registered transportation needs."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impact is reported in the current update."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system disruption is reported in the current update."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-002",
+      "category": "flash-card",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 6741,
+      "inputTokens": 992,
+      "outputTokens": 542,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"14:30\",\n  \"consequence\": \"Emergency department capacity has tightened, and ambulance patient transfers are beginning to slow. The two extended holds reduce near-term ambulance availability and may increase response-time pressure if call volume rises. The hospital has not issued a diversion order, so normal patient routing remains in effect. It remains unclear whether the delays are temporary or the start of a broader capacity problem.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued.\"\n  ],\n  \"prompt\": \"The EOC faces uncertainty over whether current hospital congestion will begin affecting countywide EMS availability and healthcare access.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No broader public-safety impacts are currently reported.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system disruptions are currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"The primary emergency department is at 92 percent capacity and ambulance transfers are delayed.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruptions are currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruptions are currently reported.\"\n    },\n    \"transport\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Two ambulances are experiencing patient-transfer delays exceeding 30 minutes.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system disruptions are currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "14:30",
+        "consequence": "Emergency department capacity has tightened, and ambulance patient transfers are beginning to slow. The two extended holds reduce near-term ambulance availability and may increase response-time pressure if call volume rises. The hospital has not issued a diversion order, so normal patient routing remains in effect. It remains unclear whether the delays are temporary or the start of a broader capacity problem.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued."
+        ],
+        "prompt": "The EOC faces uncertainty over whether current hospital congestion will begin affecting countywide EMS availability and healthcare access.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No broader public-safety impacts are currently reported."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system disruptions are currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "The primary emergency department is at 92 percent capacity and ambulance transfers are delayed."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruptions are currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruptions are currently reported."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Two ambulances are experiencing patient-transfer delays exceeding 30 minutes."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system disruptions are currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-002",
+      "category": "flash-card",
+      "run": 2,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 9295,
+      "inputTokens": 992,
+      "outputTokens": 640,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"14:20\",\n  \"consequence\": \"Hospital throughput is tightening, and two ambulance crews remain unavailable while patients await transfer. The absence of a diversion order means normal routing continues despite limited emergency department capacity. Additional arrivals could increase offload delays and reduce countywide ambulance availability. It remains unclear whether this is a temporary backlog or a worsening capacity trend.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County health reports the primary hospital emergency department at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order is in effect.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level issue is how continued hospital congestion may affect healthcare access and ambulance availability across the county.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No broader public-safety disruption is currently reported.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"The primary emergency department is nearing capacity and ambulance offload delays are occurring.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system impacts are currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruptions are currently reported.\"\n    },\n    \"transport\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Two ambulances are delayed at the hospital and temporarily unavailable for response.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "14:20",
+        "consequence": "Hospital throughput is tightening, and two ambulance crews remain unavailable while patients await transfer. The absence of a diversion order means normal routing continues despite limited emergency department capacity. Additional arrivals could increase offload delays and reduce countywide ambulance availability. It remains unclear whether this is a temporary backlog or a worsening capacity trend.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County health reports the primary hospital emergency department at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order is in effect."
+        ],
+        "prompt": "The unresolved EOC-level issue is how continued hospital congestion may affect healthcare access and ambulance availability across the county.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No broader public-safety disruption is currently reported."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "The primary emergency department is nearing capacity and ambulance offload delays are occurring."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system impacts are currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruptions are currently reported."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Two ambulances are delayed at the hospital and temporarily unavailable for response."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-002",
+      "category": "flash-card",
+      "run": 3,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 6663,
+      "inputTokens": 992,
+      "outputTokens": 547,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"14:20\",\n  \"consequence\": \"Emergency care capacity is tightening, and ambulance turnaround delays are beginning to reduce transport availability elsewhere in the county. The absence of a diversion order means the primary hospital remains open to arrivals, but current conditions leave limited margin for a new surge. Hospital capacity, patient offload times, and effects on EMS coverage remain unresolved.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued.\"\n  ],\n  \"prompt\": \"The EOC faces growing health-system capacity pressure while the hospital remains open and ambulance availability may be declining.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No broader public-safety degradation is currently reported.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Emergency department capacity is high and ambulance offload delays are occurring.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system impacts are currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruptions are currently reported.\"\n    },\n    \"transport\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Two ambulances are delayed at the hospital, potentially reducing transport availability.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "14:20",
+        "consequence": "Emergency care capacity is tightening, and ambulance turnaround delays are beginning to reduce transport availability elsewhere in the county. The absence of a diversion order means the primary hospital remains open to arrivals, but current conditions leave limited margin for a new surge. Hospital capacity, patient offload times, and effects on EMS coverage remain unresolved.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued."
+        ],
+        "prompt": "The EOC faces growing health-system capacity pressure while the hospital remains open and ambulance availability may be declining.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No broader public-safety degradation is currently reported."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Emergency department capacity is high and ambulance offload delays are occurring."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system impacts are currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruptions are currently reported."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Two ambulances are delayed at the hospital, potentially reducing transport availability."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-002",
+      "category": "flash-card",
+      "run": 4,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 7629,
+      "inputTokens": 992,
+      "outputTokens": 610,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"14:20\",\n  \"consequence\": \"Emergency care capacity has tightened, with the primary hospital emergency department reporting 92 percent occupancy and two ambulances delayed more than 30 minutes. The delays may reduce near-term EMS transport availability even though the hospital has not issued a diversion order. Current conditions remain manageable, but another patient surge could create broader health-system and transport pressure. The duration of the ambulance holds remains unresolved.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level issue is whether existing hospital and EMS capacity can absorb another patient surge without wider service impacts.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No broader public-safety degradation is currently reported.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"High emergency department occupancy and ambulance holds are constraining patient movement.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption is reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruption is reported.\"\n    },\n    \"transport\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Ambulance turnaround delays may reduce short-term EMS transport availability.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impact is reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impact is reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "14:20",
+        "consequence": "Emergency care capacity has tightened, with the primary hospital emergency department reporting 92 percent occupancy and two ambulances delayed more than 30 minutes. The delays may reduce near-term EMS transport availability even though the hospital has not issued a diversion order. Current conditions remain manageable, but another patient surge could create broader health-system and transport pressure. The duration of the ambulance holds remains unresolved.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued."
+        ],
+        "prompt": "The unresolved EOC-level issue is whether existing hospital and EMS capacity can absorb another patient surge without wider service impacts.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No broader public-safety degradation is currently reported."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "High emergency department occupancy and ambulance holds are constraining patient movement."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption is reported."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Ambulance turnaround delays may reduce short-term EMS transport availability."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impact is reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impact is reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-002",
+      "category": "flash-card",
+      "run": 5,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 11416,
+      "inputTokens": 992,
+      "outputTokens": 909,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"T+00:15\",\n  \"consequence\": \"Hospital capacity has tightened, with the emergency department at 92 percent and two ambulances delayed more than 30 minutes. That reduces near-term surge margin and begins tying up transport resources. With no diversion order, the hospital’s formal receiving status has not changed. It remains unclear whether this is temporary congestion or the start of broader system saturation.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County health reports the primary hospital emergency department at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order is in effect.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level issue is whether hospital congestion and ambulance turnaround delays are becoming a wider healthcare-system capacity problem.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No broader public-safety impact has been reported.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impact has been reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Emergency department occupancy is high and ambulance patient transfers are delayed.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system impact has been reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruption has been reported.\"\n    },\n    \"transport\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Two ambulances are experiencing extended patient-transfer delays.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impact has been reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impact has been reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "T+00:15",
+        "consequence": "Hospital capacity has tightened, with the emergency department at 92 percent and two ambulances delayed more than 30 minutes. That reduces near-term surge margin and begins tying up transport resources. With no diversion order, the hospital’s formal receiving status has not changed. It remains unclear whether this is temporary congestion or the start of broader system saturation.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County health reports the primary hospital emergency department at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order is in effect."
+        ],
+        "prompt": "The unresolved EOC-level issue is whether hospital congestion and ambulance turnaround delays are becoming a wider healthcare-system capacity problem.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No broader public-safety impact has been reported."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impact has been reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Emergency department occupancy is high and ambulance patient transfers are delayed."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system impact has been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption has been reported."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Two ambulances are experiencing extended patient-transfer delays."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impact has been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impact has been reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-002",
+      "category": "flash-card",
+      "run": 6,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 8799,
+      "inputTokens": 992,
+      "outputTokens": 641,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"14:30\",\n  \"consequence\": \"The primary hospital emergency department is operating with limited remaining capacity, and ambulance transfer delays are beginning to tie up transport resources. No diversion order means patient flow continues under existing arrangements despite the holds. Pressure is increasing on countywide EMS availability and hospital coordination. It remains unclear whether this is a temporary surge or the start of broader capacity deterioration.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level issue is how growing hospital transfer delays may affect countywide emergency medical capacity if the surge continues.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No immediate public-safety degradation has been reported.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts have been reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Emergency department capacity is constrained and ambulance transfer delays are occurring.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system impacts have been reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruptions have been reported.\"\n    },\n    \"transport\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Ambulance availability may be affected while two units remain delayed at the hospital.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts have been reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts have been reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "14:30",
+        "consequence": "The primary hospital emergency department is operating with limited remaining capacity, and ambulance transfer delays are beginning to tie up transport resources. No diversion order means patient flow continues under existing arrangements despite the holds. Pressure is increasing on countywide EMS availability and hospital coordination. It remains unclear whether this is a temporary surge or the start of broader capacity deterioration.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued."
+        ],
+        "prompt": "The unresolved EOC-level issue is how growing hospital transfer delays may affect countywide emergency medical capacity if the surge continues.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No immediate public-safety degradation has been reported."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts have been reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Emergency department capacity is constrained and ambulance transfer delays are occurring."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system impacts have been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruptions have been reported."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Ambulance availability may be affected while two units remain delayed at the hospital."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts have been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts have been reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-002",
+      "category": "flash-card",
+      "run": 7,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 6524,
+      "inputTokens": 992,
+      "outputTokens": 519,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"14:30\",\n  \"consequence\": \"Emergency care capacity has tightened, but the hospital remains open and no diversion order is in effect. Ambulance patient handoff delays may reduce near-term EMS availability elsewhere in the county. It is unclear whether the congestion is temporary or the start of a broader capacity problem.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued.\"\n  ],\n  \"prompt\": \"The EOC faces uncertainty over whether hospital congestion will begin affecting countywide emergency medical coverage.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No broader public-safety degradation is currently reported.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"High emergency department occupancy and delayed ambulance handoffs are constraining acute-care capacity.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruptions are reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruptions are reported.\"\n    },\n    \"transport\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Two ambulances are temporarily unavailable during extended patient handoffs.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "14:30",
+        "consequence": "Emergency care capacity has tightened, but the hospital remains open and no diversion order is in effect. Ambulance patient handoff delays may reduce near-term EMS availability elsewhere in the county. It is unclear whether the congestion is temporary or the start of a broader capacity problem.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued."
+        ],
+        "prompt": "The EOC faces uncertainty over whether hospital congestion will begin affecting countywide emergency medical coverage.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No broader public-safety degradation is currently reported."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "High emergency department occupancy and delayed ambulance handoffs are constraining acute-care capacity."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruptions are reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruptions are reported."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Two ambulances are temporarily unavailable during extended patient handoffs."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-002",
+      "category": "flash-card",
+      "run": 8,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 8161,
+      "inputTokens": 992,
+      "outputTokens": 632,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"Current operational period\",\n  \"consequence\": \"Emergency care capacity is tightening, with the primary hospital emergency department reporting 92 percent occupancy. Ambulance patient handoffs exceeding 30 minutes are beginning to reduce EMS unit availability elsewhere in the county. The absence of a diversion order means arrivals continue under existing procedures. It remains unclear whether this is a short-term surge or the start of broader hospital capacity pressure.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued.\"\n  ],\n  \"prompt\": \"The EOC faces unresolved pressure around regional healthcare capacity, EMS availability, and whether hospital access conditions are likely to worsen.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No broader public-safety degradation is currently reported.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"High emergency department occupancy and delayed ambulance handoffs are constraining healthcare access.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system impacts are currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruptions are currently reported.\"\n    },\n    \"transport\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Two ambulances are delayed at the hospital, temporarily reducing EMS transport availability.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "Current operational period",
+        "consequence": "Emergency care capacity is tightening, with the primary hospital emergency department reporting 92 percent occupancy. Ambulance patient handoffs exceeding 30 minutes are beginning to reduce EMS unit availability elsewhere in the county. The absence of a diversion order means arrivals continue under existing procedures. It remains unclear whether this is a short-term surge or the start of broader hospital capacity pressure.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued."
+        ],
+        "prompt": "The EOC faces unresolved pressure around regional healthcare capacity, EMS availability, and whether hospital access conditions are likely to worsen.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No broader public-safety degradation is currently reported."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "High emergency department occupancy and delayed ambulance handoffs are constraining healthcare access."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system impacts are currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruptions are currently reported."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Two ambulances are delayed at the hospital, temporarily reducing EMS transport availability."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-002",
+      "category": "flash-card",
+      "run": 9,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 10427,
+      "inputTokens": 992,
+      "outputTokens": 710,
+      "failures": [],
+      "rawText": "{\"time\":\"Current exercise time\",\"consequence\":\"The primary hospital’s emergency department is operating with limited remaining capacity. Two extended ambulance holds are reducing near-term EMS availability and may lengthen response coverage if the delays continue. With no diversion order in effect, normal patient destination patterns remain unchanged. The duration of the holds and capacity at other receiving facilities remain unclear.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued.\"],\"prompt\":\"Hospital load, ambulance turnaround delays, and the lack of information on alternate receiving capacity remain unresolved health-system pressures.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Extended ambulance holds are beginning to constrain EMS availability.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No food supply impacts are reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"The primary emergency department is at 92 percent capacity with delayed ambulance transfers.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No energy impacts are reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"No communications impacts are reported.\"},\"transport\":{\"status\":\"GREEN\",\"reason\":\"No transportation network impacts are reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No hazardous materials impacts are reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No water system impacts are reported.\"}}}",
+      "parsed": {
+        "time": "Current exercise time",
+        "consequence": "The primary hospital’s emergency department is operating with limited remaining capacity. Two extended ambulance holds are reducing near-term EMS availability and may lengthen response coverage if the delays continue. With no diversion order in effect, normal patient destination patterns remain unchanged. The duration of the holds and capacity at other receiving facilities remain unclear.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County health reports the primary hospital emergency department is at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued."
+        ],
+        "prompt": "Hospital load, ambulance turnaround delays, and the lack of information on alternate receiving capacity remain unresolved health-system pressures.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Extended ambulance holds are beginning to constrain EMS availability."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply impacts are reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "The primary emergency department is at 92 percent capacity with delayed ambulance transfers."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy impacts are reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications impacts are reported."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "No transportation network impacts are reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous materials impacts are reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water system impacts are reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-002",
+      "category": "flash-card",
+      "run": 10,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 9257,
+      "inputTokens": 992,
+      "outputTokens": 713,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"14:30\",\n  \"consequence\": \"Hospital capacity is tightening, and ambulance patient transfers are beginning to delay units from returning to service. The absence of a diversion order means normal patient routing remains in effect despite reduced emergency department flexibility. If holds continue, EMS availability elsewhere in the county may narrow. It is not yet clear whether this is a temporary surge or the start of a broader capacity problem.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County health reports the primary hospital emergency department at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level issue is how much regional hospital and EMS capacity remains if emergency department delays continue.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No broader public-safety disruption is currently reported.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Emergency department capacity is constrained and ambulance transfers are delayed.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption is reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruption is reported.\"\n    },\n    \"transport\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Two ambulances remain delayed during patient transfer.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials issue is reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impact is reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "14:30",
+        "consequence": "Hospital capacity is tightening, and ambulance patient transfers are beginning to delay units from returning to service. The absence of a diversion order means normal patient routing remains in effect despite reduced emergency department flexibility. If holds continue, EMS availability elsewhere in the county may narrow. It is not yet clear whether this is a temporary surge or the start of a broader capacity problem.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County health reports the primary hospital emergency department at 92 percent capacity, with two ambulances holding patients for more than 30 minutes. No diversion order has been issued."
+        ],
+        "prompt": "The unresolved EOC-level issue is how much regional hospital and EMS capacity remains if emergency department delays continue.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No broader public-safety disruption is currently reported."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Emergency department capacity is constrained and ambulance transfers are delayed."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption is reported."
+          },
+          "transport": {
+            "status": "YELLOW",
+            "reason": "Two ambulances remain delayed during patient transfer."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue is reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impact is reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-003",
+      "category": "flash-card",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 12012,
+      "inputTokens": 987,
+      "outputTokens": 922,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"T+30 minutes\",\n  \"consequence\": \"Cellular service in the western part of the jurisdiction remains intermittent, and mobile-data delays are now affecting two partner agencies. Public-safety voice radio is still available, limiting immediate operational disruption, but routine information exchange is becoming less reliable. The degradation increases pressure on alternate communications and may slow coordination if conditions persist. The outage footprint, cause, and likely duration remain unclear.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County communications reports intermittent cellular service across the western part of the jurisdiction. The affected coverage area remains inconsistent.\",\n    \"Two partner agencies report delayed mobile-data traffic while voice radio remains functional. The effect on time-sensitive data exchange is not yet clear.\",\n    \"Public-safety communications staff report no interruption to radio voice traffic. Continued cellular instability is increasing reliance on radio and fixed connections.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level issue is how prolonged cellular degradation could affect partner coordination and public access to information.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Public-safety radio remains operational, with no reported voice interruption.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No healthcare-service impacts are currently reported.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system impacts are currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Intermittent cellular outages and delayed mobile data are affecting the western part of the jurisdiction.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No transportation impacts are currently reported.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "T+30 minutes",
+        "consequence": "Cellular service in the western part of the jurisdiction remains intermittent, and mobile-data delays are now affecting two partner agencies. Public-safety voice radio is still available, limiting immediate operational disruption, but routine information exchange is becoming less reliable. The degradation increases pressure on alternate communications and may slow coordination if conditions persist. The outage footprint, cause, and likely duration remain unclear.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County communications reports intermittent cellular service across the western part of the jurisdiction. The affected coverage area remains inconsistent.",
+          "Two partner agencies report delayed mobile-data traffic while voice radio remains functional. The effect on time-sensitive data exchange is not yet clear.",
+          "Public-safety communications staff report no interruption to radio voice traffic. Continued cellular instability is increasing reliance on radio and fixed connections."
+        ],
+        "prompt": "The unresolved EOC-level issue is how prolonged cellular degradation could affect partner coordination and public access to information.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "Public-safety radio remains operational, with no reported voice interruption."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are currently reported."
+          },
+          "health": {
+            "status": "GREEN",
+            "reason": "No healthcare-service impacts are currently reported."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system impacts are currently reported."
+          },
+          "comms": {
+            "status": "YELLOW",
+            "reason": "Intermittent cellular outages and delayed mobile data are affecting the western part of the jurisdiction."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "No transportation impacts are currently reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-003",
+      "category": "flash-card",
+      "run": 2,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 9032,
+      "inputTokens": 987,
+      "outputTokens": 706,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"T+00:15\",\n  \"consequence\": \"Intermittent cellular outages are disrupting routine communications across the western part of the jurisdiction. Public-safety radio remains operational, limiting immediate impact on field command and dispatch. Delayed mobile-data traffic is creating coordination friction for two partner agencies and may slow information sharing if conditions persist. The outage duration and potential for wider degradation remain unclear.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County communications reports intermittent cellular service across the western part of the jurisdiction; the cause and restoration timeline remain unknown.\",\n    \"Public-safety communications staff report the radio system remains operational with no confirmed interruption to voice traffic.\",\n    \"Duty officers from two partner agencies report delayed mobile-data traffic, affecting timely access to shared operational information.\"\n  ],\n  \"prompt\": \"The EOC faces growing coordination pressure if mobile-data delays expand beyond the two reporting partner agencies.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Public-safety radio remains operational, with no confirmed loss of emergency voice communications.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are reported.\"\n    },\n    \"health\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No healthcare service disruptions are reported.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system impacts are reported.\"\n    },\n    \"comms\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Intermittent cellular outages and delayed mobile-data traffic are affecting western-area connectivity.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No transportation impacts are reported.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "T+00:15",
+        "consequence": "Intermittent cellular outages are disrupting routine communications across the western part of the jurisdiction. Public-safety radio remains operational, limiting immediate impact on field command and dispatch. Delayed mobile-data traffic is creating coordination friction for two partner agencies and may slow information sharing if conditions persist. The outage duration and potential for wider degradation remain unclear.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County communications reports intermittent cellular service across the western part of the jurisdiction; the cause and restoration timeline remain unknown.",
+          "Public-safety communications staff report the radio system remains operational with no confirmed interruption to voice traffic.",
+          "Duty officers from two partner agencies report delayed mobile-data traffic, affecting timely access to shared operational information."
+        ],
+        "prompt": "The EOC faces growing coordination pressure if mobile-data delays expand beyond the two reporting partner agencies.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "Public-safety radio remains operational, with no confirmed loss of emergency voice communications."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are reported."
+          },
+          "health": {
+            "status": "GREEN",
+            "reason": "No healthcare service disruptions are reported."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system impacts are reported."
+          },
+          "comms": {
+            "status": "YELLOW",
+            "reason": "Intermittent cellular outages and delayed mobile-data traffic are affecting western-area connectivity."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "No transportation impacts are reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-003",
+      "category": "flash-card",
+      "run": 3,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 7646,
+      "inputTokens": 987,
+      "outputTokens": 617,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"14:20\",\n  \"consequence\": \"Cellular service in the western part of the county remains intermittent, while public-safety radio is still carrying operational traffic. Delayed mobile-data traffic is slowing information exchange with two partner agencies and may reduce the timeliness of status reporting. The outage pattern, duration, and effect on public access to emergency communications remain unclear.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County communications reports intermittent cellular outages across the western part of the jurisdiction. The geographic extent is still being assessed.\",\n    \"Two partner agencies report delayed mobile-data traffic affecting routine field updates. Public-safety radio remains operational.\",\n    \"The cellular provider acknowledges a service disruption but has not confirmed the cause or estimated restoration time.\"\n  ],\n  \"prompt\": \"The EOC faces increasing coordination and public-information pressure if cellular degradation expands or persists.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Public-safety radio remains operational, with no confirmed loss of emergency response communications.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Intermittent cellular service may affect public access and mobile-data exchange, though no healthcare disruption is confirmed.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system impacts are reported.\"\n    },\n    \"comms\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Cellular outages and delayed mobile-data traffic are affecting the western part of the jurisdiction.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No transportation impacts are reported.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "14:20",
+        "consequence": "Cellular service in the western part of the county remains intermittent, while public-safety radio is still carrying operational traffic. Delayed mobile-data traffic is slowing information exchange with two partner agencies and may reduce the timeliness of status reporting. The outage pattern, duration, and effect on public access to emergency communications remain unclear.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County communications reports intermittent cellular outages across the western part of the jurisdiction. The geographic extent is still being assessed.",
+          "Two partner agencies report delayed mobile-data traffic affecting routine field updates. Public-safety radio remains operational.",
+          "The cellular provider acknowledges a service disruption but has not confirmed the cause or estimated restoration time."
+        ],
+        "prompt": "The EOC faces increasing coordination and public-information pressure if cellular degradation expands or persists.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "Public-safety radio remains operational, with no confirmed loss of emergency response communications."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Intermittent cellular service may affect public access and mobile-data exchange, though no healthcare disruption is confirmed."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system impacts are reported."
+          },
+          "comms": {
+            "status": "YELLOW",
+            "reason": "Cellular outages and delayed mobile-data traffic are affecting the western part of the jurisdiction."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "No transportation impacts are reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-003",
+      "category": "flash-card",
+      "run": 4,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 10609,
+      "inputTokens": 987,
+      "outputTokens": 799,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"T+15 minutes\",\n  \"consequence\": \"Cellular service in the western part of the jurisdiction is now unreliable, though public-safety radio remains available. Delayed mobile-data traffic may slow routine information exchange and field reporting between partner agencies. The radio redundancy limits immediate life-safety impact, but communications staff are facing growing pressure to track which functions depend on cellular data. The outage boundary, cause, and likely duration remain unconfirmed.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County communications reports intermittent cellular outages across the western part of the jurisdiction. The affected coverage area remains uncertain.\",\n    \"Two partner agencies report delayed mobile-data traffic while public-safety radio continues operating normally. The effect on time-sensitive data exchange is not yet clear.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level issue is how much operational disruption the cellular and mobile-data degradation is creating across partner agencies.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Public-safety radio remains operational, with no confirmed interruption to emergency voice communications.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are reported.\"\n    },\n    \"health\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No confirmed disruption to healthcare operations is reported.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system impacts are reported.\"\n    },\n    \"comms\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Intermittent cellular outages and delayed mobile-data traffic are affecting western areas and partner agencies.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No transportation impacts are reported.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "T+15 minutes",
+        "consequence": "Cellular service in the western part of the jurisdiction is now unreliable, though public-safety radio remains available. Delayed mobile-data traffic may slow routine information exchange and field reporting between partner agencies. The radio redundancy limits immediate life-safety impact, but communications staff are facing growing pressure to track which functions depend on cellular data. The outage boundary, cause, and likely duration remain unconfirmed.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County communications reports intermittent cellular outages across the western part of the jurisdiction. The affected coverage area remains uncertain.",
+          "Two partner agencies report delayed mobile-data traffic while public-safety radio continues operating normally. The effect on time-sensitive data exchange is not yet clear."
+        ],
+        "prompt": "The unresolved EOC-level issue is how much operational disruption the cellular and mobile-data degradation is creating across partner agencies.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "Public-safety radio remains operational, with no confirmed interruption to emergency voice communications."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are reported."
+          },
+          "health": {
+            "status": "GREEN",
+            "reason": "No confirmed disruption to healthcare operations is reported."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system impacts are reported."
+          },
+          "comms": {
+            "status": "YELLOW",
+            "reason": "Intermittent cellular outages and delayed mobile-data traffic are affecting western areas and partner agencies."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "No transportation impacts are reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-003",
+      "category": "flash-card",
+      "run": 5,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 10868,
+      "inputTokens": 987,
+      "outputTokens": 628,
+      "failures": [],
+      "rawText": "{\"time\":\"09:20\",\"consequence\":\"Cellular service remains unreliable in the western part of the county while public-safety radio continues to function. Delayed mobile-data traffic is slowing information exchange for two partner agencies, creating gaps between field activity and shared operating information. The outage footprint, cause, and likely duration remain unclear, so additional coordination friction is possible if conditions persist.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"County communications reports intermittent cellular outages continuing in the western part of the jurisdiction. The full service footprint remains uncertain.\",\"Two partner-agency liaisons report delayed mobile-data traffic affecting routine information exchange. The duration of the delays is unknown.\",\"Public-safety dispatch reports radio service remains operational. Cellular degradation may still delay non-radio updates from field personnel.\"],\"prompt\":\"The unresolved EOC-level issue is how prolonged mobile-data delays could affect shared situational awareness and partner continuity.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"GREEN\",\"reason\":\"Public-safety radio remains operational despite cellular degradation.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No food-system impacts are reported.\"},\"health\":{\"status\":\"GREEN\",\"reason\":\"No health-service impacts are reported.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No energy-system impacts are reported.\"},\"comms\":{\"status\":\"YELLOW\",\"reason\":\"Intermittent cellular outages and delayed mobile data are affecting the western part of the jurisdiction.\"},\"transport\":{\"status\":\"GREEN\",\"reason\":\"No transportation impacts are reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No hazardous-materials impacts are reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No water-system impacts are reported.\"}}}",
+      "parsed": {
+        "time": "09:20",
+        "consequence": "Cellular service remains unreliable in the western part of the county while public-safety radio continues to function. Delayed mobile-data traffic is slowing information exchange for two partner agencies, creating gaps between field activity and shared operating information. The outage footprint, cause, and likely duration remain unclear, so additional coordination friction is possible if conditions persist.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County communications reports intermittent cellular outages continuing in the western part of the jurisdiction. The full service footprint remains uncertain.",
+          "Two partner-agency liaisons report delayed mobile-data traffic affecting routine information exchange. The duration of the delays is unknown.",
+          "Public-safety dispatch reports radio service remains operational. Cellular degradation may still delay non-radio updates from field personnel."
+        ],
+        "prompt": "The unresolved EOC-level issue is how prolonged mobile-data delays could affect shared situational awareness and partner continuity.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "Public-safety radio remains operational despite cellular degradation."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are reported."
+          },
+          "health": {
+            "status": "GREEN",
+            "reason": "No health-service impacts are reported."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system impacts are reported."
+          },
+          "comms": {
+            "status": "YELLOW",
+            "reason": "Intermittent cellular outages and delayed mobile data are affecting the western part of the jurisdiction."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "No transportation impacts are reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-003",
+      "category": "flash-card",
+      "run": 6,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 9829,
+      "inputTokens": 987,
+      "outputTokens": 663,
+      "failures": [],
+      "rawText": "{\"time\":\"T+15 minutes\",\"consequence\":\"Communications reliability has degraded across the western part of the jurisdiction, although the full geographic extent is not confirmed. Public-safety radio remains operational, limiting immediate impact on field voice communications. Delayed mobile-data traffic at two partner agencies is creating gaps in shared information and may slow status updates to the EOC. The cause, duration, and potential for wider disruption remain unresolved.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"County communications reports intermittent cellular service across the western part of the jurisdiction. The affected carriers and outage boundaries have not been confirmed.\",\"Public-safety dispatch reports radio systems remain operational with no sustained voice failures. Call volume and system loading are currently within normal ranges.\",\"Two partner agencies report delayed mobile-data traffic affecting field status updates and information exchange. Neither agency has reported a complete loss of connectivity.\"],\"prompt\":\"The EOC faces growing uncertainty about whether the communications degradation will remain localized or begin affecting public access and interagency coordination.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"GREEN\",\"reason\":\"Public-safety radio remains operational, with no reported loss of emergency voice communications.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No food supply or distribution impacts are reported.\"},\"health\":{\"status\":\"GREEN\",\"reason\":\"No healthcare communications or service disruptions are confirmed.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No power-system impacts are reported.\"},\"comms\":{\"status\":\"YELLOW\",\"reason\":\"Intermittent cellular outages and delayed partner mobile-data traffic are affecting western areas.\"},\"transport\":{\"status\":\"GREEN\",\"reason\":\"No transportation impacts are reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No hazardous-materials impacts are reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No water-system impacts are reported.\"}}}",
+      "parsed": {
+        "time": "T+15 minutes",
+        "consequence": "Communications reliability has degraded across the western part of the jurisdiction, although the full geographic extent is not confirmed. Public-safety radio remains operational, limiting immediate impact on field voice communications. Delayed mobile-data traffic at two partner agencies is creating gaps in shared information and may slow status updates to the EOC. The cause, duration, and potential for wider disruption remain unresolved.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County communications reports intermittent cellular service across the western part of the jurisdiction. The affected carriers and outage boundaries have not been confirmed.",
+          "Public-safety dispatch reports radio systems remain operational with no sustained voice failures. Call volume and system loading are currently within normal ranges.",
+          "Two partner agencies report delayed mobile-data traffic affecting field status updates and information exchange. Neither agency has reported a complete loss of connectivity."
+        ],
+        "prompt": "The EOC faces growing uncertainty about whether the communications degradation will remain localized or begin affecting public access and interagency coordination.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "Public-safety radio remains operational, with no reported loss of emergency voice communications."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply or distribution impacts are reported."
+          },
+          "health": {
+            "status": "GREEN",
+            "reason": "No healthcare communications or service disruptions are confirmed."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No power-system impacts are reported."
+          },
+          "comms": {
+            "status": "YELLOW",
+            "reason": "Intermittent cellular outages and delayed partner mobile-data traffic are affecting western areas."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "No transportation impacts are reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-003",
+      "category": "flash-card",
+      "run": 7,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 8573,
+      "inputTokens": 987,
+      "outputTokens": 680,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"10:20\",\n  \"consequence\": \"Cellular degradation is affecting routine coordination in the western part of the jurisdiction, while public-safety radio remains operational. Delayed mobile-data traffic may slow information exchange with partner agencies and reduce the timeliness of field status updates. The extent, duration, and cause of the disruption remain unclear, creating pressure around situational awareness and continuity of communications.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County communications reports intermittent cellular outages across the western part of the jurisdiction. The duration and geographic extent remain unconfirmed.\",\n    \"Two partner agencies report delayed mobile-data traffic affecting routine information exchange. Public-safety radio remains operational.\",\n    \"The cellular provider has acknowledged service disruption in the affected area. No estimated restoration time is available.\"\n  ],\n  \"prompt\": \"The EOC faces incomplete information on how long the communications degradation will persist and whether additional coordination functions will be affected.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Public-safety radio remains operational despite cellular service disruption.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are reported.\"\n    },\n    \"health\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No healthcare service impacts are reported.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system disruption is reported.\"\n    },\n    \"comms\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Intermittent cellular outages and delayed mobile-data traffic are affecting western-area communications.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No transportation impacts are reported.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "10:20",
+        "consequence": "Cellular degradation is affecting routine coordination in the western part of the jurisdiction, while public-safety radio remains operational. Delayed mobile-data traffic may slow information exchange with partner agencies and reduce the timeliness of field status updates. The extent, duration, and cause of the disruption remain unclear, creating pressure around situational awareness and continuity of communications.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County communications reports intermittent cellular outages across the western part of the jurisdiction. The duration and geographic extent remain unconfirmed.",
+          "Two partner agencies report delayed mobile-data traffic affecting routine information exchange. Public-safety radio remains operational.",
+          "The cellular provider has acknowledged service disruption in the affected area. No estimated restoration time is available."
+        ],
+        "prompt": "The EOC faces incomplete information on how long the communications degradation will persist and whether additional coordination functions will be affected.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "Public-safety radio remains operational despite cellular service disruption."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are reported."
+          },
+          "health": {
+            "status": "GREEN",
+            "reason": "No healthcare service impacts are reported."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system disruption is reported."
+          },
+          "comms": {
+            "status": "YELLOW",
+            "reason": "Intermittent cellular outages and delayed mobile-data traffic are affecting western-area communications."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "No transportation impacts are reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-003",
+      "category": "flash-card",
+      "run": 8,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 11477,
+      "inputTokens": 987,
+      "outputTokens": 818,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"10:15\",\n  \"consequence\": \"Intermittent cellular service loss is now affecting the western part of the jurisdiction. Public-safety radio remains available, limiting immediate operational impact, but delayed mobile-data traffic may slow information sharing between field agencies and the EOC. Increased reliance on voice traffic could add workload if conditions persist. The cause, geographic extent, and likely duration remain unconfirmed.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County communications reports intermittent cellular outages in the western part of the jurisdiction. The full service area and duration are not confirmed.\",\n    \"Two partner agencies report delayed mobile-data traffic affecting receipt of field information. The degree of operational impact remains unclear.\",\n    \"Public-safety communications staff report that radio voice service remains operational with no current degradation.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level pressure is maintaining reliable interagency information flow if cellular and mobile-data degradation continues.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No direct public-safety service interruption has been reported.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food supply or distribution impacts are reported.\"\n    },\n    \"health\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No healthcare service impacts are reported.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-sector disruption is reported.\"\n    },\n    \"comms\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Western cellular service is intermittent and two partner agencies are experiencing delayed mobile-data traffic.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No transportation impacts are reported.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "10:15",
+        "consequence": "Intermittent cellular service loss is now affecting the western part of the jurisdiction. Public-safety radio remains available, limiting immediate operational impact, but delayed mobile-data traffic may slow information sharing between field agencies and the EOC. Increased reliance on voice traffic could add workload if conditions persist. The cause, geographic extent, and likely duration remain unconfirmed.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County communications reports intermittent cellular outages in the western part of the jurisdiction. The full service area and duration are not confirmed.",
+          "Two partner agencies report delayed mobile-data traffic affecting receipt of field information. The degree of operational impact remains unclear.",
+          "Public-safety communications staff report that radio voice service remains operational with no current degradation."
+        ],
+        "prompt": "The unresolved EOC-level pressure is maintaining reliable interagency information flow if cellular and mobile-data degradation continues.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No direct public-safety service interruption has been reported."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply or distribution impacts are reported."
+          },
+          "health": {
+            "status": "GREEN",
+            "reason": "No healthcare service impacts are reported."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-sector disruption is reported."
+          },
+          "comms": {
+            "status": "YELLOW",
+            "reason": "Western cellular service is intermittent and two partner agencies are experiencing delayed mobile-data traffic."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "No transportation impacts are reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-003",
+      "category": "flash-card",
+      "run": 9,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 7671,
+      "inputTokens": 987,
+      "outputTokens": 580,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"15 minutes later\",\n  \"consequence\": \"Cellular service in the western part of the jurisdiction remains intermittent, while public-safety radio is still operating. Delayed mobile-data traffic is slowing information exchange for two partner agencies without fully isolating them. The immediate pressure is determining how broadly the degradation is affecting coordination and public access to communications. Duration and restoration estimates remain unknown.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County communications reports intermittent cellular outages continuing in the western part of the jurisdiction. The affected carriers and estimated restoration time remain unconfirmed.\",\n    \"Two partner agencies report delayed mobile-data traffic, although public-safety radio remains operational. The extent of impact on their routine information exchange is still being assessed.\"\n  ],\n  \"prompt\": \"The EOC faces uncertainty over whether the communications degradation will remain limited or begin affecting broader coordination and public access.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Public-safety radio remains operational, with no reported loss of emergency voice communications.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system impacts are reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Intermittent cellular service may affect public and partner-agency communications in the western area.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system disruption is reported.\"\n    },\n    \"comms\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Cellular outages and delayed mobile-data traffic are affecting part of the jurisdiction.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No transportation impacts are reported.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "15 minutes later",
+        "consequence": "Cellular service in the western part of the jurisdiction remains intermittent, while public-safety radio is still operating. Delayed mobile-data traffic is slowing information exchange for two partner agencies without fully isolating them. The immediate pressure is determining how broadly the degradation is affecting coordination and public access to communications. Duration and restoration estimates remain unknown.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County communications reports intermittent cellular outages continuing in the western part of the jurisdiction. The affected carriers and estimated restoration time remain unconfirmed.",
+          "Two partner agencies report delayed mobile-data traffic, although public-safety radio remains operational. The extent of impact on their routine information exchange is still being assessed."
+        ],
+        "prompt": "The EOC faces uncertainty over whether the communications degradation will remain limited or begin affecting broader coordination and public access.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "Public-safety radio remains operational, with no reported loss of emergency voice communications."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system impacts are reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Intermittent cellular service may affect public and partner-agency communications in the western area."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system disruption is reported."
+          },
+          "comms": {
+            "status": "YELLOW",
+            "reason": "Cellular outages and delayed mobile-data traffic are affecting part of the jurisdiction."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "No transportation impacts are reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-003",
+      "category": "flash-card",
+      "run": 10,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 7925,
+      "inputTokens": 987,
+      "outputTokens": 649,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"14:20\",\n  \"consequence\": \"Intermittent cellular outages are now affecting the western part of the county, while public-safety radio remains available. Delayed mobile-data traffic is slowing information exchange with partner agencies and may reduce the timeliness of field status updates. The immediate life-safety communications path remains intact, but coordination pressure will increase if cellular service degrades further. The outage footprint, cause, and restoration timeline remain unclear.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"County communications reports intermittent cellular outages across the western part of the jurisdiction; the extent and duration remain unconfirmed.\",\n    \"Two partner agencies report delayed mobile-data traffic, while their public-safety radio communications remain operational.\"\n  ],\n  \"prompt\": \"The EOC faces uncertainty over whether the communications disruption will remain limited or begin affecting broader coordination and public access.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Public-safety radio remains operational, with no reported loss of emergency voice communications.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food supply impacts are currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No healthcare service disruptions are currently reported.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No power-system impacts are currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Intermittent cellular outages and delayed mobile-data traffic are affecting western-area connectivity.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No transportation impacts are currently reported.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials impacts are currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system impacts are currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "14:20",
+        "consequence": "Intermittent cellular outages are now affecting the western part of the county, while public-safety radio remains available. Delayed mobile-data traffic is slowing information exchange with partner agencies and may reduce the timeliness of field status updates. The immediate life-safety communications path remains intact, but coordination pressure will increase if cellular service degrades further. The outage footprint, cause, and restoration timeline remain unclear.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "County communications reports intermittent cellular outages across the western part of the jurisdiction; the extent and duration remain unconfirmed.",
+          "Two partner agencies report delayed mobile-data traffic, while their public-safety radio communications remain operational."
+        ],
+        "prompt": "The EOC faces uncertainty over whether the communications disruption will remain limited or begin affecting broader coordination and public access.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "Public-safety radio remains operational, with no reported loss of emergency voice communications."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply impacts are currently reported."
+          },
+          "health": {
+            "status": "GREEN",
+            "reason": "No healthcare service disruptions are currently reported."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No power-system impacts are currently reported."
+          },
+          "comms": {
+            "status": "YELLOW",
+            "reason": "Intermittent cellular outages and delayed mobile-data traffic are affecting western-area connectivity."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "No transportation impacts are currently reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impacts are currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impacts are currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-004",
+      "category": "flash-card",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 7092,
+      "inputTokens": 992,
+      "outputTokens": 565,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"Current operational period\",\n  \"consequence\": \"Shelter occupancy will reach 454 when the inbound evacuees arrive, leaving 46 spaces under the facility rating. General capacity remains available, but accessible-cot capacity is nearly exhausted and may not match incoming access and functional needs. This creates pressure on shelter support and equitable accommodation while the needs of the inbound group remain unconfirmed.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The shelter manager reports 438 occupants, with 16 more evacuees en route to the 500-person facility. Only four accessible cots remain, and the incoming group’s accommodation needs are not yet known.\"\n  ],\n  \"prompt\": \"The EOC faces an emerging accessible-shelter capacity constraint before the needs of arriving evacuees are confirmed.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Shelter occupancy is increasing, with limited accessible sleeping capacity.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food supply constraint has been reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Accessible-cot inventory is nearly exhausted, potentially affecting evacuees with access or functional needs.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption has been reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Shelter status information is reaching the EOC.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Sixteen evacuees are en route with no reported transportation disruption.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-material condition has been reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water service constraint has been reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "Current operational period",
+        "consequence": "Shelter occupancy will reach 454 when the inbound evacuees arrive, leaving 46 spaces under the facility rating. General capacity remains available, but accessible-cot capacity is nearly exhausted and may not match incoming access and functional needs. This creates pressure on shelter support and equitable accommodation while the needs of the inbound group remain unconfirmed.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The shelter manager reports 438 occupants, with 16 more evacuees en route to the 500-person facility. Only four accessible cots remain, and the incoming group’s accommodation needs are not yet known."
+        ],
+        "prompt": "The EOC faces an emerging accessible-shelter capacity constraint before the needs of arriving evacuees are confirmed.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Shelter occupancy is increasing, with limited accessible sleeping capacity."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply constraint has been reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Accessible-cot inventory is nearly exhausted, potentially affecting evacuees with access or functional needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption has been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Shelter status information is reaching the EOC."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "Sixteen evacuees are en route with no reported transportation disruption."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-material condition has been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water service constraint has been reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-004",
+      "category": "flash-card",
+      "run": 2,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 10136,
+      "inputTokens": 992,
+      "outputTokens": 700,
+      "failures": [],
+      "rawText": "{\"time\":\"T+00:15\",\"consequence\":\"The shelter is projected to reach 454 occupants when the current evacuees arrive, leaving 46 spaces below its rated capacity. Accessible accommodations are under greater pressure, with only four accessible cots remaining. The accessibility needs of the incoming group have not been confirmed. Continued arrivals could create an accommodation shortfall before the facility reaches its overall occupancy limit.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"The shelter manager reports 438 occupants, 16 more en route, and four accessible cots remaining. Accessibility needs among the incoming evacuees are unknown.\"],\"prompt\":\"The unresolved EOC-level issue is how to maintain accessible shelter capacity if arrivals continue.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"GREEN\",\"reason\":\"No immediate security or life-safety issue has been reported at the shelter.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No food supply constraint has been reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Accessible shelter accommodations are nearing their current inventory limit.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No power disruption has been reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Shelter status reporting remains available.\"},\"transport\":{\"status\":\"GREEN\",\"reason\":\"Evacuee transportation is continuing, with 16 people currently en route.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No hazardous-materials condition has been reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No water or sanitation constraint has been reported.\"}}}",
+      "parsed": {
+        "time": "T+00:15",
+        "consequence": "The shelter is projected to reach 454 occupants when the current evacuees arrive, leaving 46 spaces below its rated capacity. Accessible accommodations are under greater pressure, with only four accessible cots remaining. The accessibility needs of the incoming group have not been confirmed. Continued arrivals could create an accommodation shortfall before the facility reaches its overall occupancy limit.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The shelter manager reports 438 occupants, 16 more en route, and four accessible cots remaining. Accessibility needs among the incoming evacuees are unknown."
+        ],
+        "prompt": "The unresolved EOC-level issue is how to maintain accessible shelter capacity if arrivals continue.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No immediate security or life-safety issue has been reported at the shelter."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply constraint has been reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Accessible shelter accommodations are nearing their current inventory limit."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No power disruption has been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Shelter status reporting remains available."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "Evacuee transportation is continuing, with 16 people currently en route."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials condition has been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water or sanitation constraint has been reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-004",
+      "category": "flash-card",
+      "run": 3,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 10481,
+      "inputTokens": 992,
+      "outputTokens": 794,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"Current operational period\",\n  \"consequence\": \"Projected occupancy rises to 454, leaving 46 spaces under the facility’s rated capacity. The broader constraint is accessible accommodation, with only four accessible cots remaining and no confirmed needs profile for the incoming evacuees. That mismatch could limit usable capacity before the shelter reaches its posted maximum. Shelter staffing, supply endurance, and alternative accessible space remain unconfirmed.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The shelter manager reports 438 occupants, 16 more en route, and four accessible cots remaining. Accessibility needs among the incoming evacuees are not yet confirmed.\"\n  ],\n  \"prompt\": \"Overall shelter space remains available, but accessible capacity may become the limiting factor before the facility reaches its rated maximum.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Shelter occupancy is increasing and usable capacity may be narrower than the posted total.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food supply constraint has been reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Only four accessible cots remain, with incoming accessibility needs unknown.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption has been reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Shelter status reporting remains functional.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Sixteen evacuees are reported en route without a transportation disruption.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials condition has been reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-service constraint has been reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "Current operational period",
+        "consequence": "Projected occupancy rises to 454, leaving 46 spaces under the facility’s rated capacity. The broader constraint is accessible accommodation, with only four accessible cots remaining and no confirmed needs profile for the incoming evacuees. That mismatch could limit usable capacity before the shelter reaches its posted maximum. Shelter staffing, supply endurance, and alternative accessible space remain unconfirmed.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The shelter manager reports 438 occupants, 16 more en route, and four accessible cots remaining. Accessibility needs among the incoming evacuees are not yet confirmed."
+        ],
+        "prompt": "Overall shelter space remains available, but accessible capacity may become the limiting factor before the facility reaches its rated maximum.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Shelter occupancy is increasing and usable capacity may be narrower than the posted total."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply constraint has been reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Only four accessible cots remain, with incoming accessibility needs unknown."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption has been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Shelter status reporting remains functional."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "Sixteen evacuees are reported en route without a transportation disruption."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials condition has been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-service constraint has been reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-004",
+      "category": "flash-card",
+      "run": 4,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 10985,
+      "inputTokens": 992,
+      "outputTokens": 774,
+      "failures": [],
+      "rawText": "{\"time\":\"19:30\",\"consequence\":\"The shelter census is approaching its rated limit, though the 16 incoming evacuees would bring occupancy to 454 and remain below 500. The tighter constraint is accessible sleeping capacity, with only four accessible cots left. Accessibility needs among those en route are unknown, leaving uncertain how much usable capacity will remain after arrival. Further evacuee movement could create overflow or accommodation pressure.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"The shelter manager reports 438 occupants against a rated capacity of 500, with 16 more evacuees en route. Four accessible cots remain, and accessibility needs among the incoming group are not yet confirmed.\"],\"prompt\":\"The EOC faces limited visibility on accessibility demand as remaining shelter capacity narrows.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Shelter occupancy is rising, and accessible sleeping capacity is nearly exhausted.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No food supply disruption has been reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Only four accessible cots remain, with incoming accessibility needs unknown.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No energy disruption has been reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Shelter status reporting remains available.\"},\"transport\":{\"status\":\"GREEN\",\"reason\":\"Sixteen evacuees are en route with no transportation disruption reported.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No hazardous-materials issue has been reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No water service disruption has been reported.\"}}}",
+      "parsed": {
+        "time": "19:30",
+        "consequence": "The shelter census is approaching its rated limit, though the 16 incoming evacuees would bring occupancy to 454 and remain below 500. The tighter constraint is accessible sleeping capacity, with only four accessible cots left. Accessibility needs among those en route are unknown, leaving uncertain how much usable capacity will remain after arrival. Further evacuee movement could create overflow or accommodation pressure.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The shelter manager reports 438 occupants against a rated capacity of 500, with 16 more evacuees en route. Four accessible cots remain, and accessibility needs among the incoming group are not yet confirmed."
+        ],
+        "prompt": "The EOC faces limited visibility on accessibility demand as remaining shelter capacity narrows.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Shelter occupancy is rising, and accessible sleeping capacity is nearly exhausted."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply disruption has been reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Only four accessible cots remain, with incoming accessibility needs unknown."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption has been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Shelter status reporting remains available."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "Sixteen evacuees are en route with no transportation disruption reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue has been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water service disruption has been reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-004",
+      "category": "flash-card",
+      "run": 5,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 8601,
+      "inputTokens": 992,
+      "outputTokens": 647,
+      "failures": [],
+      "rawText": "{\"time\":\"Current operational period\",\"consequence\":\"Expected occupancy is now 454 of 500, leaving limited room for additional evacuees. The accessible-cot shortage may become binding before the facility reaches its overall capacity. This increases pressure on shelter coordination and resource availability if arrivals continue. The needs of the inbound group and likely near-term shelter demand remain unresolved.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"The shelter manager reports 438 occupants in a 500-person facility, with 16 more evacuees en route. Only four accessible cots remain, and the accommodation needs of the incoming group are not yet confirmed.\"],\"prompt\":\"The EOC faces a narrowing shelter-capacity margin while accessible accommodation demand remains uncertain.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Shelter capacity is tightening as additional evacuees continue to arrive.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No food supply disruption has been reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Only four accessible cots remain, with incoming accommodation needs unknown.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No energy disruption has been reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"No communications disruption has been reported.\"},\"transport\":{\"status\":\"GREEN\",\"reason\":\"Evacuees are en route with no reported transportation disruption.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No hazardous-materials issue has been reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No water service disruption has been reported.\"}}}",
+      "parsed": {
+        "time": "Current operational period",
+        "consequence": "Expected occupancy is now 454 of 500, leaving limited room for additional evacuees. The accessible-cot shortage may become binding before the facility reaches its overall capacity. This increases pressure on shelter coordination and resource availability if arrivals continue. The needs of the inbound group and likely near-term shelter demand remain unresolved.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The shelter manager reports 438 occupants in a 500-person facility, with 16 more evacuees en route. Only four accessible cots remain, and the accommodation needs of the incoming group are not yet confirmed."
+        ],
+        "prompt": "The EOC faces a narrowing shelter-capacity margin while accessible accommodation demand remains uncertain.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Shelter capacity is tightening as additional evacuees continue to arrive."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply disruption has been reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Only four accessible cots remain, with incoming accommodation needs unknown."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption has been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption has been reported."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "Evacuees are en route with no reported transportation disruption."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue has been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water service disruption has been reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-004",
+      "category": "flash-card",
+      "run": 6,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 10038,
+      "inputTokens": 992,
+      "outputTokens": 709,
+      "failures": [],
+      "rawText": "{\"time\":\"T+15 minutes\",\"consequence\":\"Projected shelter occupancy has increased to 454, leaving 46 spaces within the facility’s rated capacity. The accessible-cot inventory is more constrained, with only four remaining before the incoming evacuees arrive. This creates pressure around equitable accommodation even though overall bed space remains available. The access and functional needs of the incoming group are not yet confirmed.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"The shelter manager reports 438 occupants at a 500-person facility, with 16 more evacuees en route. Only four accessible cots remain, leaving accommodation for evacuees with access and functional needs uncertain.\"],\"prompt\":\"The EOC faces an unresolved capacity issue if incoming or later evacuees require more accessible accommodations than the shelter can support.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Shelter crowding is increasing, though the facility remains below its rated capacity.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No food supply or feeding disruption has been reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Accessible sleeping accommodations are nearly exhausted, and incoming needs are unknown.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No energy disruption has been reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"No communications disruption has been reported.\"},\"transport\":{\"status\":\"GREEN\",\"reason\":\"Additional evacuees are en route with no reported transportation interruption.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No hazardous-materials condition has been reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No water service disruption has been reported.\"}}}",
+      "parsed": {
+        "time": "T+15 minutes",
+        "consequence": "Projected shelter occupancy has increased to 454, leaving 46 spaces within the facility’s rated capacity. The accessible-cot inventory is more constrained, with only four remaining before the incoming evacuees arrive. This creates pressure around equitable accommodation even though overall bed space remains available. The access and functional needs of the incoming group are not yet confirmed.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The shelter manager reports 438 occupants at a 500-person facility, with 16 more evacuees en route. Only four accessible cots remain, leaving accommodation for evacuees with access and functional needs uncertain."
+        ],
+        "prompt": "The EOC faces an unresolved capacity issue if incoming or later evacuees require more accessible accommodations than the shelter can support.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Shelter crowding is increasing, though the facility remains below its rated capacity."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply or feeding disruption has been reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Accessible sleeping accommodations are nearly exhausted, and incoming needs are unknown."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption has been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption has been reported."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "Additional evacuees are en route with no reported transportation interruption."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials condition has been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water service disruption has been reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-004",
+      "category": "flash-card",
+      "run": 7,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 13086,
+      "inputTokens": 992,
+      "outputTokens": 866,
+      "failures": [],
+      "rawText": "{\"time\":\"20:15\",\"consequence\":\"Shelter occupancy is at 438 and will rise to 454 if all evacuees en route arrive, leaving 46 spaces below the facility rating. Accessible-cot inventory has fallen to four, but the accessibility needs of the incoming group are not yet confirmed. Additional arrivals could create a functional capacity problem before the shelter reaches its overall limit. The likely pace and composition of further evacuees remain unresolved.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"The shelter manager reports 438 occupants, with 16 additional evacuees en route to the 500-person facility. Four accessible cots remain, and the incoming group’s accessibility needs are unknown.\"],\"prompt\":\"The unresolved EOC issue is whether accessible shelter capacity will remain adequate as arrivals continue.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"GREEN\",\"reason\":\"The shelter remains below its rated capacity, with no immediate safety issue reported.\"},\"food\":{\"status\":\"YELLOW\",\"reason\":\"Shelter capacity is tightening as additional evacuees arrive.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Only four accessible cots remain, and incoming accessibility needs are unknown.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No energy disruption is reported in this update.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"Shelter reporting remains available.\"},\"transport\":{\"status\":\"GREEN\",\"reason\":\"Evacuees are reported en route with no transportation disruption identified.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No hazardous-materials impact is reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No water-system impact is reported.\"}}}",
+      "parsed": {
+        "time": "20:15",
+        "consequence": "Shelter occupancy is at 438 and will rise to 454 if all evacuees en route arrive, leaving 46 spaces below the facility rating. Accessible-cot inventory has fallen to four, but the accessibility needs of the incoming group are not yet confirmed. Additional arrivals could create a functional capacity problem before the shelter reaches its overall limit. The likely pace and composition of further evacuees remain unresolved.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The shelter manager reports 438 occupants, with 16 additional evacuees en route to the 500-person facility. Four accessible cots remain, and the incoming group’s accessibility needs are unknown."
+        ],
+        "prompt": "The unresolved EOC issue is whether accessible shelter capacity will remain adequate as arrivals continue.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "The shelter remains below its rated capacity, with no immediate safety issue reported."
+          },
+          "food": {
+            "status": "YELLOW",
+            "reason": "Shelter capacity is tightening as additional evacuees arrive."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Only four accessible cots remain, and incoming accessibility needs are unknown."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is reported in this update."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Shelter reporting remains available."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "Evacuees are reported en route with no transportation disruption identified."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials impact is reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system impact is reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-004",
+      "category": "flash-card",
+      "run": 8,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 11297,
+      "inputTokens": 992,
+      "outputTokens": 821,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"14:30\",\n  \"consequence\": \"The shelter remains below its rated capacity, with projected occupancy reaching 454 when the inbound evacuees arrive. That leaves 46 general spaces, but only four accessible cots remain. Accessibility needs among the incoming evacuees are not yet known, creating pressure that the facility’s overall capacity figure does not capture. Additional arrivals could turn the accessible-cot shortage into the shelter’s binding constraint.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The shelter manager reports 438 occupants, with 16 more evacuees en route to the 500-person facility. Four accessible cots remain, and accessibility needs among the inbound group are unknown.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level issue is how to maintain accessible shelter capacity if additional evacuees arrive.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Shelter occupancy is increasing, and accessible accommodations are nearing exhaustion.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food supply disruption has been reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Limited accessible-cot inventory may affect evacuees with access and functional needs.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption has been reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruption has been reported.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Inbound evacuee transport is continuing without a reported disruption.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials issue has been reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system disruption has been reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "14:30",
+        "consequence": "The shelter remains below its rated capacity, with projected occupancy reaching 454 when the inbound evacuees arrive. That leaves 46 general spaces, but only four accessible cots remain. Accessibility needs among the incoming evacuees are not yet known, creating pressure that the facility’s overall capacity figure does not capture. Additional arrivals could turn the accessible-cot shortage into the shelter’s binding constraint.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The shelter manager reports 438 occupants, with 16 more evacuees en route to the 500-person facility. Four accessible cots remain, and accessibility needs among the inbound group are unknown."
+        ],
+        "prompt": "The unresolved EOC-level issue is how to maintain accessible shelter capacity if additional evacuees arrive.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Shelter occupancy is increasing, and accessible accommodations are nearing exhaustion."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply disruption has been reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Limited accessible-cot inventory may affect evacuees with access and functional needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption has been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption has been reported."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "Inbound evacuee transport is continuing without a reported disruption."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue has been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system disruption has been reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-004",
+      "category": "flash-card",
+      "run": 9,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 11992,
+      "inputTokens": 992,
+      "outputTokens": 827,
+      "failures": [],
+      "rawText": "{\"time\":\"Current operational period\",\"consequence\":\"Shelter occupancy is at 438 of 500, with 16 more evacuees en route, bringing projected occupancy to 454 if all arrive. Overall space remains available, but only four accessible cots remain, so functional capacity may be reached before the facility limit. This is increasing pressure on mass-care resource coordination and access for evacuees with mobility or medical support needs. The accommodation needs of the incoming evacuees remain unconfirmed.\",\"situation\":\"DEVELOPING\",\"planGrounded\":false,\"sources\":[],\"dispatches\":[\"The shelter manager reports 438 occupants in a facility rated for 500. Sixteen evacuees are en route, and whether any require one of the four remaining accessible cots is unconfirmed.\"],\"prompt\":\"Accessible sheltering capacity is narrowing while additional arrivals and their accommodation needs remain uncertain.\",\"headlines\":[],\"pins\":[],\"lifelines\":{\"safety\":{\"status\":\"YELLOW\",\"reason\":\"Shelter space remains available, but accessible accommodation capacity is limited.\"},\"food\":{\"status\":\"GREEN\",\"reason\":\"No food supply or feeding disruption has been reported.\"},\"health\":{\"status\":\"YELLOW\",\"reason\":\"Limited accessible-cot inventory may affect evacuees with mobility or medical support needs.\"},\"energy\":{\"status\":\"GREEN\",\"reason\":\"No energy disruption has been reported.\"},\"comms\":{\"status\":\"GREEN\",\"reason\":\"No communications disruption has been reported.\"},\"transport\":{\"status\":\"GREEN\",\"reason\":\"Evacuees remain in transit with no reported transportation interruption.\"},\"hazmat\":{\"status\":\"GREEN\",\"reason\":\"No hazardous-materials issue has been reported.\"},\"water\":{\"status\":\"GREEN\",\"reason\":\"No water service disruption has been reported.\"}}}",
+      "parsed": {
+        "time": "Current operational period",
+        "consequence": "Shelter occupancy is at 438 of 500, with 16 more evacuees en route, bringing projected occupancy to 454 if all arrive. Overall space remains available, but only four accessible cots remain, so functional capacity may be reached before the facility limit. This is increasing pressure on mass-care resource coordination and access for evacuees with mobility or medical support needs. The accommodation needs of the incoming evacuees remain unconfirmed.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The shelter manager reports 438 occupants in a facility rated for 500. Sixteen evacuees are en route, and whether any require one of the four remaining accessible cots is unconfirmed."
+        ],
+        "prompt": "Accessible sheltering capacity is narrowing while additional arrivals and their accommodation needs remain uncertain.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Shelter space remains available, but accessible accommodation capacity is limited."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply or feeding disruption has been reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Limited accessible-cot inventory may affect evacuees with mobility or medical support needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption has been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption has been reported."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "Evacuees remain in transit with no reported transportation interruption."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue has been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water service disruption has been reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-004",
+      "category": "flash-card",
+      "run": 10,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 12173,
+      "inputTokens": 992,
+      "outputTokens": 957,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"Current operational period\",\n  \"consequence\": \"The shelter remains below rated capacity, and the 16 evacuees en route would bring occupancy to 454, leaving 46 spaces by headcount. Accessible-cot capacity is considerably tighter, with only four remaining. This creates a potential mismatch between nominal shelter space and the facility's ability to accommodate access and functional needs. The needs of the incoming evacuees remain unknown.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The shelter manager reports 438 occupants at the 500-person facility, with 16 more evacuees en route. Only four accessible cots remain, and the incoming group's accommodation needs are unknown.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level issue is whether projected shelter demand and accessibility needs can be absorbed at this facility without additional capacity.\",\n  \"headlines\": [],\n  \"pins\": [],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No immediate security or life-safety issue has been reported at the shelter.\"\n    },\n    \"food\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Shelter headcount remains within rated capacity, but accessible accommodations are constrained.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Only four accessible cots remain, and incoming evacuees' access and functional needs are unknown.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption has been reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Shelter reporting remains available.\"\n    },\n    \"transport\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"Sixteen evacuees are en route with no transportation disruption reported.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials issue has been reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-service constraint has been reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "Current operational period",
+        "consequence": "The shelter remains below rated capacity, and the 16 evacuees en route would bring occupancy to 454, leaving 46 spaces by headcount. Accessible-cot capacity is considerably tighter, with only four remaining. This creates a potential mismatch between nominal shelter space and the facility's ability to accommodate access and functional needs. The needs of the incoming evacuees remain unknown.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The shelter manager reports 438 occupants at the 500-person facility, with 16 more evacuees en route. Only four accessible cots remain, and the incoming group's accommodation needs are unknown."
+        ],
+        "prompt": "The unresolved EOC-level issue is whether projected shelter demand and accessibility needs can be absorbed at this facility without additional capacity.",
+        "headlines": [],
+        "pins": [],
+        "lifelines": {
+          "safety": {
+            "status": "GREEN",
+            "reason": "No immediate security or life-safety issue has been reported at the shelter."
+          },
+          "food": {
+            "status": "YELLOW",
+            "reason": "Shelter headcount remains within rated capacity, but accessible accommodations are constrained."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Only four accessible cots remain, and incoming evacuees' access and functional needs are unknown."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption has been reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "Shelter reporting remains available."
+          },
+          "transport": {
+            "status": "GREEN",
+            "reason": "Sixteen evacuees are en route with no transportation disruption reported."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue has been reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-service constraint has been reported."
+          }
+        }
+      }
+    }
+  ]
+}

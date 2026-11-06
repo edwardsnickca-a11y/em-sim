@@ -1,0 +1,34 @@
+[
+  {
+    "id":"flash-001",
+    "category":"flash-card",
+    "title":"Wake County accessible transportation shortfall",
+    "context":"Wake County hurricane evacuation. The Emergency Management Duty Officer reports that the Special Needs Registry lists approximately 1,200 residents requiring transportation assistance. As of 0830 only two accessible transit vehicles are confirmed available from the transit agency; the remainder of fleet status is unverified.",
+    "playerAction":"Advance the exercise and provide current dispatches.",
+    "expected":{"validJson":true,"dispatchRequired":true,"maxDispatchWords":45,"maxDispatchSentences":2,"forbidSourceConditionPipe":true,"neutralDispatch":true,"mustMentionAny":["1,200","1200","two accessible","2 accessible"]}
+  },
+  {
+    "id":"flash-002",
+    "category":"flash-card",
+    "title":"Hospital capacity status",
+    "context":"County health reports the primary hospital emergency department is at 92 percent capacity. Two ambulances are holding patients for more than 30 minutes. No diversion order has been issued.",
+    "playerAction":"Advance the exercise and provide current dispatches.",
+    "expected":{"validJson":true,"dispatchRequired":true,"maxDispatchWords":45,"maxDispatchSentences":2,"forbidSourceConditionPipe":true,"neutralDispatch":true}
+  },
+  {
+    "id":"flash-003",
+    "category":"flash-card",
+    "title":"Communications degradation",
+    "context":"County communications reports intermittent cellular outages in the western part of the jurisdiction. Public-safety radio remains operational, but two partner agencies report delayed mobile-data traffic.",
+    "playerAction":"Advance the exercise and provide current dispatches.",
+    "expected":{"validJson":true,"dispatchRequired":true,"maxDispatchWords":45,"maxDispatchSentences":2,"forbidSourceConditionPipe":true,"neutralDispatch":true}
+  },
+  {
+    "id":"flash-004",
+    "category":"flash-card",
+    "title":"Shelter capacity constraint",
+    "context":"The shelter manager reports 438 occupants in a facility rated for 500. Sixteen additional evacuees are en route and the accessible-cot inventory is down to four.",
+    "playerAction":"Advance the exercise and provide current dispatches.",
+    "expected":{"validJson":true,"dispatchRequired":true,"maxDispatchWords":45,"maxDispatchSentences":2,"forbidSourceConditionPipe":true,"neutralDispatch":true}
+  }
+]

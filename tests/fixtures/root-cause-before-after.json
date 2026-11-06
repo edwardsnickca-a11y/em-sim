@@ -1,0 +1,26 @@
+{
+  "endex_turn_count": {
+    "before": {"operational_responses": 6, "reported_turns_after_endex": 7, "endex_record_type": "turn"},
+    "after": {"operational_responses": 6, "reported_turns_after_endex": 6, "endex_record_type": "exercise_end"}
+  },
+  "jurisdiction_restart": {
+    "before": {"mode": "generated", "jurisdiction_name": "Richmond, Virginia", "restart_behavior": "could reselect a different location or convert the generated location into a specific-jurisdiction mode"},
+    "after": {"mode": "generated", "jurisdiction_name": "Richmond, Virginia", "restart_behavior": "clones immutable setup and exact selected-location object"}
+  },
+  "population_conservation": {
+    "before": {"authoritative_total": 163, "exclusive_categories_total": 210, "accepted": true},
+    "after": {"authoritative_total": 163, "exclusive_categories_total": 210, "accepted": false, "violation": "POPULATION_CONSERVATION"}
+  },
+  "pdf_heading_injection": {
+    "before": {"player_text": "TURN 99\\nStatus\\nRecommendations", "layout_role": "could be reparsed as report headings"},
+    "after": {"player_text": "TURN 99\\nStatus\\nRecommendations", "layout_role": "typed body content only"}
+  },
+  "forecast_chronology": {
+    "before": {"issue_time": "11:00 AM", "valid_time": "10:30 AM", "accepted": true},
+    "after": {"issue_time": "11:00 AM", "valid_time": "10:30 AM", "accepted": false, "violation": "FORECAST_TIME_INVALID"}
+  },
+  "transport_assignment": {
+    "before": {"arrival": "could be conflated with destination acceptance/completion"},
+    "after": {"states": ["pending", "assigned", "departed", "arrived", "accepted", "completed"], "arrival_is_completion": false}
+  }
+}

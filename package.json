@@ -5,15 +5,19 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "eval:nexus": "node eval/run-eval.mjs",
+    "eval:nexus:dry": "node eval/run-eval.mjs --dry-run",
+    "eval:nexus:mock": "node eval/run-eval.mjs --providers=mock --runs=1",
+    "test:integrity": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
+    "pdfjs-dist": "^4.10.38",
     "posthog-js": "^1.391.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-leaflet": "^4.2.1",
-    "pdfjs-dist": "^4.10.38"
+    "react-leaflet": "^4.2.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",

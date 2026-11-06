@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "runsPerCase": 10,
+  "concurrency": 2,
+  "timeoutMs": 60000,
+  "providers": ["openai"],
+  "categories": ["standard-turn", "flash-card", "local-plan"]
+}

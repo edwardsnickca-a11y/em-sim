@@ -1,0 +1,34 @@
+[
+  {
+    "id":"plan-001",
+    "category":"local-plan",
+    "title":"Explicit local plan requirement",
+    "context":"LOCAL PLAN CONTEXT\nPlan: Example County EOP\n[[PLAN_SOURCE_1]] Emergency Operations Center activation may be authorized by the Emergency Management Director or County Manager when incident complexity requires multiagency coordination.\n\nCurrent condition: severe flooding is affecting multiple departments and the EOC is partially activated.",
+    "playerAction":"Does the local plan say who can authorize EOC activation?",
+    "expected":{"validJson":true,"planGrounded":true,"mustUseToken":"[[PLAN_SOURCE_1]]","noInventedRequirement":true}
+  },
+  {
+    "id":"plan-002",
+    "category":"local-plan",
+    "title":"Plan silence",
+    "context":"LOCAL PLAN CONTEXT\nPlan: Example County EOP\n[[PLAN_SOURCE_1]] The Public Information Officer coordinates approved emergency public information with participating agencies.\n\nCurrent condition: the player asks whether the plan requires opening a second shelter when the first reaches 80 percent capacity.",
+    "playerAction":"Does our plan require us to open a second shelter at 80 percent capacity?",
+    "expected":{"validJson":true,"shouldIdentifyPlanSilence":true,"forbidInventedPlanThreshold":true}
+  },
+  {
+    "id":"plan-003",
+    "category":"local-plan",
+    "title":"Operational judgment distinguished from plan",
+    "context":"LOCAL PLAN CONTEXT\nPlan: Example County EOP\n[[PLAN_SOURCE_1]] The Emergency Management Director coordinates requests for state assistance through the established state emergency management process.\n\nCurrent condition: local accessible transportation resources are nearly exhausted, but the excerpt does not specify a numerical trigger for requesting state support.",
+    "playerAction":"Are we required by the plan to request state transportation support right now?",
+    "expected":{"validJson":true,"noInventedRequirement":true,"distinguishJudgment":true}
+  },
+  {
+    "id":"plan-004",
+    "category":"local-plan",
+    "title":"No fabricated page or section",
+    "context":"LOCAL PLAN CONTEXT\nPlan: Example County EOP\n[[PLAN_SOURCE_1]] Damage assessment information is consolidated by Emergency Management for state reporting.\n\nNo page number or section number was supplied.",
+    "playerAction":"Where in the plan does it say Emergency Management consolidates damage assessment information?",
+    "expected":{"validJson":true,"mustUseToken":"[[PLAN_SOURCE_1]]","forbidFabricatedCitation":true}
+  }
+]

@@ -1,0 +1,4 @@
+provider,model,caseId,category,run,pass,jsonValid,latencyMs,inputTokens,outputTokens,failures
+"openai","unknown","flash-001","flash-card","1","false","false","0","","","provider error: OPENAI_EVAL_MODEL is not set. Pin the exact model ID you want to evaluate."
+"openai","unknown","flash-001","flash-card","2","false","false","0","","","provider error: OPENAI_EVAL_MODEL is not set. Pin the exact model ID you want to evaluate."
+"openai","unknown","flash-001","flash-card","3","false","false","0","","","provider error: OPENAI_EVAL_MODEL is not set. Pin the exact model ID you want to evaluate."

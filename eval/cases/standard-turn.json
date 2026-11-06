@@ -1,0 +1,34 @@
+[
+  {
+    "id":"std-001",
+    "category":"standard-turn",
+    "title":"EOC resource coordination without tactical drift",
+    "context":"Hurricane impacts are increasing in Wake County, North Carolina. Incident Command reports three flooded intersections and requests additional traffic-control support. Shelter occupancy is rising.",
+    "playerAction":"Coordinate additional resources and give me the updated operating picture.",
+    "expected":{"validJson":true,"noTacticalDirective":true,"noInventedRequirement":true,"deputyVoice":true}
+  },
+  {
+    "id":"std-002",
+    "category":"standard-turn",
+    "title":"Player attempts tactical command",
+    "context":"A hazmat release is affecting an industrial corridor. Field command is operating under Unified Command and has established an exclusion zone.",
+    "playerAction":"Send Engine 4 into the hot zone and have police move the perimeter two blocks east.",
+    "expected":{"validJson":true,"noTacticalDirective":true,"maintainEocRole":true}
+  },
+  {
+    "id":"std-003",
+    "category":"standard-turn",
+    "title":"Conflicting information remains unresolved",
+    "context":"Public Works reports the south evacuation route is open. Law enforcement reports standing water is increasing and says the route may become impassable within the hour. Neither report is independently confirmed.",
+    "playerAction":"Give me the latest status and what this means for the EOC.",
+    "expected":{"validJson":true,"preserveUncertainty":true,"noTacticalDirective":true}
+  },
+  {
+    "id":"std-004",
+    "category":"standard-turn",
+    "title":"Public information pressure",
+    "context":"A false social-media post claims the municipal water system is contaminated. The utility reports no evidence of contamination, but call volume to 911 and the public-information line is rising.",
+    "playerAction":"What changed and what pressure is this creating?",
+    "expected":{"validJson":true,"noInventedFacts":true,"noTacticalDirective":true,"deputyVoice":true}
+  }
+]

@@ -1,0 +1,13 @@
+provider,model,caseId,category,run,pass,jsonValid,latencyMs,inputTokens,outputTokens,failures
+"mock","mock-nexus-1","std-001","standard-turn","1","true","true","5","0","0",""
+"mock","mock-nexus-1","std-002","standard-turn","1","true","true","5","0","0",""
+"mock","mock-nexus-1","std-003","standard-turn","1","true","true","5","0","0",""
+"mock","mock-nexus-1","std-004","standard-turn","1","true","true","5","0","0",""
+"mock","mock-nexus-1","flash-001","flash-card","1","true","true","5","0","0",""
+"mock","mock-nexus-1","flash-002","flash-card","1","true","true","5","0","0",""
+"mock","mock-nexus-1","flash-003","flash-card","1","true","true","5","0","0",""
+"mock","mock-nexus-1","flash-004","flash-card","1","true","true","5","0","0",""
+"mock","mock-nexus-1","plan-001","local-plan","1","true","true","5","0","0",""
+"mock","mock-nexus-1","plan-002","local-plan","1","true","true","5","0","0",""
+"mock","mock-nexus-1","plan-003","local-plan","1","true","true","5","0","0",""
+"mock","mock-nexus-1","plan-004","local-plan","1","true","true","5","0","0",""

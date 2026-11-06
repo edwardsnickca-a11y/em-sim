@@ -594,7 +594,9 @@ async function handleCompleteEndex(body) {
   if (!body.teamAar || typeof body.teamAar !== 'object') throw new Error('Team AAR is required');
 
   const individualAars = body.individualAars && typeof body.individualAars === 'object' ? body.individualAars : {};
-  const finalTurn = Number(room.turn || 0) + 1;
+  // ENDEX is a lifecycle/control event, not an operational player turn.
+  // Preserve the last completed operational turn and simulated time exactly.
+  const finalTurn = Number(room.turn || 0);
   const finalTime = String(body.simTime || room.sharedTurnState?.simTime || 'ENDEX');
   const finalTranscript = Array.isArray(body.exerciseTranscript) ? body.exerciseTranscript : (room.sharedTurnState?.exerciseTranscript || []);
 

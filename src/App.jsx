@@ -19,6 +19,8 @@ import TeamExerciseLobby from './components/teamExercise/TeamExerciseLobby'
 import NexusLogo from './components/brand/NexusLogo'
 import TestConsole from './components/dev/TestConsole'
 import { retrieveLocalPlanContext } from './lib/localPlanProcessing'
+import { createExerciseConfigSnapshot, launchOptionsFromSnapshot, createIntegrityState, appendIntegrityEvent, nextEventId, operationalTurnCount, validateChronology, applyStatePatch, freezeFinalState, canonicalJurisdictionName, buildEvidenceLedger, validateEvaluationEvidence } from './lib/exerciseIntegrity'
+import { buildTranscriptReportModel, buildAarReportModel } from './lib/reportModel'
 
 const CARTO_BASEMAP_KEY = import.meta.env.VITE_CARTO_BASEMAP_KEY?.trim() || ''
 const CARTO_DARK_TILE_URL = CARTO_BASEMAP_KEY
@@ -201,6 +203,10 @@ function sanitizeWorldOutput(world, fallbackLocation='') {
     `STARTEX. Initial reports are still being reconciled for ${safe.location || 'the jurisdiction'}, and the operating picture remains incomplete.`
   )
   safe.pins = sanitizeGeneratedMapPins(safe.pins, 'init', safe.location || fallbackLocation)
+  safe.clock = safe.clock && typeof safe.clock === 'object'
+    ? { incidentOnset:String(safe.clock.incidentOnset || 'H+0:00').trim(), currentTime:String(safe.clock.currentTime || safe.clock.incidentOnset || 'H+0:00').trim(), timezone:String(safe.clock.timezone || '').trim() }
+    : { incidentOnset:'H+0:00', currentTime:'H+0:00', timezone:'' }
+  if (validateChronology(safe.clock.incidentOnset, safe.clock.currentTime).length) safe.clock.currentTime = safe.clock.incidentOnset
   return safe
 }
 
@@ -252,6 +258,11 @@ function sanitizeTurnOutput(turn, currentState) {
         noRelevantPassage:Boolean(safe.planQuery.noRelevantPassage),
       }
     : null
+  safe.statePatch = safe.statePatch && typeof safe.statePatch === 'object' ? safe.statePatch : null
+  safe.timeMeta = safe.timeMeta && typeof safe.timeMeta === 'object'
+    ? { historical:Boolean(safe.timeMeta.historical), correction:Boolean(safe.timeMeta.correction), issueTime:safe.timeMeta.issueTime || null, validTime:safe.timeMeta.validTime || null, supersedesEventId:safe.timeMeta.supersedesEventId || null }
+    : { historical:false, correction:false, issueTime:null, validTime:null, supersedesEventId:null }
+  safe.evaluationEvidence = Array.isArray(safe.evaluationEvidence) ? safe.evaluationEvidence.slice(0, 40) : []
   return safe
 }
 
@@ -392,6 +403,7 @@ End with one concise, non-prescriptive question asking for the player's initial 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 {
   "location": "${customScenario.location}",
+  "clock": { "incidentOnset": "H+0:00 or local clock time", "currentTime": "same format and not earlier than incidentOnset", "timezone": "local timezone when known" },
   "center": [latitude, longitude],
   "pins": [
     { "id": "eoc", "label": "Name of EOC or generic EOC label", "type": "EOC", "lat": 0.000, "lng": 0.000, "note": "One sentence status note specific to this custom scenario" }
@@ -533,6 +545,7 @@ End with one concise, non-prescriptive question asking for the player's initial 
 RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
 {
   "location": "${loc.label}",
+  "clock": { "incidentOnset": "H+0:00 or local clock time", "currentTime": "same format and not earlier than incidentOnset", "timezone": "local timezone when known" },
   "center": ${hasKnownCenter ? `[${center[0]}, ${center[1]}]` : '[0.000, 0.000]'},
   "pins": [
     { "id": "eoc", "label": "Name of EOC or generic EOC label", "type": "EOC", "lat": 0.000, "lng": 0.000, "note": "One sentence status note specific to this jurisdiction" }
@@ -846,6 +859,7 @@ function buildSystemPrompt(scenario, jurisdiction, difficulty, worldState, playe
 
   const locationBlock = worldState
     ? `LOCATION: ${worldState.location}
+SIMULATION CLOCK: incident onset ${worldState.clock?.incidentOnset || 'H+0:00'}; current time ${worldState.clock?.currentTime || 'H+0:00'}${worldState.clock?.timezone ? `; timezone ${worldState.clock.timezone}` : ''}. Preserve this time format on live turns and never return a current turn time earlier than incident onset or the prior accepted turn.
 MAP CENTER: lat ${worldState.center[0]}, lng ${worldState.center[1]}
 Use the map center only as geographic context; do not force every pin into a fixed-distance ring around it. Coordinates must be geographically plausible for the active jurisdiction and must match the semantic feature represented by the pin. Named highways, interchanges, airports, hospitals, schools, shelters, roads, bridges, and public facilities must be placed on or immediately adjacent to the named feature. A BLOCKED pin must sit on the affected roadway/transportation feature, and a HOSPITAL pin must sit at a real or plausible healthcare facility. AFFECTED pins may be approximate and may sit slightly offshore for coastal/surge impacts when that accurately represents the affected area. If a point cannot be placed confidently and plausibly, omit it rather than inventing a nearby coordinate.`
     : `JURISDICTION: ${normalizedJurisdiction}`
@@ -1491,6 +1505,15 @@ If this is a localized exercise, every generated pin must remain inside the sele
 
 If LOCAL PLAN CONTEXT was supplied and you materially rely on it, set "planGrounded" to true and place the exact [[PLAN_SOURCE_n]] Citation token after each material plan-based claim. Always return "sources": [] yourself; the application will populate verified source metadata from the retrieved excerpts actually cited. These tokens are normally hidden from the Deputy dialogue and retained only for internal grounding, Plan Info/AAR, or explicit player source requests. If no local plan passage was used, set "planGrounded" to false. Never type a plan section/page citation yourself.
 
+INTEGRITY CONTRACT
+The application maintains authoritative typed state and rejects impossible state changes. When a turn introduces or changes a count, facility capacity, resource status, capability, or other material fact, also return a structured statePatch that represents the same facts. Do not put arithmetic in prose that conflicts with statePatch. Use stable ids across turns.
+- populations: each record has id, label, authoritative total, categories, completePartition, source, confidence, verification. Categories that are mutually exclusive must set exclusive:true. Overlapping needs set exclusive:false.
+- facilities: use stable id; changes to capacity or capability require causeEventId or an explicit causal event in the current turn.
+- resources: use stable id and lifecycle statuses such as requested, assigned, en_route, arrived, staged, committed, available, unavailable, completed.
+- assignments: represent transport/resource assignments separately from the resource itself, using statuses pending, assigned, departed, arrived, accepted, rejected, completed, or cancelled. Destination acceptance is not the same as arrival.
+- facts: every real-place detail must carry source, confidence, and verification. Use exercise_assumption or simulated_report for fictional exercise injects; never imply they are verified real-world facts.
+Time must not move backward. If reporting historical information, set timeMeta.historical=true. If correcting a previously reported timestamp, set timeMeta.correction=true, provide timeMeta.supersedesEventId for the event being corrected, and explain the correction in the consequence. Forecast issue time and valid time are different fields and validTime cannot precede issueTime.
+
 STANDARD TURN RESPONSE FORMAT — no preamble, no markdown:
 {
   "time": "simulated time",
@@ -1498,6 +1521,8 @@ STANDARD TURN RESPONSE FORMAT — no preamble, no markdown:
   "situation": "STABLE | DEVELOPING | CRITICAL | DETERIORATING",
   "planGrounded": false,
   "sources": [],
+  "timeMeta": { "historical": false, "correction": false, "issueTime": null, "validTime": null, "supersedesEventId": null },
+  "statePatch": { "populations": [], "facilities": [], "resources": [], "assignments": [], "facts": [] },
   "dispatches": ["dispatch item 1", "dispatch item 2"],
   "prompt": "one sentence EOC-level pressure or decision issue for the next player action",
   "headlines": [
@@ -1537,6 +1562,9 @@ ENDEX RESPONSE FORMAT — use this exact format when player types ENDEX:
     "hazmat":    { "status": "GREEN | YELLOW | RED", "reason": "final status" },
     "water":     { "status": "GREEN | YELLOW | RED", "reason": "final status" }
   },
+  "evaluationEvidence": [
+    { "claim": "short finding", "section": "strengths | criticalGaps | decisionLog | resourceCoordination | communications | recommendations", "actor": "player | simulated_staff | incident_command | system", "status": "directed_completed | directed_not_completed | directed_not_confirmed | not_directed | simulator_contradiction | exception_no_followup | exception_followed_up | deadline_after_end", "directiveEventIds": [], "executionEventIds": [], "followUpEventIds": [], "deadlineState": "not_specified | before_end | after_end" }
+  ],
   "aar": {
     "situationSummary": "What happened, how it evolved, where it ended. Specific to this location and scenario.",
     "decisionLog": "Assessment of the key EOC-level decisions made — timing, quality, what was right, what was wrong.",
@@ -1561,7 +1589,8 @@ const defaultState = {
   screen:'portal', scenario:null, jurisdiction:'Mid-Size City', difficulty:'Adaptive', playerName:'', role:'EOC Director', teamEntryMode:'host',
   history:[], dispatches:[], terminal:[], notepad:'', simTime:'H+0:00',
   situation:'DEVELOPING', turn:0, lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[],
-  dynamicPins:[], worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:null,
+  dynamicPins:[], worldState:null, aar:null, aarEvidence:[], exerciseTranscript:[], customScenario:null, localizedJurisdiction:null,
+  exerciseConfig:null, integrity:createIntegrityState(),
   teamMode:false, roomCode:null, playerId:null, players:[], hostMode:null, teamRoom:null,
   teamAar:null, individualAar:null, allIndividualAars:{}, facilitatorAar:null, teamCommunicationsLog:[],
 }
@@ -1584,7 +1613,8 @@ function formatExerciseTranscript({ scenario, jurisdiction, difficulty, role, pl
   let text = `NEXUS EOC — EXERCISE TRANSCRIPT\n`
   text += `${'='.repeat(72)}\n\n`
   text += `SCENARIO:        ${scenarioName}\n`
-  text += `JURISDICTION:    ${jurisdiction || 'Unspecified'}\n`
+  const transcriptJurisdiction = normalizeJurisdictionDisplayName(worldState?.localizedJurisdiction || worldState?.location || jurisdiction) || 'Unspecified'
+  text += `JURISDICTION:    ${transcriptJurisdiction}\n`
   text += `ROLE:            ${role || 'EOC Director'}\n`
   text += `DIFFICULTY:      ${difficulty || 'Unspecified'}\n`
   if (playerName) text += `COMMANDER:       ${playerName}\n`
@@ -1966,7 +1996,7 @@ async function loadJpegForPdf(url) {
 }
 
 async function renderAarPdfV8(filename, rawText) {
-  const { meta, sections } = parseAarForPdf(rawText)
+  const { meta, sections } = rawText && typeof rawText === 'object' && rawText.type === 'aar' ? rawText : parseAarForPdf(rawText)
   const scenarioName = meta.SCENARIO || 'Scenario'
   const generated = meta.GENERATED || new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
   const participant = meta.PLAYER || meta.NAME || meta.PARTICIPANT || meta.COMMANDER || 'Not provided'
@@ -2596,7 +2626,9 @@ function parseTranscriptForPdf(rawText = '') {
 }
 
 async function renderTranscriptPdfV5(filename, rawText) {
-  const { meta, entries } = parseTranscriptForPdf(rawText)
+  const parsedReport = rawText && typeof rawText === 'object' && rawText.type === 'transcript' ? rawText : parseTranscriptForPdf(rawText)
+  const { meta, entries } = parsedReport
+  const reportTitle = parsedReport.reportTitle || 'Exercise Transcript'
   const scenarioName = meta.SCENARIO || 'Scenario'
   const generated = meta.GENERATED || new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
   const participant = meta.PLAYER || meta.NAME || meta.PARTICIPANT || meta.COMMANDER || 'Not provided'
@@ -2729,13 +2761,13 @@ async function renderTranscriptPdfV5(filename, rawText) {
       textAt('NEXUS', contentX + 14, top - 27, 23, 'F2', colors.text)
       textAt('EOC', contentX + 104, top - 27, 23, 'F2', colors.teal)
     }
-    textAt('Exercise Transcript', contentX + contentW / 2 - 72, top - 25, 16, 'F2', colors.text)
+    textAt(reportTitle, contentX + contentW / 2 - Math.min(92, reportTitle.length * 4.1), top - 25, 16, 'F2', colors.text)
     textAt(`Generated ${generated}`, contentX + contentW - 136, top - 24, 6.8, 'F2', colors.dim)
   }
   function drawFooter(pageNo) {
     line(24, 24, W - 24, 24, colors.border, 0.5)
     textAt('NEXUS EOC', 24, 11, 7, 'F2', colors.dim)
-    textAt('Exercise Transcript', 88, 11, 7, 'F1', colors.dim)
+    textAt(reportTitle, 88, 11, 7, 'F1', colors.dim)
     textAt(`Page ${pageNo}`, W - 55, 11, 7, 'F1', colors.dim)
   }
   function drawSetupBox(x, yTop, w, h, label, value) {
@@ -2810,9 +2842,9 @@ async function renderTranscriptPdfV5(filename, rawText) {
   const entryAccent = kind => kind === 'opening' || kind === 'lifelines' ? colors.teal : kind === 'turn' ? colors.cyan : colors.amber
   const sectionItems = (label, body) => {
     const isDirector = String(label || '').toLowerCase() === 'director input'
-    const size = isDirector ? 6.95 : 7.25
-    const leading = isDirector ? 8.2 : 8.65
-    const font = isDirector ? 'F3' : 'F1'
+    const size = isDirector ? 8.0 : 7.65
+    const leading = isDirector ? 9.8 : 9.1
+    const font = 'F1'
     return { label, size, leading, font, lines:textLines(body, contentW - 36, size, font) }
   }
   const statusLine = entry => {
@@ -3040,14 +3072,16 @@ function downloadPlainPdfTextFile(filename, text) {
 }
 
 
-async function downloadPdfTextFile(filename, text) {
-  const cleaned = cleanPdfText(text)
-  if (/transcript/i.test(filename) || /EXERCISE TRANSCRIPT/i.test(cleaned)) {
+async function downloadPdfTextFile(filename, documentOrText) {
+  const isModel = documentOrText && typeof documentOrText === 'object' && (documentOrText.type === 'transcript' || documentOrText.type === 'aar')
+  const cleaned = isModel ? documentOrText : cleanPdfText(documentOrText)
+  const isTranscript = isModel ? cleaned.type === 'transcript' : (/transcript/i.test(filename) || /EXERCISE TRANSCRIPT/i.test(cleaned))
+  if (isTranscript) {
     try {
       await renderTranscriptPdfV5(filename, cleaned)
     } catch (err) {
       console.error('Transcript PDF render failed; using plain fallback.', err)
-      downloadPlainPdfTextFile(filename, cleaned)
+      downloadPlainPdfTextFile(filename, isModel ? JSON.stringify(cleaned, null, 2) : cleaned)
     }
     return
   }
@@ -3055,118 +3089,85 @@ async function downloadPdfTextFile(filename, text) {
     await renderAarPdfV8(filename, cleaned)
   } catch (err) {
     console.error('AAR PDF render failed; using plain fallback.', err)
-    downloadPlainPdfTextFile(filename, cleaned)
+    downloadPlainPdfTextFile(filename, isModel ? JSON.stringify(cleaned, null, 2) : cleaned)
   }
 }
 
 
 // ─── AAR DISPLAY COMPONENT ────────────────────────────────────────────────────
-function AARDisplay({ aar, teamMode=false, teamAar=null, individualAar=null, allIndividualAars={}, facilitatorAar=null, communicationsLog=[], isHost=false, players=[], scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, onRestart, onMissionPortal, fs, ac, al, embedded=false }) {
+function AARDisplay({ aar, aarEvidence=[], exerciseConfig=null, teamMode=false, teamAar=null, individualAar=null, allIndividualAars={}, facilitatorAar=null, communicationsLog=[], isHost=false, players=[], scenario, jurisdiction, difficulty, role, playerName, turns, simTime, worldState, transcript, lifelines, situation, onReset, onRestart, onMissionPortal, fs, ac, al, embedded=false }) {
   const scenarioName = SCENARIOS[scenario]?.name || scenario || 'Scenario'
   const generatedDate = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
   const startTime = transcript?.[0]?.time || 'H+0:00'
   const endTime = simTime || 'ENDEX'
   const duration = `${turns || 0} turn${turns === 1 ? '' : 's'}`
   const clean = value => value || 'Not captured in this exercise record.'
-  const displayJurisdiction = normalizeJurisdictionDisplayName(worldState?.localizedJurisdiction || worldState?.location || jurisdiction) || 'Unspecified'
+  const displayJurisdiction = normalizeJurisdictionDisplayName(exerciseConfig?.jurisdictionName || worldState?.localizedJurisdiction || worldState?.location || jurisdiction) || 'Unspecified'
   const participantLabel = String(playerName || '').trim() || 'Name not entered'
   const planReviewRecords = collectPlanAlignmentRecord(transcript || [])
   const planAlignmentText = String(aar?.planAlignment || '').trim()
     || (planReviewRecords.length ? buildPlanAlignmentFallback(transcript || []) : '')
 
   function downloadAAR() {
-    let report = `NEXUS EOC — AFTER-ACTION REVIEW\n`
-    report += `${'='.repeat(72)}\n\n`
-    report += `SCENARIO:        ${scenarioName}\n`
-    report += `JURISDICTION:    ${displayJurisdiction}\n`
-    report += `ROLE:            ${role || 'EOC Director'}\n`
-    report += `DIFFICULTY:      ${difficulty || 'Unspecified'}\n`
-    report += `PLAYER:          ${participantLabel}\n`
-    if (worldState?.location) report += `LOCATION:        ${worldState.location}\n`
-    report += `SESSION START:   ${startTime}\n`
-    report += `SESSION END:     ${endTime}\n`
-    report += `DURATION:        ${duration}\n`
-    report += `GENERATED:       ${generatedDate}\n\n`
-    report += `${'='.repeat(72)}\n\n`
-
-    const order = [
-      ['SITUATION SUMMARY', aar?.situationSummary],
-      ['DECISION LOG REVIEW', aar?.decisionLog],
-      ['RESOURCE & COORDINATION EFFECTIVENESS', aar?.resourceCoordination],
-      ['COMMUNICATIONS & INFORMATION MANAGEMENT', aar?.communications],
-      ['DOCTRINE / REFERENCE NOTES', aar?.doctrineReferences],
-      ...(planAlignmentText ? [['PLAN ALIGNMENT', planAlignmentText]] : []),
-      ['STRENGTHS', aar?.strengths],
-      ['CRITICAL GAPS', aar?.criticalGaps],
-      ['RECOMMENDATIONS', aar?.recommendations],
-    ]
-
-    order.forEach(([label, content]) => {
-      report += `${label}\n`
-      report += `${'-'.repeat(label.length)}\n`
-      report += `${clean(content)}\n\n`
-    })
-
+    const extraSections = []
     if (teamMode && individualAar) {
-      report += `INDIVIDUAL ROLE AAR — ${playerName || role}\n${'-'.repeat(48)}\n`
-      ;[
-        ['ROLE CONTRIBUTION', individualAar.situationSummary],
-        ['ROLE DECISIONS', individualAar.decisionLog],
-        ['ROLE COORDINATION', individualAar.resourceCoordination],
-        ['ROLE COMMUNICATIONS', individualAar.communications],
-        ['INDIVIDUAL STRENGTHS', individualAar.strengths],
-        ['INDIVIDUAL GAPS', individualAar.criticalGaps],
-        ['ROLE RECOMMENDATIONS', individualAar.recommendations],
-      ].forEach(([label, content]) => { report += `${label}\n${clean(content)}\n\n` })
+      extraSections.push(
+        ['Individual Role AAR — Role Contribution', clean(individualAar.situationSummary)],
+        ['Individual Role AAR — Role Decisions', clean(individualAar.decisionLog)],
+        ['Individual Role AAR — Role Coordination', clean(individualAar.resourceCoordination)],
+        ['Individual Role AAR — Role Communications', clean(individualAar.communications)],
+        ['Individual Role AAR — Strengths', clean(individualAar.strengths)],
+        ['Individual Role AAR — Gaps', clean(individualAar.criticalGaps)],
+        ['Individual Role AAR — Recommendations', clean(individualAar.recommendations)],
+      )
     }
     if (teamMode && isHost && facilitatorAar) {
-      report += `FACILITATOR AAR\n${'-'.repeat(48)}\n`
-      ;[
-        ['OVERVIEW', facilitatorAar.situationSummary],
-        ['CROSS-ROLE DECISIONS', facilitatorAar.decisionLog],
-        ['TEAM INTEGRATION', facilitatorAar.resourceCoordination],
-        ['COORDINATION PATTERNS', facilitatorAar.communications],
-        ['FACILITATOR PRIORITIES', facilitatorAar.recommendations],
-      ].forEach(([label, content]) => { report += `${label}\n${clean(content)}\n\n` })
+      extraSections.push(
+        ['Facilitator AAR — Overview', clean(facilitatorAar.situationSummary)],
+        ['Facilitator AAR — Cross-Role Decisions', clean(facilitatorAar.decisionLog)],
+        ['Facilitator AAR — Team Integration', clean(facilitatorAar.resourceCoordination)],
+        ['Facilitator AAR — Coordination Patterns', clean(facilitatorAar.communications)],
+        ['Facilitator AAR — Priorities', clean(facilitatorAar.recommendations)],
+      )
     }
-
-    report += `${'='.repeat(72)}\n`
-    report += `NEXUS EOC — nexuseoc.com\n`
-
+    const model = buildAarReportModel({
+      scenarioName,
+      jurisdictionName:displayJurisdiction,
+      jurisdictionType:exerciseConfig?.jurisdictionType || jurisdiction,
+      role, difficulty, participant:participantLabel,
+      sessionStart:startTime, sessionEnd:endTime, turns,
+      aar:{ ...aar, planAlignment:planAlignmentText }, evidence:aarEvidence,
+      extraSections,
+    })
     const filename = `NEXUS_EOC_AAR_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.pdf`
-    if (typeof downloadPdfTextFile === 'function') {
-      downloadPdfTextFile(filename, report)
-    } else {
-      downloadTextFile(filename.replace(/\.pdf$/i, '.txt'), report)
-    }
+    downloadPdfTextFile(filename, model)
   }
 
   function downloadTranscript() {
-    const report = formatExerciseTranscript({
-      scenario, jurisdiction, difficulty, role, playerName,
-      worldState, transcript, finalLifelines: lifelines,
-      finalSimTime: simTime, finalSituation: situation, aar,
-    })
-    let finalReport = report
+    const extraEntries = []
     if (teamMode && communicationsLog?.length) {
-      finalReport += `
-
-TEAM COORDINATION COMMUNICATIONS LOG
-${'='.repeat(72)}
-`
-      communicationsLog.forEach(message => {
-        const destination = message.channel === 'direct' ? `PRIVATE TO ${message.recipientName || message.recipientRole}` : 'TEAM ROOM'
-        finalReport += `${message.createdAt || ''} | ${message.senderName || message.senderRole} | ${destination}
-${message.text}
-
-`
+      extraEntries.push({
+        kind:'communications',
+        title:'Team Coordination Communications Log',
+        subs:[{
+          label:'Team Coordination Communications Log',
+          body:communicationsLog.map(message => {
+            const destination = message.channel === 'direct' ? `PRIVATE TO ${message.recipientName || message.recipientRole}` : 'TEAM ROOM'
+            return `${message.createdAt || ''} | ${message.senderName || message.senderRole} | ${destination}\n${message.text}`
+          }).join('\n\n'),
+        }],
       })
     }
-    if (typeof downloadPdfTextFile === 'function') {
-      downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.pdf`, finalReport)
-    } else {
-      downloadTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.txt`, finalReport)
-    }
+    const model = buildTranscriptReportModel({
+      scenarioName,
+      jurisdictionName:displayJurisdiction,
+      jurisdictionType:exerciseConfig?.jurisdictionType || jurisdiction,
+      difficulty, role, participant:participantLabel, worldState, transcript,
+      finalLifelines:lifelines, finalLifelineText:lifelineSummary(lifelines),
+      finalSimTime:simTime, finalSituation:situation, aar,
+      extraEntries,
+    })
+    downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${generatedDate.replace(/\s+/g,'_')}.pdf`, model)
   }
 
   const UI = {
@@ -3536,9 +3537,23 @@ function MediaIconTile({ item }) {
   )
 }
 
-function MapUpdater({ center }) {
+function MapUpdater({ center, pins=[] }) {
   const map = useMap()
-  useEffect(() => { map.setView(center, 13) }, [map, center])
+  const pinSignature = (pins || []).map(pin => `${pin.id || ''}:${pin.lat}:${pin.lng}`).join('|')
+  useEffect(() => {
+    const positions = (pins || [])
+      .map(pin => [Number(pin.lat), Number(pin.lng)])
+      .filter(([lat,lng]) => Number.isFinite(lat) && Number.isFinite(lng))
+    if (positions.length === 1) {
+      map.setView(positions[0], Math.min(14, Math.max(map.getZoom() || 12, 12)))
+      return
+    }
+    if (positions.length > 1) {
+      map.fitBounds(L.latLngBounds(positions), { padding:[34,34], maxZoom:13, animate:false })
+      return
+    }
+    if (Array.isArray(center) && Number.isFinite(Number(center[0])) && Number.isFinite(Number(center[1]))) map.setView(center, 13)
+  }, [map, center?.[0], center?.[1], pinSignature])
   return null
 }
 
@@ -4043,9 +4058,21 @@ async function initCustomWorld(customScenario) {
           notes: `User requested that the selected prebuilt scenario be localized to ${specificJurisdiction}. Preserve the base scenario and localize only the context.`,
           isUserProvided: true,
         }
-      : selectScenarioLocation(scenarioKey, jurisdiction)
+      : (launchOptions.selectedLocationOverride || selectScenarioLocation(scenarioKey, jurisdiction))
     if (!isLocalizedScenario) rememberScenarioLocation(selectedLocation)
     const localization = isLocalizedScenario ? { specificJurisdiction } : null
+    const exerciseConfig = createExerciseConfigSnapshot({
+      scenario:scenarioKey,
+      jurisdictionType:jurisdiction,
+      jurisdictionName:selectedLocation?.label || specificJurisdiction || jurisdiction,
+      jurisdictionMode:isLocalizedScenario ? 'specific' : 'generated',
+      difficulty:launchDifficulty,
+      role:launchRole,
+      participant:launchPlayerName,
+      localPlan,
+      selectedLocation,
+    })
+    let launchIntegrity = createIntegrityState(`solo-${Date.now()}`)
     setActiveESFs({})
     setInitLoading(true)
     if (typeof window !== 'undefined' && window.posthog) {
@@ -4061,7 +4088,8 @@ async function initCustomWorld(customScenario) {
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
       notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
-      worldState:null, aar:null, exerciseTranscript:[], customScenario:null, localizedJurisdiction:isLocalizedScenario ? specificJurisdiction : null, localPlan,
+      worldState:null, aar:null, aarEvidence:[], exerciseTranscript:[], customScenario:null, localizedJurisdiction:isLocalizedScenario ? specificJurisdiction : null, localPlan,
+      exerciseConfig, integrity:launchIntegrity,
       jurisdiction, difficulty:launchDifficulty, role:launchRole, playerName:launchPlayerName,
       teamMode:false, roomCode:null, playerId:null, players:[], hostMode:null, teamRoom:null,
       teamAar:null, individualAar:null, allIndividualAars:{}, facilitatorAar:null, teamCommunicationsLog:[],
@@ -4072,8 +4100,16 @@ async function initCustomWorld(customScenario) {
       if (isLocalizedScenario) world.localizedJurisdiction = specificJurisdiction
       const initDispatches = (world.dispatches || []).map((text, i) => ({ id:i, text, turn:0 }))
       const initPins = (world.pins || []).map((p, i) => ({ ...p, id: `init-${i}` }))
+      const opening = appendIntegrityEvent(launchIntegrity, {
+        type:'exercise_open', actor:'system', simTime:world.clock?.currentTime || 'H+0:00', jurisdictionName:world.localizedJurisdiction || world.location || exerciseConfig.jurisdictionName,
+      })
+      launchIntegrity = opening.integrity
+      const canonicalConfig = { ...exerciseConfig, jurisdictionName:world.localizedJurisdiction || world.location || exerciseConfig.jurisdictionName }
       update({
         worldState: world,
+        exerciseConfig:canonicalConfig,
+        integrity:launchIntegrity,
+        simTime:world.clock?.currentTime || 'H+0:00',
         dispatches: initDispatches,
         terminal: [
           { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${launchDifficulty} — ${launchRole.toUpperCase()}${launchPlayerName ? ` — ${launchPlayerName.toUpperCase()}` : ''}` },
@@ -4083,7 +4119,7 @@ async function initCustomWorld(customScenario) {
         dynamicPins: initPins,
         exerciseTranscript: [{
           type:'opening',
-          time:'H+0:00',
+          time:world.clock?.currentTime || 'H+0:00',
           location: world.location,
           narrative: world.openingNarrative,
           dispatches: initDispatches,
@@ -4092,7 +4128,12 @@ async function initCustomWorld(customScenario) {
         }],
       })
     } catch(e) {
+      const fallbackTime = 'H+0:00'
+      const opening = appendIntegrityEvent(launchIntegrity, { type:'exercise_open', actor:'system', simTime:fallbackTime, jurisdictionName:selectedLocation?.label || specificJurisdiction || jurisdiction })
+      launchIntegrity = opening.integrity
       update({
+        integrity:launchIntegrity,
+        exerciseConfig:{ ...exerciseConfig, jurisdictionName:selectedLocation?.label || specificJurisdiction || exerciseConfig.jurisdictionName },
         terminal: [
           { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${launchDifficulty}` },
           { type:'divider' },
@@ -4201,6 +4242,20 @@ async function initCustomWorld(customScenario) {
     // than allowing them to be rendered as turn/event markers.
     const initPins = normalizeMapPins(world.pins, 'init')
       .map((pin, i) => ({ ...pin, id:`init-${i}` }))
+    const exerciseConfig = createExerciseConfigSnapshot({
+      scenario:scenarioKey,
+      jurisdictionType:normalizeJurisdictionType(jurisdiction),
+      jurisdictionName:world.localizedJurisdiction || world.location || selectedLocation.label || jurisdiction,
+      jurisdictionMode:(shared.specificJurisdiction || room.exercise.specificJurisdiction) ? 'specific' : (customScenario ? 'custom' : 'generated'),
+      difficulty,
+      role:participant.role,
+      participant:participant.name,
+      localPlan:shared.localPlan || room.exercise.localPlan || null,
+      customScenario,
+      selectedLocation,
+    })
+    let teamIntegrity = createIntegrityState(`team-${room.roomCode || Date.now()}-${participant.id}`)
+    ;({ integrity:teamIntegrity } = appendIntegrityEvent(teamIntegrity, { type:'exercise_open', actor:'system', simTime:world.clock?.currentTime || 'H+0:00', jurisdictionName:exerciseConfig.jurisdictionName }))
 
     setActiveESFs({})
     setInitLoading(false)
@@ -4219,7 +4274,7 @@ async function initCustomWorld(customScenario) {
       ],
       history:[],
       turn:0,
-      simTime:'H+0:00',
+      simTime:world.clock?.currentTime || 'H+0:00',
       situation:'DEVELOPING',
       notepad:'',
       lifelines:INITIAL_LIFELINES_UNKNOWN,
@@ -4227,9 +4282,12 @@ async function initCustomWorld(customScenario) {
       dynamicPins:initPins,
       worldState:world,
       aar:null,
+      aarEvidence:[],
+      exerciseConfig,
+      integrity:teamIntegrity,
       exerciseTranscript:[{
         type:'opening',
-        time:'H+0:00',
+        time:world.clock?.currentTime || 'H+0:00',
         location:world.location || selectedLocation.label || jurisdiction,
         narrative:world.openingNarrative,
         dispatches:initDispatches,
@@ -4258,6 +4316,19 @@ async function startCustomScenario(customScenario) {
   const role = customScenario.role || state.role || 'EOC Director'
   const difficulty = customScenario.difficulty || state.difficulty || 'Adaptive'
   const localPlan = isUsableLocalPlan(customScenario.localPlan) ? customScenario.localPlan : null
+  const exerciseConfig = createExerciseConfigSnapshot({
+    scenario:scenarioKey,
+    jurisdictionType:customScenario.jurisdictionType || 'Custom Real Jurisdiction',
+    jurisdictionName:customScenario.location,
+    jurisdictionMode:'custom',
+    difficulty,
+    role,
+    participant:state.playerName || '',
+    localPlan,
+    customScenario,
+    selectedLocation:{ label:customScenario.location },
+  })
+  let launchIntegrity = createIntegrityState(`custom-${Date.now()}`)
 
   setActiveESFs({})
   setInitLoading(true)
@@ -4282,7 +4353,8 @@ async function startCustomScenario(customScenario) {
     ],
     history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
     notepad:'', lifelines:INITIAL_LIFELINES_UNKNOWN, headlines:[], dynamicPins:[],
-    worldState:null, aar:null, exerciseTranscript:[],
+    worldState:null, aar:null, aarEvidence:[], exerciseTranscript:[],
+    exerciseConfig, integrity:launchIntegrity,
     teamMode:false, roomCode:null, playerId:null, players:[], hostMode:null, teamRoom:null,
     teamAar:null, individualAar:null, allIndividualAars:{}, facilitatorAar:null, teamCommunicationsLog:[],
   })
@@ -4291,8 +4363,13 @@ async function startCustomScenario(customScenario) {
     const world = await initCustomWorld(customScenario)
     const initDispatches = (world.dispatches || []).map((text, i) => ({ id:i, text, turn:0 }))
     const initPins = (world.pins || []).map((p, i) => ({ ...p, id: `init-${i}` }))
+    const opening = appendIntegrityEvent(launchIntegrity, { type:'exercise_open', actor:'system', simTime:world.clock?.currentTime || 'H+0:00', jurisdictionName:world.location || customScenario.location })
+    launchIntegrity = opening.integrity
     update({
       worldState: world,
+      simTime:world.clock?.currentTime || 'H+0:00',
+      integrity:launchIntegrity,
+      exerciseConfig:{ ...exerciseConfig, jurisdictionName:world.location || exerciseConfig.jurisdictionName },
       dispatches: initDispatches,
       terminal: [
         { type:'header', text:`▶ ${scenarioName.toUpperCase()} — ${world.location || customScenario.location} — ${difficulty} — ${role.toUpperCase()}${state.playerName ? ` — ${state.playerName.toUpperCase()}` : ''}` },
@@ -4302,7 +4379,7 @@ async function startCustomScenario(customScenario) {
       dynamicPins: initPins,
       exerciseTranscript: [{
         type:'opening',
-        time:'H+0:00',
+        time:world.clock?.currentTime || 'H+0:00',
         location: world.location || customScenario.location,
         narrative: world.openingNarrative || customScenarioSummary(customScenario),
         dispatches: initDispatches,
@@ -4311,7 +4388,12 @@ async function startCustomScenario(customScenario) {
       }],
     })
   } catch(e) {
+    const fallbackTime = 'H+0:00'
+    const opening = appendIntegrityEvent(launchIntegrity, { type:'exercise_open', actor:'system', simTime:fallbackTime, jurisdictionName:customScenario.location })
+    launchIntegrity = opening.integrity
     update({
+      integrity:launchIntegrity,
+      exerciseConfig:{ ...exerciseConfig, jurisdictionName:customScenario.location },
       terminal: [
         { type:'header', text:`▶ ${scenarioName.toUpperCase()} — ${customScenario.location} — ${difficulty}` },
         { type:'divider' },
@@ -4346,6 +4428,7 @@ async function startCustomScenario(customScenario) {
       lifelines: sharedTurnState.lifelines || state.lifelines,
       headlines: sharedTurnState.headlines || state.headlines,
       dynamicPins: sharedTurnState.dynamicPins || state.dynamicPins,
+      integrity: sharedTurnState.integrity || state.integrity,
       aar: sharedTurnState.aar || room?.teamAar || state.aar,
       teamAar: room?.teamAar || sharedTurnState.aar || state.teamAar,
       individualAar: room?.individualAar || state.individualAar,
@@ -4502,7 +4585,12 @@ async function startCustomScenario(customScenario) {
       catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'Several coordination issues remain unresolved as the situation develops.', lifelines:state.lifelines, headlines:[], pins:[], aar:null } }
       parsed = applyVerifiedPlanCitations(parsed, localPlanContext, combinedAction)
       parsed = sanitizeTurnOutput(parsed, state)
-
+      const schemaViolations = parsed.statePatch ? [] : [{ code:'STATE_PATCH_REQUIRED', message:'Every team turn must include the typed statePatch object.' }]
+      const chronologyViolations = validateChronology(state.simTime, parsed.time || state.simTime, parsed.timeMeta || {}, (state.integrity?.events || []).map(event => event.id))
+      const eventId = nextEventId(state.integrity || createIntegrityState())
+      const patchResult = applyStatePatch(state.integrity || createIntegrityState(), parsed.statePatch, { causeEventId:eventId })
+      const integrityViolations = [...schemaViolations, ...chronologyViolations, ...patchResult.violations]
+      if (integrityViolations.length) throw new Error(`Team update failed integrity validation: ${integrityViolations.map(v => v.code).join(', ')}`)
       const nextTurn = state.turn + 1
       const resolvedSituation = parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') ? 'ENDEX' : (parsed.situation||'DEVELOPING')
       const newHistory = [...msgs, { role:'assistant', content:JSON.stringify(parsed) }]
@@ -4523,8 +4611,13 @@ async function startCustomScenario(customScenario) {
       const newDynamicPins = parsed.pins?.length
         ? [...(state.dynamicPins||[]), ...parsed.pins.map((pin,i) => ({ ...pin, id:`dyn-${Date.now()}-${i}`, turn:nextTurn }))]
         : (state.dynamicPins||[])
+      const appendedTeamEvent = appendIntegrityEvent(patchResult.integrity, {
+        id:eventId, type:'player_turn', turn:nextTurn, actor:'team', simTime:parsed.time || state.simTime,
+        directive:combinedAction, execution:parsed.consequence || '', timeMeta:parsed.timeMeta || null,
+        acceptedSnapshot:{ situation:resolvedSituation, lifelines:parsed.lifelines || state.lifelines, dispatches:parsed.dispatches || [], headlines:parsed.headlines || [], pins:parsed.pins || [] },
+      })
       const transcriptEntry = {
-        type:'turn', turn:nextTurn, simTime:parsed.time || state.simTime, situation:resolvedSituation,
+        type:'turn', eventId:appendedTeamEvent.event.id, turn:nextTurn, simTime:parsed.time || state.simTime, situation:resolvedSituation,
         playerInput:combinedAction, aiResponse:parsed.consequence || '', prompt:resolvedSituation !== 'ENDEX' ? (parsed.prompt || '') : '',
         dispatches:parsed.dispatches || [], headlines:parsed.headlines || [], pins:parsed.pins || [], lifelines:parsed.lifelines || state.lifelines,
         planGrounded:Boolean(parsed.planGrounded), sources:parsed.sources || [], planEvidence:parsed.planEvidence || [], planReviewEvidence:parsed.planReviewEvidence || [], planQuery:parsed.planQuery || null,
@@ -4540,6 +4633,7 @@ async function startCustomScenario(customScenario) {
         headlines:newHeadlines,
         dynamicPins:newDynamicPins,
         aar:parsed.aar || state.aar,
+        integrity:appendedTeamEvent.integrity,
         exerciseTranscript:[...(state.exerciseTranscript || []), transcriptEntry],
       }
       const completeRes = await fetch('/api/team-room', {
@@ -4686,7 +4780,7 @@ async function startCustomScenario(customScenario) {
           }).join('\n')
         : 'No permitted Team Coordination messages were captured.'
 
-      const sharedRecord = `SCENARIO: ${scenarioName}\nJURISDICTION: ${state.jurisdiction}\nDIFFICULTY: ${state.difficulty}\nFINAL SIMULATED TIME: ${state.simTime}\nCOMPLETED TURNS: ${state.turn}\n\nTEAM ROSTER:\n${rosterText}\n\nROLE SUBMISSIONS BY TURN:\n${submissionText}\n\nPERMITTED COMMUNICATIONS:\n${communicationsText}\n\nSHARED EXERCISE TRANSCRIPT:\n${JSON.stringify(sharedTranscript, null, 2)}`
+      const sharedRecord = `SCENARIO: ${scenarioName}\nJURISDICTION: ${canonicalJurisdictionName(state) || state.jurisdiction}\nJURISDICTION TYPE: ${state.exerciseConfig?.jurisdictionType || state.jurisdiction}\nDIFFICULTY: ${state.difficulty}\nFINAL SIMULATED TIME: ${state.simTime}\nCOMPLETED TURNS: ${state.turn}\n\nTEAM ROSTER:\n${rosterText}\n\nROLE SUBMISSIONS BY TURN:\n${submissionText}\n\nPERMITTED COMMUNICATIONS:\n${communicationsText}\n\nSHARED EXERCISE TRANSCRIPT:\n${JSON.stringify(sharedTranscript, null, 2)}`
 
       // Use the same proven ENDEX/AAR contract as single-player EOC.
       const teamAar = await requestBaselineAar({
@@ -4749,7 +4843,7 @@ async function startCustomScenario(customScenario) {
       })
 
       const finalTranscript = [...sharedTranscript, {
-        type:'turn', turn:state.turn + 1, simTime:state.simTime, situation:'ENDEX',
+        type:'exercise_end', simTime:state.simTime, situation:'ENDEX',
         playerInput:'HOST ENDEX', aiResponse:'ENDEX — Team Exercise complete.', prompt:'', dispatches:[], headlines:[], pins:[], lifelines:state.lifelines,
       }]
       const completeRes = await fetch('/api/team-room', {
@@ -4766,7 +4860,7 @@ async function startCustomScenario(customScenario) {
       const room = completeData.room
       setTeamLiveRoom(room)
       update({
-        screen:'aar', situation:'ENDEX', turn:Number(room?.sharedTurnState?.turn || state.turn + 1),
+        screen:'aar', situation:'ENDEX', turn:Number(room?.sharedTurnState?.turn ?? state.turn),
         aar:room.teamAar, teamAar:room.teamAar, individualAar:room.individualAar || null,
         allIndividualAars:room.allIndividualAars || {}, facilitatorAar:room.facilitatorAar || null,
         teamCommunicationsLog:room.communicationsLog || [], teamRoom:room,
@@ -4799,7 +4893,7 @@ async function startCustomScenario(customScenario) {
     setLoading(true)
 
     posthog.capture(isEndex ? 'scenario_ended' : 'action_submitted', {
-      scenario: state.scenario, jurisdiction: state.jurisdiction,
+      scenario: state.scenario, jurisdiction: canonicalJurisdictionName(state) || state.jurisdiction,
       difficulty: state.difficulty, turn: state.turn, role: state.role,
       ...(state.playerName ? { player: state.playerName } : {}),
     })
@@ -4809,105 +4903,151 @@ async function startCustomScenario(customScenario) {
       : [...state.terminal, { type:'player', text:`> ${action}` }]
     update({ terminal:newTerm })
     const aarPlanRecords = isEndex ? collectPlanAlignmentRecord(state.exerciseTranscript || []) : []
+    const eventLedger = buildEvidenceLedger(state.integrity?.events || [])
+    const authoritativeEndexRecord = isEndex
+      ? `\n\nAAR AUTHORITATIVE EVENT LEDGER — every evaluative claim must identify the actor/status and cite only these event IDs. Distinguish player direction from simulated execution. Do not blame the player for simulator contradictions or work whose deadline falls after ENDEX.\n${JSON.stringify(eventLedger, null, 2)}\n\nFINAL OPERATIONAL STATE — ENDEX is a control event. Do not advance time, change lifelines, or invent completion during closure.\n${JSON.stringify(state.integrity?.frozenFinalState || { simTime:state.simTime, lifelines:state.lifelines }, null, 2)}`
+      : ''
     const msgs = [
       ...state.history,
-      
-      { role:'user', content:action },
+      { role:'user', content:isEndex ? `ENDEX${authoritativeEndexRecord}` : action },
     ]
 
-    try {
+    const requestAndValidate = async (repairContext='') => {
       const localPlanContext = await getTurnLocalPlanContext(state, action)
+      const requestMessages = repairContext
+        ? [...msgs, { role:'user', content:`SYSTEM INTEGRITY REPAIR REQUEST. The previous proposed update was rejected before display. Correct the JSON without changing the player's directive. Violations:\n${repairContext}\nReturn a complete replacement response that obeys the integrity contract.` }]
+        : msgs
       const data = await requestAiChat({
         system: buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, state.playerName, state.role, state.customScenario, localPlanContext),
-        messages: msgs,
+        messages: requestMessages,
       })
-      const raw  = data.content?.[0]?.text || ''
+      const raw = data.content?.[0]?.text || ''
       let parsed
       try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
       catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'Several coordination issues remain unresolved as the situation develops.', lifelines:state.lifelines, headlines:[], pins:[], aar:null } }
       parsed = applyVerifiedPlanCitations(parsed, localPlanContext, action)
       parsed = sanitizeTurnOutput(parsed, state)
 
+      if (isEndex) {
+        parsed.time = state.simTime
+        parsed.lifelines = state.lifelines
+        parsed.dispatches = []
+        parsed.headlines = []
+        parsed.pins = []
+        parsed.prompt = ''
+        parsed.situation = 'ENDEX'
+        const evidenceViolations = validateEvaluationEvidence(parsed.evaluationEvidence || [], (state.integrity?.events || []).map(e => e.id))
+        if (parsed.aar && evidenceViolations.length) return { parsed, violations:evidenceViolations, localPlanContext }
+        return { parsed, violations:[], localPlanContext }
+      }
+
+      const schemaViolations = parsed.statePatch ? [] : [{ code:'STATE_PATCH_REQUIRED', message:'Every live turn must include the typed statePatch object, even when its arrays are empty.' }]
+      const chronologyViolations = validateChronology(state.simTime, parsed.time || state.simTime, parsed.timeMeta || {}, (state.integrity?.events || []).map(event => event.id))
+      const eventId = nextEventId(state.integrity || createIntegrityState())
+      const patchResult = applyStatePatch(state.integrity || createIntegrityState(), parsed.statePatch, { causeEventId:eventId })
+      const violations = [...schemaViolations, ...chronologyViolations, ...patchResult.violations]
+      return { parsed, violations, localPlanContext, eventId, patchedIntegrity:patchResult.integrity }
+    }
+
+    try {
+      let result = await requestAndValidate('')
+      if (result.violations.length) {
+        result = await requestAndValidate(result.violations.map(v => `${v.code}: ${v.message}`).join('\n'))
+      }
+      if (result.violations.length) {
+        const codes = result.violations.map(v => v.code).join(', ')
+        throw new Error(`Generated update failed integrity validation (${codes}). No exercise state was changed.`)
+      }
+
+      let { parsed } = result
       if (isEndex && aarPlanRecords.length && parsed?.aar) {
         try {
           const verifiedPlanAlignment = await generatePlanAlignmentSection(state.exerciseTranscript || [], parsed.aar)
-          parsed.aar = {
-            ...parsed.aar,
-            planAlignment:verifiedPlanAlignment || buildPlanAlignmentFallback(state.exerciseTranscript || []),
-          }
+          parsed.aar = { ...parsed.aar, planAlignment:verifiedPlanAlignment || buildPlanAlignmentFallback(state.exerciseTranscript || []) }
         } catch (err) {
           console.warn('Verified Plan Alignment generation unavailable:', err?.message || err)
-          parsed.aar = {
-            ...parsed.aar,
-            planAlignment:buildPlanAlignmentFallback(state.exerciseTranscript || []),
-          }
+          parsed.aar = { ...parsed.aar, planAlignment:buildPlanAlignmentFallback(state.exerciseTranscript || []) }
         }
       }
 
-      const nextTurn   = state.turn + 1
-      if (typeof window !== 'undefined' && window.posthog) {
-        window.posthog.capture('turn_completed', { scenario: state.scenario, jurisdiction: state.jurisdiction, difficulty: state.difficulty, turn: nextTurn })
+      const nextTurn = isEndex ? state.turn : state.turn + 1
+      const resolvedSituation = isEndex ? 'ENDEX' : (parsed.situation || 'DEVELOPING')
+      let nextIntegrity = result.patchedIntegrity || state.integrity || createIntegrityState()
+      let integrityEvent
+      if (isEndex) {
+        const appended = appendIntegrityEvent(nextIntegrity, {
+          type:'exercise_end', actor:'system', simTime:state.simTime, operationalTurnCount:state.turn,
+        })
+        nextIntegrity = freezeFinalState(appended.integrity, { ...state, simTime:state.simTime, lifelines:state.lifelines })
+        integrityEvent = appended.event
+      } else {
+        const appended = appendIntegrityEvent(nextIntegrity, {
+          id:result.eventId,
+          type:'player_turn', turn:nextTurn, actor:'player', simTime:parsed.time || state.simTime,
+          directive:action, execution:parsed.consequence || '', timeMeta:parsed.timeMeta || null,
+          acceptedSnapshot:{ situation:resolvedSituation, lifelines:parsed.lifelines || state.lifelines, dispatches:parsed.dispatches || [], headlines:parsed.headlines || [], pins:parsed.pins || [] },
+        })
+        nextIntegrity = appended.integrity
+        integrityEvent = appended.event
+      }
+
+      if (!isEndex && typeof window !== 'undefined' && window.posthog) {
+        window.posthog.capture('turn_completed', { scenario: state.scenario, jurisdiction: canonicalJurisdictionName(state) || state.jurisdiction, difficulty: state.difficulty, turn: nextTurn })
       }
 
       const newHistory = [...msgs, { role:'assistant', content:JSON.stringify(parsed) }]
-      const resolvedSituation = isEndex || parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') ? 'ENDEX' : (parsed.situation||'DEVELOPING')
-
       const addedTerm = [
         ...newTerm,
-        { type:'time',        text:parsed.time },
+        { type:'time', text:isEndex ? state.simTime : parsed.time },
         { type:'consequence', text:parsed.consequence },
-        resolvedSituation !== 'ENDEX' ? { type:'prompt', text:parsed.prompt } : null,
+        !isEndex ? { type:'prompt', text:parsed.prompt } : null,
         { type:'divider' },
       ].filter(Boolean)
 
-      const newDispatches = parsed.dispatches?.length
+      const newDispatches = !isEndex && parsed.dispatches?.length
         ? [...parsed.dispatches.map((text,i) => ({ id:Date.now()+i, text, turn:nextTurn })), ...state.dispatches.slice(0,6)]
         : state.dispatches
-      const newHeadlines = parsed.headlines?.length
+      const newHeadlines = !isEndex && parsed.headlines?.length
         ? [...parsed.headlines.map((h,i) => ({ ...h, id:Date.now()+i, turn:nextTurn })), ...state.headlines.slice(0,12)]
         : state.headlines
-      const newDynamicPins = parsed.pins?.length
+      const newDynamicPins = !isEndex && parsed.pins?.length
         ? [...(state.dynamicPins||[]), ...parsed.pins.map((p,i) => ({ ...p, id:`dyn-${Date.now()}-${i}`, turn:nextTurn }))]
         : (state.dynamicPins||[])
 
-      const transcriptEntry = {
-        type:'turn',
-        turn: nextTurn,
-        simTime: parsed.time || state.simTime,
-        situation: resolvedSituation,
-        playerInput: action,
-        aiResponse: parsed.consequence || '',
-        prompt: resolvedSituation !== 'ENDEX' ? (parsed.prompt || '') : '',
-        dispatches: parsed.dispatches || [],
-        headlines: parsed.headlines || [],
-        pins: parsed.pins || [],
-        lifelines: parsed.lifelines || state.lifelines,
-        planGrounded:Boolean(parsed.planGrounded),
-        sources:parsed.sources || [],
-        planEvidence:parsed.planEvidence || [],
-        planReviewEvidence:parsed.planReviewEvidence || [],
-        planQuery:parsed.planQuery || null,
+      const transcriptEntry = isEndex ? {
+        type:'exercise_end', eventId:integrityEvent.id, simTime:state.simTime, situation:'ENDEX',
+        playerInput:'ENDEX', aiResponse:parsed.consequence || 'ENDEX - scenario complete.',
+        lifelines:state.lifelines,
+      } : {
+        type:'turn', eventId:integrityEvent.id, turn:nextTurn,
+        simTime:parsed.time || state.simTime, situation:resolvedSituation,
+        playerInput:action, aiResponse:parsed.consequence || '', prompt:parsed.prompt || '',
+        dispatches:parsed.dispatches || [], headlines:parsed.headlines || [], pins:parsed.pins || [],
+        lifelines:parsed.lifelines || state.lifelines, lifelineText:lifelineSummary(parsed.lifelines || state.lifelines),
+        planGrounded:Boolean(parsed.planGrounded), sources:parsed.sources || [], planEvidence:parsed.planEvidence || [],
+        planReviewEvidence:parsed.planReviewEvidence || [], planQuery:parsed.planQuery || null,
       }
 
       update({
         terminal:addedTerm, history:newHistory, dispatches:newDispatches,
-        simTime:parsed.time||state.simTime, situation:resolvedSituation,
-        turn:nextTurn, lifelines:parsed.lifelines||state.lifelines,
+        simTime:isEndex ? state.simTime : (parsed.time||state.simTime), situation:resolvedSituation,
+        turn:nextTurn, lifelines:isEndex ? state.lifelines : (parsed.lifelines||state.lifelines),
         headlines:newHeadlines, dynamicPins:newDynamicPins,
-        aar: parsed.aar || state.aar,
-        screen: resolvedSituation === 'ENDEX' && parsed.aar ? 'aar' : state.screen,
-        exerciseTranscript: [...(state.exerciseTranscript || []), transcriptEntry],
+        aar:parsed.aar || state.aar, aarEvidence:isEndex ? (parsed.evaluationEvidence || []) : state.aarEvidence,
+        integrity:nextIntegrity,
+        screen:isEndex && parsed.aar ? 'aar' : state.screen,
+        exerciseTranscript:[...(state.exerciseTranscript || []), transcriptEntry],
       })
 
-      if (resolvedSituation === 'ENDEX' && typeof window !== 'undefined' && window.posthog) {
+      if (isEndex && typeof window !== 'undefined' && window.posthog) {
         window.posthog.capture('scenario_completed', {
-          scenario: state.scenario, jurisdiction: state.jurisdiction,
-          difficulty: state.difficulty, total_turns: nextTurn, role: state.role,
-          ...(state.playerName ? { player: state.playerName } : {}),
+          scenario:state.scenario, jurisdiction:canonicalJurisdictionName(state) || state.jurisdiction,
+          difficulty:state.difficulty, total_turns:state.turn, role:state.role,
+          ...(state.playerName ? { player:state.playerName } : {}),
         })
       }
     } catch(e) {
-      update({ terminal:[...newTerm, { type:'system', text:`[ERROR: ${e.message}]` }] })
+      update({ terminal:[...newTerm, { type:'system', text:`[INTEGRITY HOLD: ${e.message}]` }] })
     }
     setLoading(false)
     setTimeout(() => inputRef.current?.focus(), 50)
@@ -4937,20 +5077,22 @@ async function startCustomScenario(customScenario) {
     if (!state) return
     const scenarioName = SCENARIOS[state.scenario]?.name || customScenarioTitle(state.customScenario) || state.scenario || 'Scenario'
     const date = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })
-    const text = formatExerciseTranscript({
-      scenario: state.scenario,
-      jurisdiction: state.jurisdiction,
-      difficulty: state.difficulty,
-      role: state.role,
-      playerName: state.playerName,
-      worldState: state.worldState,
-      transcript: state.exerciseTranscript || [],
-      finalLifelines: state.lifelines,
-      finalSimTime: state.simTime,
-      finalSituation: state.situation,
-      aar: state.aar,
+    const model = buildTranscriptReportModel({
+      scenarioName,
+      jurisdictionName:canonicalJurisdictionName(state) || state.jurisdiction,
+      jurisdictionType:state.exerciseConfig?.jurisdictionType || state.jurisdiction,
+      difficulty:state.difficulty,
+      role:state.role,
+      participant:String(state.playerName || '').trim() || 'Not provided',
+      worldState:state.worldState,
+      transcript:state.exerciseTranscript || [],
+      finalLifelines:state.lifelines,
+      finalLifelineText:lifelineSummary(state.lifelines),
+      finalSimTime:state.simTime,
+      finalSituation:state.situation,
+      aar:state.aar,
     })
-    downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.pdf`, text)
+    downloadPdfTextFile(`NEXUS_EOC_Transcript_${scenarioName.replace(/\s+/g,'_')}_${date.replace(/\s+/g,'_')}.pdf`, model)
   }
 
   if (typeof window !== 'undefined' && window.location.pathname === '/dev/test-console') return <TestConsole AARComponent={AARDisplay} />
@@ -5005,6 +5147,8 @@ async function startCustomScenario(customScenario) {
     return (
       <AARDisplay
         aar={state.teamMode ? (state.teamAar || state.aar) : state.aar}
+        aarEvidence={state.aarEvidence || []}
+        exerciseConfig={state.exerciseConfig || null}
         teamMode={Boolean(state.teamMode)}
         teamAar={state.teamAar || null}
         individualAar={state.individualAar || null}
@@ -5025,7 +5169,7 @@ async function startCustomScenario(customScenario) {
         lifelines={state.lifelines}
         situation={state.situation}
         onReset={reset}
-        onRestart={() => state.customScenario ? startCustomScenario(state.customScenario) : startScenario(state.scenario)}
+        onRestart={() => state.customScenario ? startCustomScenario(state.customScenario) : startScenario(state.exerciseConfig?.scenario || state.scenario, launchOptionsFromSnapshot(state.exerciseConfig || {}))}
         onMissionPortal={() => update({ screen:'portal' })}
         fs={fs}
         ac={ac}
@@ -5778,7 +5922,7 @@ async function startCustomScenario(customScenario) {
                   />
                   <ScaleControl position="bottomright" imperial={true} metric={true} />
                   <MapResizeHandler watchKey={`${rightWidth}-${rightSplit}-${center?.[0]}-${center?.[1]}`} />
-                  <MapUpdater center={center}/>
+                  <MapUpdater center={center} pins={[...initPins, ...turnPins]}/>
                   {initPins.map(pin => (
                     <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={makeIcon(PIN_COLORS[pin.type]||PIN_COLORS.DEFAULT, pin.type)}>
                       <Popup>

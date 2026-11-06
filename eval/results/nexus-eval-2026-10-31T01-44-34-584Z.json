@@ -1,0 +1,228 @@
+{
+  "generatedAt": "2026-10-31T01:44:34.585Z",
+  "summary": [
+    {
+      "key": "openai:gpt-5.6",
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "runs": 3,
+      "passRate": 1,
+      "avgLatency": 13966,
+      "jsonRate": 1,
+      "avgInputTokens": 1014,
+      "avgOutputTokens": 1044
+    }
+  ],
+  "rows": [
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 1,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 14749,
+      "inputTokens": 1014,
+      "outputTokens": 986,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"0845\",\n  \"consequence\": \"Confirmed accessible transportation capacity remains far below the known registry population, although the actual shortfall cannot yet be quantified because most fleet status is unverified. Residents needing mobility assistance could face longer evacuation timelines than the general population. The uncertainty also limits reliable public messaging and resource forecasting. It remains unclear how many registrants will seek transportation or how quickly additional accessible vehicles could become available.\",\n  \"situation\": \"DETERIORATING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance; the number who will use county-supported transportation remains unknown.\",\n    \"The transit agency confirms two accessible vehicles are available as of 0830. Status of the remaining fleet is still unverified.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level pressure is how to manage evacuation expectations and resource uncertainty while confirmed accessible capacity remains limited.\",\n  \"headlines\": [],\n  \"pins\": [\n    {\n      \"label\": \"Wake County\",\n      \"type\": \"AFFECTED\",\n      \"lat\": 35.78,\n      \"lng\": -78.64,\n      \"note\": \"Accessible evacuation transportation capacity remains uncertain.\"\n    }\n  ],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Transportation-dependent residents may face delayed evacuation.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-access disruption is currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Residents with access and functional needs may experience transportation delays.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption is currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications outage is currently reported.\"\n    },\n    \"transport\": {\n      \"status\": \"RED\",\n      \"reason\": \"Only two accessible vehicles are confirmed against approximately 1,200 registered transportation needs.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials issue is currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system disruption is currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "0845",
+        "consequence": "Confirmed accessible transportation capacity remains far below the known registry population, although the actual shortfall cannot yet be quantified because most fleet status is unverified. Residents needing mobility assistance could face longer evacuation timelines than the general population. The uncertainty also limits reliable public messaging and resource forecasting. It remains unclear how many registrants will seek transportation or how quickly additional accessible vehicles could become available.",
+        "situation": "DETERIORATING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance; the number who will use county-supported transportation remains unknown.",
+          "The transit agency confirms two accessible vehicles are available as of 0830. Status of the remaining fleet is still unverified."
+        ],
+        "prompt": "The unresolved EOC-level pressure is how to manage evacuation expectations and resource uncertainty while confirmed accessible capacity remains limited.",
+        "headlines": [],
+        "pins": [
+          {
+            "label": "Wake County",
+            "type": "AFFECTED",
+            "lat": 35.78,
+            "lng": -78.64,
+            "note": "Accessible evacuation transportation capacity remains uncertain."
+          }
+        ],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Transportation-dependent residents may face delayed evacuation."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-access disruption is currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Residents with access and functional needs may experience transportation delays."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications outage is currently reported."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible vehicles are confirmed against approximately 1,200 registered transportation needs."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue is currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system disruption is currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 2,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 10739,
+      "inputTokens": 1014,
+      "outputTokens": 896,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"0830\",\n  \"consequence\": \"Confirmed accessible transportation capacity is far below the approximately 1,200 registered residents who may need evacuation assistance. The gap creates uncertainty around evacuation timing and increases pressure on transportation coordination and public messaging. Some registrants may have alternate transportation or may not evacuate, but that has not been verified. The status of the remaining accessible fleet is unresolved.\",\n  \"situation\": \"DETERIORATING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance. Individual transportation needs and current evacuation intentions remain unverified.\",\n    \"The transit agency confirms two accessible vehicles available as of 0830. The operational status of the remainder of the fleet is unknown.\"\n  ],\n  \"prompt\": \"The unresolved EOC-level pressure is the widening gap between registered transportation needs and confirmed accessible capacity while the evacuation timeline continues.\",\n  \"headlines\": [],\n  \"pins\": [\n    {\n      \"label\": \"Wake County\",\n      \"type\": \"AFFECTED\",\n      \"lat\": 35.8032,\n      \"lng\": -78.5661,\n      \"note\": \"Accessible evacuation transportation capacity remains largely unverified.\"\n    }\n  ],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Residents needing transportation assistance may face delayed evacuation.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food-system disruption is currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Transportation uncertainty may affect residents with medical or mobility needs.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy-system disruption is currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruption is currently reported.\"\n    },\n    \"transport\": {\n      \"status\": \"RED\",\n      \"reason\": \"Only two accessible transit vehicles are confirmed against approximately 1,200 registered transportation needs.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous-materials issue is currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water-system disruption is currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "0830",
+        "consequence": "Confirmed accessible transportation capacity is far below the approximately 1,200 registered residents who may need evacuation assistance. The gap creates uncertainty around evacuation timing and increases pressure on transportation coordination and public messaging. Some registrants may have alternate transportation or may not evacuate, but that has not been verified. The status of the remaining accessible fleet is unresolved.",
+        "situation": "DETERIORATING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance. Individual transportation needs and current evacuation intentions remain unverified.",
+          "The transit agency confirms two accessible vehicles available as of 0830. The operational status of the remainder of the fleet is unknown."
+        ],
+        "prompt": "The unresolved EOC-level pressure is the widening gap between registered transportation needs and confirmed accessible capacity while the evacuation timeline continues.",
+        "headlines": [],
+        "pins": [
+          {
+            "label": "Wake County",
+            "type": "AFFECTED",
+            "lat": 35.8032,
+            "lng": -78.5661,
+            "note": "Accessible evacuation transportation capacity remains largely unverified."
+          }
+        ],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents needing transportation assistance may face delayed evacuation."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food-system disruption is currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Transportation uncertainty may affect residents with medical or mobility needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy-system disruption is currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption is currently reported."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible transit vehicles are confirmed against approximately 1,200 registered transportation needs."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous-materials issue is currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water-system disruption is currently reported."
+          }
+        }
+      }
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5.6",
+      "caseId": "flash-001",
+      "category": "flash-card",
+      "run": 3,
+      "pass": true,
+      "jsonValid": true,
+      "latencyMs": 16410,
+      "inputTokens": 1014,
+      "outputTokens": 1251,
+      "failures": [],
+      "rawText": "{\n  \"time\": \"0830\",\n  \"consequence\": \"Confirmed accessible transportation capacity remains far below the registry population, although the registry count is not the same as validated evacuation demand. The fleet-status gap prevents reliable movement estimates and increases the risk of delayed pickup for residents with mobility needs. This creates pressure on evacuation timing, accessible shelter operations, and potential outside resource needs. Actual demand and total available fleet capacity remain unresolved.\",\n  \"situation\": \"DEVELOPING\",\n  \"planGrounded\": false,\n  \"sources\": [],\n  \"dispatches\": [\n    \"The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance. The number who intend to evacuate is not yet confirmed.\",\n    \"The transit agency confirms two accessible vehicles are currently available. Status of the remaining accessible fleet is unverified.\"\n  ],\n  \"prompt\": \"The unresolved EOC decision is how much evacuation planning and external resource action to base on the registry count while most accessible fleet capacity remains unverified.\",\n  \"headlines\": [],\n  \"pins\": [\n    {\n      \"label\": \"Wake County\",\n      \"type\": \"AFFECTED\",\n      \"lat\": 35.8032,\n      \"lng\": -78.5661,\n      \"note\": \"Accessible evacuation transportation capacity is not fully verified.\"\n    }\n  ],\n  \"lifelines\": {\n    \"safety\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Residents needing accessible transportation may face delayed evacuation.\"\n    },\n    \"food\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No food supply disruption is currently reported.\"\n    },\n    \"health\": {\n      \"status\": \"YELLOW\",\n      \"reason\": \"Transportation uncertainty may affect residents with medical or mobility needs.\"\n    },\n    \"energy\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No energy disruption is currently reported.\"\n    },\n    \"comms\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No communications disruption is currently reported.\"\n    },\n    \"transport\": {\n      \"status\": \"RED\",\n      \"reason\": \"Only two accessible vehicles are confirmed against a registry population of approximately 1,200.\"\n    },\n    \"hazmat\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No hazardous materials issue is currently reported.\"\n    },\n    \"water\": {\n      \"status\": \"GREEN\",\n      \"reason\": \"No water system disruption is currently reported.\"\n    }\n  }\n}",
+      "parsed": {
+        "time": "0830",
+        "consequence": "Confirmed accessible transportation capacity remains far below the registry population, although the registry count is not the same as validated evacuation demand. The fleet-status gap prevents reliable movement estimates and increases the risk of delayed pickup for residents with mobility needs. This creates pressure on evacuation timing, accessible shelter operations, and potential outside resource needs. Actual demand and total available fleet capacity remain unresolved.",
+        "situation": "DEVELOPING",
+        "planGrounded": false,
+        "sources": [],
+        "dispatches": [
+          "The Emergency Management Duty Officer reports approximately 1,200 Special Needs Registry residents are listed as requiring transportation assistance. The number who intend to evacuate is not yet confirmed.",
+          "The transit agency confirms two accessible vehicles are currently available. Status of the remaining accessible fleet is unverified."
+        ],
+        "prompt": "The unresolved EOC decision is how much evacuation planning and external resource action to base on the registry count while most accessible fleet capacity remains unverified.",
+        "headlines": [],
+        "pins": [
+          {
+            "label": "Wake County",
+            "type": "AFFECTED",
+            "lat": 35.8032,
+            "lng": -78.5661,
+            "note": "Accessible evacuation transportation capacity is not fully verified."
+          }
+        ],
+        "lifelines": {
+          "safety": {
+            "status": "YELLOW",
+            "reason": "Residents needing accessible transportation may face delayed evacuation."
+          },
+          "food": {
+            "status": "GREEN",
+            "reason": "No food supply disruption is currently reported."
+          },
+          "health": {
+            "status": "YELLOW",
+            "reason": "Transportation uncertainty may affect residents with medical or mobility needs."
+          },
+          "energy": {
+            "status": "GREEN",
+            "reason": "No energy disruption is currently reported."
+          },
+          "comms": {
+            "status": "GREEN",
+            "reason": "No communications disruption is currently reported."
+          },
+          "transport": {
+            "status": "RED",
+            "reason": "Only two accessible vehicles are confirmed against a registry population of approximately 1,200."
+          },
+          "hazmat": {
+            "status": "GREEN",
+            "reason": "No hazardous materials issue is currently reported."
+          },
+          "water": {
+            "status": "GREEN",
+            "reason": "No water system disruption is currently reported."
+          }
+        }
+      }
+    }
+  ]
+}

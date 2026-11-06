@@ -1,0 +1,31 @@
+NEXUS MODEL EVALUATION HARNESS - INSTALL
+
+1. Unzip this package.
+2. Copy the unzipped folder contents somewhere temporary.
+3. From C:\Dev\em-sim run:
+
+   node <path-to-unzipped-folder>\install_nexus_eval.cjs
+
+4. Validate without API cost:
+
+   npm run eval:nexus:mock
+
+5. Inspect changes:
+
+   git diff -- package.json eval/
+
+6. Set your OpenAI key and EXACT model ID, then run a narrow real test first:
+
+   $env:OPENAI_API_KEY="YOUR_KEY"
+   $env:OPENAI_EVAL_MODEL="YOUR_EXACT_MODEL_ID"
+   npm run eval:nexus -- --case=flash-001 --runs=3
+
+7. Full OpenAI baseline:
+
+   npm run eval:nexus -- --runs=10
+
+8. Optional Claude comparison after setting ANTHROPIC_API_KEY and ANTHROPIC_EVAL_MODEL:
+
+   npm run eval:nexus -- --providers=openai,anthropic --runs=10
+
+The installer refuses to overwrite an existing eval/ folder or conflicting npm script.
