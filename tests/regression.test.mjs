@@ -121,3 +121,20 @@ test('team AAR supplemental sections remain typed sections', () => {
   const entry = model.entries.find(e => e.title === 'Facilitator AAR — Overview')
   assert.equal(entry.subs[0].body.startsWith('TURN 3'), true)
 })
+
+test('team-turn integrity fixture rejects invalid population numbers and confidence enum', () => {
+  const integrity=createIntegrityState('team-repair-fixture')
+  const result=applyStatePatch(integrity,{
+    populations:[{
+      id:'winter-shelter-population', label:'Winter shelter population', total:'unknown', completePartition:true,
+      categories:[{id:'evacuated',label:'Evacuated',count:'TBD',exclusive:true}], source:'Simulated shelter report', confidence:'moderate', verification:'simulated_report',
+    }],
+    facts:[{
+      id:'road-confidence', source:'Simulated public works report', confidence:'medium', verification:'simulated_report', value:'Road conditions deteriorating',
+    }],
+  },{causeEventId:'EVT-0001'})
+  const codes=result.violations.map(v=>v.code)
+  assert.ok(codes.includes('POPULATION_TOTAL_INVALID'))
+  assert.ok(codes.includes('POPULATION_CATEGORY_INVALID'))
+  assert.ok(codes.includes('FACT_CONFIDENCE_INVALID'))
+})

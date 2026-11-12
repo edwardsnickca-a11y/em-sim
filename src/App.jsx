@@ -1507,11 +1507,12 @@ If LOCAL PLAN CONTEXT was supplied and you materially rely on it, set "planGroun
 
 INTEGRITY CONTRACT
 The application maintains authoritative typed state and rejects impossible state changes. When a turn introduces or changes a count, facility capacity, resource status, capability, or other material fact, also return a structured statePatch that represents the same facts. Do not put arithmetic in prose that conflicts with statePatch. Use stable ids across turns.
-- populations: each record has id, label, authoritative total, categories, completePartition, source, confidence, verification. Categories that are mutually exclusive must set exclusive:true. Overlapping needs set exclusive:false.
+- populations: each record has id, label, total, categories, completePartition, source, confidence, verification. total and every category count MUST be JSON numbers (for example 38, not "38", null, "unknown", or prose). If no defensible numeric total exists, omit that population record instead of inventing a placeholder. Categories that are mutually exclusive must set exclusive:true. Overlapping needs set exclusive:false. A completePartition=true record must have mutually exclusive category counts that sum exactly to total.
 - facilities: use stable id; changes to capacity or capability require causeEventId or an explicit causal event in the current turn.
 - resources: use stable id and lifecycle statuses such as requested, assigned, en_route, arrived, staged, committed, available, unavailable, completed.
 - assignments: represent transport/resource assignments separately from the resource itself, using statuses pending, assigned, departed, arrived, accepted, rejected, completed, or cancelled. Destination acceptance is not the same as arrival.
-- facts: every real-place detail must carry source, confidence, and verification. Use exercise_assumption or simulated_report for fictional exercise injects; never imply they are verified real-world facts.
+- facts: every material fact record must have a stable id and non-empty source. confidence MUST be exactly one of: low, moderate, high, confirmed, unknown. verification MUST be exactly one of: exercise_assumption, plan_derived, participant_provided, simulated_report, verified, unverified, corrected. Use exercise_assumption or simulated_report for fictional exercise injects; never imply they are verified real-world facts.
+- Never use descriptive words such as "medium", "likely", "estimated", "TBD", or percentages in confidence. Map uncertainty to the allowed confidence enum and keep explanation in the narrative/source fields.
 Time must not move backward. If reporting historical information, set timeMeta.historical=true. If correcting a previously reported timestamp, set timeMeta.correction=true, provide timeMeta.supersedesEventId for the event being corrected, and explain the correction in the consequence. Forecast issue time and valid time are different fields and validTime cannot precede issueTime.
 
 STANDARD TURN RESPONSE FORMAT — no preamble, no markdown:
@@ -4456,7 +4457,8 @@ async function startCustomScenario(customScenario) {
         if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to synchronize Team Room')
         if (cancelled) return
         setTeamLiveRoom(data.room)
-        setTeamSyncError('')
+        // Do not clear action/generation errors during the 2-second room poll.
+        // They remain visible until the user retries an action or a new action succeeds.
         if (data.room?.status === 'ended' && data.room?.teamAar) {
           update({
             screen:'aar', situation:'ENDEX', aar:data.room.teamAar, teamAar:data.room.teamAar,
@@ -4575,22 +4577,42 @@ async function startCustomScenario(customScenario) {
       const teamMessage = `TEAM TURN ${state.turn + 1} RESPONSES\n\n${combinedAction}\n\nEvaluate these responses as the combined actions of the EOC team. Generate one shared consequence update for the entire room. Do not coach the players or identify the correct answer.`
       const msgs = [...state.history, { role:'user', content:teamMessage }]
       const localPlanContext = await getTurnLocalPlanContext(state, combinedAction, 'EOC Team')
-      const aiData = await requestAiChat({
-        system:buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, '', 'EOC Team', state.customScenario, localPlanContext),
-        messages:msgs,
-      })
-      const raw = aiData.content?.[0]?.text || ''
-      let parsed
-      try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
-      catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'Several coordination issues remain unresolved as the situation develops.', lifelines:state.lifelines, headlines:[], pins:[], aar:null } }
-      parsed = applyVerifiedPlanCitations(parsed, localPlanContext, combinedAction)
-      parsed = sanitizeTurnOutput(parsed, state)
-      const schemaViolations = parsed.statePatch ? [] : [{ code:'STATE_PATCH_REQUIRED', message:'Every team turn must include the typed statePatch object.' }]
-      const chronologyViolations = validateChronology(state.simTime, parsed.time || state.simTime, parsed.timeMeta || {}, (state.integrity?.events || []).map(event => event.id))
-      const eventId = nextEventId(state.integrity || createIntegrityState())
-      const patchResult = applyStatePatch(state.integrity || createIntegrityState(), parsed.statePatch, { causeEventId:eventId })
-      const integrityViolations = [...schemaViolations, ...chronologyViolations, ...patchResult.violations]
-      if (integrityViolations.length) throw new Error(`Team update failed integrity validation: ${integrityViolations.map(v => v.code).join(', ')}`)
+
+      const requestAndValidateTeamUpdate = async (rejected=null, violations=[]) => {
+        const requestMessages = rejected
+          ? [
+              ...msgs,
+              { role:'assistant', content:JSON.stringify(rejected) },
+              { role:'user', content:`SYSTEM INTEGRITY REPAIR REQUEST. The proposed team update above was rejected before display and no exercise state was changed. Repair the complete JSON response without changing the team's directives or the substantive scenario outcome. Correct only what is necessary to satisfy the integrity contract.\n\nVALIDATION ERRORS:\n${violations.map(v => `${v.code}: ${v.message}`).join('\n')}\n\nCritical repair rules: population total/count fields must be JSON numbers; confidence must be exactly low, moderate, high, confirmed, or unknown; verification must use an allowed integrity value; preserve stable ids and all valid narrative/UI fields. Return one complete replacement JSON object only.` },
+            ]
+          : msgs
+        const aiData = await requestAiChat({
+          system:buildSystemPrompt(state.scenario, state.jurisdiction, state.difficulty, state.worldState, '', 'EOC Team', state.customScenario, localPlanContext),
+          messages:requestMessages,
+        })
+        const raw = aiData.content?.[0]?.text || ''
+        let parsed
+        try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()) }
+        catch { parsed = { time:state.simTime, consequence:raw, situation:'DEVELOPING', dispatches:[], prompt:'Several coordination issues remain unresolved as the situation develops.', lifelines:state.lifelines, headlines:[], pins:[], aar:null } }
+        parsed = applyVerifiedPlanCitations(parsed, localPlanContext, combinedAction)
+        parsed = sanitizeTurnOutput(parsed, state)
+        const schemaViolations = parsed.statePatch ? [] : [{ code:'STATE_PATCH_REQUIRED', message:'Every team turn must include the typed statePatch object, even when its arrays are empty.' }]
+        const chronologyViolations = validateChronology(state.simTime, parsed.time || state.simTime, parsed.timeMeta || {}, (state.integrity?.events || []).map(event => event.id))
+        const eventId = nextEventId(state.integrity || createIntegrityState())
+        const patchResult = applyStatePatch(state.integrity || createIntegrityState(), parsed.statePatch, { causeEventId:eventId })
+        return { parsed, eventId, patchResult, violations:[...schemaViolations, ...chronologyViolations, ...patchResult.violations] }
+      }
+
+      let result = await requestAndValidateTeamUpdate()
+      if (result.violations.length) {
+        result = await requestAndValidateTeamUpdate(result.parsed, result.violations)
+      }
+      if (result.violations.length) {
+        const details = result.violations.map(v => `${v.code}: ${v.message}`).join(' | ')
+        throw new Error(`Team update failed integrity validation after one repair attempt: ${details}. No exercise state was changed.`)
+      }
+
+      const { parsed, eventId, patchResult } = result
       const nextTurn = state.turn + 1
       const resolvedSituation = parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') ? 'ENDEX' : (parsed.situation||'DEVELOPING')
       const newHistory = [...msgs, { role:'assistant', content:JSON.stringify(parsed) }]
@@ -4643,6 +4665,7 @@ async function startCustomScenario(customScenario) {
       const completeData = await completeRes.json().catch(() => ({}))
       if (!completeRes.ok || completeData.ok === false) throw new Error(completeData.error || 'Unable to save shared team turn')
       setTeamLiveRoom(completeData.room)
+      setTeamSyncError('')
       applySharedTeamTurn(sharedTurnState, completeData.room)
     } catch (err) {
       setTeamSyncError(err.message)
