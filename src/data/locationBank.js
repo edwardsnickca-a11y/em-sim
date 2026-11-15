@@ -1,19 +1,15 @@
 // Curated real-location bank for NEXUS EOC.
 // The app selects the location before Claude runs, so the model builds around a real place instead of choosing from examples.
 
+import DATA from '../../shared/exerciseData.json'
+
 const RECENT_LOCATIONS_KEY = 'nexus_recent_locations_v1'
 const RECENT_LIMIT = 12
 const BROADLY_PLAUSIBLE_HAZARDS = new Set(['rdd', 'cyber', 'mci'])
 
 export function normalizeJurisdictionType(value = '') {
   const v = String(value || '').trim()
-  const aliases = {
-    'Large Urban Metro': 'Large Urban City',
-    'Coastal Community': 'Island / Coastal',
-    'Interstate Corridor': 'Industrial Corridor',
-    'Border Community': 'Industrial Corridor',
-  }
-  return aliases[v] || v || 'Mid-Size City'
+  return DATA.jurisdictionAliases[v] || v || 'Mid-Size City'
 }
 
 export const LOCATION_BANK = [

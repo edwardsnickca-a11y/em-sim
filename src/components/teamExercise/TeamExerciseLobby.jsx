@@ -116,10 +116,13 @@ async function apiTeamRoom(payload, method='POST') {
   return data
 }
 
-async function fetchRoom(code) {
+async function fetchRoom(code, credentials=null) {
   const clean = String(code || '').trim().toUpperCase()
   if (!clean) return null
-  const res = await fetch(`/api/team-room?code=${encodeURIComponent(clean)}`)
+  const auth = credentials?.playerId && credentials?.playerToken
+    ? `&playerId=${encodeURIComponent(credentials.playerId)}&playerToken=${encodeURIComponent(credentials.playerToken)}`
+    : ''
+  const res = await fetch(`/api/team-room?code=${encodeURIComponent(clean)}${auth}`)
   const data = await res.json().catch(() => ({}))
   if (!res.ok || data.ok === false) throw new Error(data.error || 'Room not found')
   return data.room
@@ -139,12 +142,13 @@ function readTeamSession(code) {
   catch { return null }
 }
 
-function writeTeamSession(code, participant) {
+function writeTeamSession(code, participant, playerToken) {
   const clean = String(code || '').trim().toUpperCase()
   if (!clean || !participant?.id) return
   try {
     localStorage.setItem(`${TEAM_SESSION_PREFIX}${clean}`, JSON.stringify({
       playerId: participant.id,
+      playerToken: playerToken || '',
       playerName: participant.name || '',
       playerRole: participant.role || '',
       savedAt: new Date().toISOString(),
@@ -174,6 +178,8 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   const [joinName, setJoinName] = useState('')
   const [joinRole, setJoinRole] = useState('EOC Director')
   const [playerId, setPlayerId] = useState(() => state?.playerId || readTeamSession(initialLinkCode || state?.teamRoom?.roomCode)?.playerId || null)
+  const [playerToken, setPlayerToken] = useState(() => state?.playerToken || readTeamSession(initialLinkCode || state?.teamRoom?.roomCode)?.playerToken || null)
+  const credentials = playerId && playerToken ? { playerId, playerToken } : null
   const [joinPreview, setJoinPreview] = useState(null)
   const [copyMsg, setCopyMsg] = useState('')
   const [error, setError] = useState('')
@@ -207,6 +213,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
     if (playerId || !code) return
     const savedSession = readTeamSession(code)
     if (savedSession?.playerId) setPlayerId(savedSession.playerId)
+    if (savedSession?.playerToken) setPlayerToken(savedSession.playerToken)
   }, [code, playerId])
 
   useEffect(() => {
@@ -214,10 +221,10 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
     let cancelled = false
     const load = async () => {
       try {
-        const next = await fetchRoom(code)
+        const next = await fetchRoom(code, credentials)
         if (!cancelled) {
           setRoom(next)
-          update?.({ teamRoom:next, roomCode:next.roomCode, playerId:playerId || state?.playerId || null })
+          update?.({ teamRoom:next, roomCode:next.roomCode, playerId:playerId || state?.playerId || null, playerToken:playerToken || state?.playerToken || null })
         }
       } catch (err) {
         if (!cancelled) setError(err.message)
@@ -226,15 +233,15 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
     load()
     const id = setInterval(load, 2500)
     return () => { cancelled = true; clearInterval(id) }
-  }, [screen, code, update])
+  }, [screen, code, update, playerId, playerToken])
 
   useEffect(() => {
     if (screen !== 'waiting' || !joinCode.trim()) return undefined
     let cancelled = false
     const load = async () => {
       try {
-        const next = await fetchRoom(joinCode)
-        if (!cancelled) { setRoom(next); update?.({ teamRoom:next, roomCode:next.roomCode, playerId:playerId || state?.playerId || null }) }
+        const next = await fetchRoom(joinCode, credentials)
+        if (!cancelled) { setRoom(next); update?.({ teamRoom:next, roomCode:next.roomCode, playerId:playerId || state?.playerId || null, playerToken:playerToken || state?.playerToken || null }) }
       } catch (err) {
         if (!cancelled) setError(err.message)
       }
@@ -242,12 +249,12 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
     load()
     const id = setInterval(load, 2500)
     return () => { cancelled = true; clearInterval(id) }
-  }, [screen, joinCode, playerId, state?.playerId, update])
+  }, [screen, joinCode, playerId, playerToken, state?.playerId, state?.playerToken, update])
 
   useEffect(() => {
     if (room?.status !== 'active' || launching || !launchPlayer || !onStartExercise) return
     setLaunching(true)
-    update?.({ teamRoom:room, roomCode:room.roomCode, playerId:launchPlayer.id })
+    update?.({ teamRoom:room, roomCode:room.roomCode, playerId:launchPlayer.id, playerToken })
     onStartExercise(room, launchPlayer)
   }, [room, launching, launchPlayer, onStartExercise, update])
 
@@ -292,8 +299,9 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
       const data = await apiTeamRoom({ action:'create', scenario:buildCustomScenario ? 'custom' : selectedScenario, jurisdiction:buildCustomScenario ? customScenario.location : jurisdiction, difficulty, hostMode, hostName, hostRole, specificJurisdiction:!buildCustomScenario && useSpecificJurisdiction ? cleanedSpecificJurisdiction : '', localPlan:buildCustomScenario ? (roomCustomScenario?.localPlan || null) : (useSpecificJurisdiction && localPlan?.status === 'ready' && localPlan.activeForExercise ? localPlan : null), customScenario:roomCustomScenario })
       setRoom(data.room)
       setPlayerId(data.playerId || null)
+      setPlayerToken(data.playerToken || null)
       const createdParticipant = data.player || data.room?.players?.find(p => p.id === data.playerId)
-      if (createdParticipant) writeTeamSession(data.room.roomCode, createdParticipant)
+      if (createdParticipant) writeTeamSession(data.room.roomCode, createdParticipant, data.playerToken)
       update?.({
         scenario:buildCustomScenario ? 'custom' : selectedScenario,
         jurisdiction:buildCustomScenario ? customScenario.location : jurisdiction,
@@ -303,7 +311,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
         localPlan:buildCustomScenario ? (roomCustomScenario?.localPlan || null) : (useSpecificJurisdiction && localPlan?.status === 'ready' && localPlan.activeForExercise ? localPlan : null),
         role:hostMode === 'host_player' ? hostRole : state?.role,
         playerName:hostMode === 'host_player' ? hostName : state?.playerName,
-        teamRoom:data.room, roomCode:data.room.roomCode, playerId:data.playerId || null,
+        teamRoom:data.room, roomCode:data.room.roomCode, playerId:data.playerId || null, playerToken:data.playerToken || null,
       })
       setScreen('lobby')
     } catch (err) { setError(err.message) }
@@ -316,12 +324,14 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
       const data = await apiTeamRoom({ action:'join', code:joinCode, name:joinName, role:joinRole })
       setRoom(data.room)
       setPlayerId(data.playerId)
+      setPlayerToken(data.playerToken || null)
       const joinedParticipant = data.player || data.room?.players?.find(p => p.id === data.playerId)
-      if (joinedParticipant) writeTeamSession(data.room.roomCode, joinedParticipant)
+      if (joinedParticipant) writeTeamSession(data.room.roomCode, joinedParticipant, data.playerToken)
       update?.({
         teamRoom:data.room,
         roomCode:data.room.roomCode,
         playerId:data.playerId,
+        playerToken:data.playerToken || null,
         playerName:joinedParticipant?.name || joinName,
         role:joinedParticipant?.role || joinRole,
       })
@@ -334,7 +344,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
     if (!code) return
     setBusy(true); setError('')
     try {
-      const data = await apiTeamRoom({ action:'updateRole', code, playerId:id, role })
+      const data = await apiTeamRoom({ action:'updateRole', code, playerId, playerToken, targetPlayerId:id, role })
       setRoom(data.room)
       update?.({ teamRoom:data.room })
     } catch (err) { setError(err.message) }
@@ -348,7 +358,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
       const activeRoom = await onPrepareStart(room, launchPlayer)
       if (activeRoom) {
         setRoom(activeRoom)
-        update?.({ teamRoom:activeRoom, roomCode:activeRoom.roomCode, playerId:launchPlayer?.id || playerId })
+        update?.({ teamRoom:activeRoom, roomCode:activeRoom.roomCode, playerId:launchPlayer?.id || playerId, playerToken })
       }
     } catch (err) { setError(err.message) }
     finally { setBusy(false) }
@@ -358,7 +368,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
     if (!code || id === 'host') return
     setBusy(true); setError('')
     try {
-      const data = await apiTeamRoom({ action:'removePlayer', code, playerId:id })
+      const data = await apiTeamRoom({ action:'removePlayer', code, playerId, playerToken, targetPlayerId:id })
       setRoom(data.room)
       update?.({ teamRoom:data.room })
     } catch (err) { setError(err.message) }

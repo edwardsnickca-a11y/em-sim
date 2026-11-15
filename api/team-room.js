@@ -1,13 +1,21 @@
 // NEXUS EOC Team Rooms API
-// Uses REDIS_URL from Vercel Redis / Redis Cloud.
-// No npm dependency required. Supports redis:// and rediss:// URLs.
+// Uses REDIS_URL from Vercel Redis / Redis Cloud (see server/redis.js).
+//
+// Authorization model
+// -------------------
+// Every participant receives a secret `playerToken` when they create or join a
+// room. The token is returned once to that participant and is never included in
+// any room view. Every state-changing action must carry `playerId` plus the
+// matching `playerToken`; host-only actions additionally require that player to
+// be the host. Reads without a valid token see only the public lobby view
+// (roster, status, exercise setup, turn counters), never private messages,
+// individual AARs, or the facilitator AAR.
 
-const net = require('node:net');
-const tls = require('node:tls');
 const crypto = require('node:crypto');
+const { redisCommands } = require('../server/redis.js');
 
 const ROOM_TTL_SECONDS = 60 * 60 * 12; // 12 hours
-const REDIS_TIMEOUT_MS = 8000;
+const MAX_PLAYERS = 8;
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
@@ -17,6 +25,7 @@ function sendJson(res, statusCode, payload) {
 }
 
 function readBody(req) {
+  if (req.body && typeof req.body === 'object') return Promise.resolve(req.body);
   return new Promise((resolve, reject) => {
     let body = '';
     req.on('data', (chunk) => {
@@ -56,181 +65,52 @@ function makePlayerId() {
   return crypto.randomBytes(8).toString('hex');
 }
 
+function makePlayerToken() {
+  return crypto.randomBytes(24).toString('hex');
+}
+
 function roomKey(code) {
   return `nexus:eoc:team-room:${normalizeRoomCode(code)}`;
 }
 
-function encodeRedisCommand(args) {
-  const parts = [`*${args.length}\r\n`];
-  for (const arg of args) {
-    const value = Buffer.from(String(arg));
-    parts.push(`$${value.length}\r\n`);
-    parts.push(value);
-    parts.push('\r\n');
-  }
-  return Buffer.concat(parts.map((part) => Buffer.isBuffer(part) ? part : Buffer.from(part)));
+function authError(message) {
+  const err = new Error(message);
+  err.statusCode = 403;
+  return err;
 }
 
-class RespParser {
-  constructor() {
-    this.buffer = Buffer.alloc(0);
-  }
-
-  push(chunk) {
-    this.buffer = Buffer.concat([this.buffer, chunk]);
-  }
-
-  readLine(offset) {
-    const end = this.buffer.indexOf('\r\n', offset);
-    if (end === -1) return null;
-    return {
-      line: this.buffer.slice(offset, end).toString('utf8'),
-      next: end + 2,
-    };
-  }
-
-  parseAt(offset = 0) {
-    if (this.buffer.length <= offset) return null;
-    const type = String.fromCharCode(this.buffer[offset]);
-
-    if (type === '+') {
-      const line = this.readLine(offset + 1);
-      if (!line) return null;
-      return { value: line.line, next: line.next };
-    }
-
-    if (type === '-') {
-      const line = this.readLine(offset + 1);
-      if (!line) return null;
-      throw new Error(line.line || 'Redis error');
-    }
-
-    if (type === ':') {
-      const line = this.readLine(offset + 1);
-      if (!line) return null;
-      return { value: Number(line.line), next: line.next };
-    }
-
-    if (type === '$') {
-      const line = this.readLine(offset + 1);
-      if (!line) return null;
-      const length = Number(line.line);
-      if (length === -1) return { value: null, next: line.next };
-      const start = line.next;
-      const end = start + length;
-      if (this.buffer.length < end + 2) return null;
-      return {
-        value: this.buffer.slice(start, end).toString('utf8'),
-        next: end + 2,
-      };
-    }
-
-    if (type === '*') {
-      const line = this.readLine(offset + 1);
-      if (!line) return null;
-      const count = Number(line.line);
-      if (count === -1) return { value: null, next: line.next };
-      const values = [];
-      let next = line.next;
-      for (let i = 0; i < count; i += 1) {
-        const parsed = this.parseAt(next);
-        if (!parsed) return null;
-        values.push(parsed.value);
-        next = parsed.next;
-      }
-      return { value: values, next };
-    }
-
-    throw new Error(`Unsupported Redis response type: ${type}`);
-  }
-
-  shiftParsed() {
-    const parsed = this.parseAt(0);
-    if (!parsed) return null;
-    this.buffer = this.buffer.slice(parsed.next);
-    return parsed.value;
-  }
+function tokensMatch(expected, supplied) {
+  if (!expected || !supplied) return false;
+  const a = Buffer.from(String(expected));
+  const b = Buffer.from(String(supplied));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-async function redisCommands(commandList) {
-  const redisUrl = process.env.REDIS_URL;
-  if (!redisUrl) {
-    throw new Error('REDIS_URL is not configured for this deployment');
-  }
+// Resolves the acting player from playerId + playerToken. Returns null when the
+// credentials do not identify an active participant.
+function authenticate(room, playerId, playerToken) {
+  const id = String(playerId || '').trim();
+  if (!id) return null;
+  const player = (room.players || []).find((item) => item.id === id && item.status !== 'removed');
+  if (!player || !tokensMatch(player.token, playerToken)) return null;
+  return player;
+}
 
-  const parsedUrl = new URL(redisUrl);
-  const isTls = parsedUrl.protocol === 'rediss:';
-  const port = Number(parsedUrl.port || (isTls ? 6380 : 6379));
-  const host = parsedUrl.hostname;
-  const username = decodeURIComponent(parsedUrl.username || '');
-  const password = decodeURIComponent(parsedUrl.password || '');
-  const db = parsedUrl.pathname && parsedUrl.pathname !== '/' ? parsedUrl.pathname.slice(1) : '';
+function requirePlayer(room, body) {
+  const player = authenticate(room, body.playerId, body.playerToken);
+  if (!player) throw authError('Player credentials are missing or invalid');
+  return player;
+}
 
-  return new Promise((resolve, reject) => {
-    const socket = isTls
-      ? tls.connect({ host, port, servername: host, timeout: REDIS_TIMEOUT_MS })
-      : net.connect({ host, port, timeout: REDIS_TIMEOUT_MS });
+function requireHost(room, body, message = 'Only the host can perform this action') {
+  const player = requirePlayer(room, body);
+  if (!player.isHost) throw authError(message);
+  return player;
+}
 
-    const parser = new RespParser();
-    const queue = [];
-    let settled = false;
-
-    function fail(err) {
-      if (settled) return;
-      settled = true;
-      socket.destroy();
-      reject(err);
-    }
-
-    function finish(value) {
-      if (settled) return;
-      settled = true;
-      socket.end();
-      resolve(value);
-    }
-
-    function writeCommand(args) {
-      socket.write(encodeRedisCommand(args));
-    }
-
-    function runNext(previousValue) {
-      if (queue.length === 0) return finish(previousValue);
-      const next = queue.shift();
-      writeCommand(next);
-    }
-
-    socket.on('connect', () => {
-      if (password) {
-        queue.push(username ? ['AUTH', username, password] : ['AUTH', password]);
-      }
-      if (db) queue.push(['SELECT', db]);
-      queue.push(...commandList);
-      runNext();
-    });
-
-    socket.on('secureConnect', () => {
-      // tls.connect emits secureConnect after connect. Commands are queued on connect above.
-    });
-
-    socket.on('data', (chunk) => {
-      try {
-        parser.push(chunk);
-        let value;
-        while ((value = parser.shiftParsed()) !== null) {
-          if (queue.length === 0) {
-            finish(value);
-            return;
-          }
-          runNext(value);
-        }
-      } catch (err) {
-        fail(err);
-      }
-    });
-
-    socket.on('timeout', () => fail(new Error('Redis request timed out')));
-    socket.on('error', fail);
-  });
+function publicPlayer(player) {
+  const { token, ...rest } = player;
+  return rest;
 }
 
 async function redisGetRoom(code) {
@@ -247,28 +127,32 @@ async function redisSaveRoom(room) {
   return room;
 }
 
-function publicRoom(room, viewerId = '') {
-  const viewer = (room.players || []).find((player) => player.id === viewerId);
+// `viewer` must be a player object returned by authenticate(); anonymous callers
+// pass null and receive the public lobby view only.
+function publicRoom(room, viewer = null) {
+  const viewerId = viewer?.id || '';
   const viewerIsHost = Boolean(viewer?.isHost);
-  const messages = (room.messages || []).filter((message) => {
-    if (message.channel === 'room') return true;
-    return viewerId && (message.senderId === viewerId || message.recipientId === viewerId);
-  });
+  const messages = viewer
+    ? (room.messages || []).filter((message) => {
+        if (message.channel === 'room') return true;
+        return message.senderId === viewerId || message.recipientId === viewerId;
+      })
+    : [];
   const viewerIndividualAar = viewerId ? (room.individualAars || {})[viewerId] || null : null;
   return {
     roomCode: room.roomCode,
     status: room.status,
     exercise: room.exercise,
-    players: room.players,
+    players: (room.players || []).map(publicPlayer),
     sharedNotes: room.sharedNotes || [],
-    sharedScenario: room.sharedScenario || null,
+    sharedScenario: viewer ? (room.sharedScenario || null) : null,
     turn: Number(room.turn || 0),
     turnStatus: room.turnStatus || 'collecting',
     submissions: (room.submissions || []).map(({ response, ...submission }) => submission),
-    sharedTurnState: room.sharedTurnState || null,
+    sharedTurnState: viewer ? (room.sharedTurnState || null) : null,
     messages,
     chatSettings: room.chatSettings || { includePrivateMessagesInTranscript: false },
-    teamAar: room.teamAar || null,
+    teamAar: viewer ? (room.teamAar || null) : null,
     individualAar: viewerIndividualAar,
     allIndividualAars: viewerIsHost ? (room.individualAars || {}) : {},
     facilitatorAar: viewerIsHost ? (room.facilitatorAar || null) : null,
@@ -326,34 +210,27 @@ async function handleCreate(body) {
     updatedAt: now,
   };
 
-  if (hostPlays) {
-    room.players.push({
-      id: body.hostPlayerId || makePlayerId(),
-      name: hostName,
-      role: hostRole,
-      isHost: true,
-      status: 'ready',
-      joinedAt: now,
-    });
-  } else {
-    room.players.push({
-      id: body.hostPlayerId || makePlayerId(),
-      name: hostName,
-      role: '',
-      isHost: true,
-      status: 'facilitator',
-      joinedAt: now,
-    });
-  }
+  const host = {
+    id: makePlayerId(),
+    token: makePlayerToken(),
+    name: hostName,
+    role: hostPlays ? hostRole : '',
+    isHost: true,
+    status: hostPlays ? 'ready' : 'facilitator',
+    joinedAt: now,
+  };
+  room.players.push(host);
 
   await redisSaveRoom(room);
-  return { ok: true, playerId: room.players[0]?.id || null, room: publicRoom(room) };
+  return { ok: true, playerId: host.id, playerToken: host.token, player: publicPlayer(host), room: publicRoom(room, host) };
 }
 
-async function handleGet(code, viewerId = '') {
+async function handleGet(code, playerId = '', playerToken = '') {
   const room = await redisGetRoom(code);
   if (!room) return { ok: false, error: 'Room not found', statusCode: 404 };
-  return { ok: true, room: publicRoom(room, viewerId) };
+  const viewer = authenticate(room, playerId, playerToken);
+  if (playerId && !viewer) return { ok: false, error: 'Player credentials are missing or invalid', statusCode: 403 };
+  return { ok: true, room: publicRoom(room, viewer) };
 }
 
 async function handleJoin(body) {
@@ -370,12 +247,13 @@ async function handleJoin(body) {
   if (room.status !== 'lobby') throw new Error('This room is not accepting new players');
 
   const activePlayers = room.players.filter((player) => player.status !== 'removed');
-  if (activePlayers.length >= 8) throw new Error('This team room already has 8 active roles');
+  if (activePlayers.length >= MAX_PLAYERS) throw new Error(`This team room already has ${MAX_PLAYERS} active roles`);
   validateRoleAvailable(room, role);
 
   const now = new Date().toISOString();
   const player = {
-    id: body.playerId || makePlayerId(),
+    id: makePlayerId(),
+    token: makePlayerToken(),
     name,
     role,
     isHost: false,
@@ -385,44 +263,44 @@ async function handleJoin(body) {
 
   room.players.push(player);
   await redisSaveRoom(room);
-  return { ok: true, playerId: player.id, player, room: publicRoom(room) };
+  return { ok: true, playerId: player.id, playerToken: player.token, player: publicPlayer(player), room: publicRoom(room, player) };
 }
 
 async function handleUpdateRole(body) {
   const roomCode = normalizeRoomCode(body.roomCode || body.code);
-  const playerId = String(body.playerId || '').trim();
   const role = String(body.role || '').trim();
-
   if (!roomCode) throw new Error('Room code is required');
-  if (!playerId) throw new Error('Player ID is required');
   if (!role) throw new Error('Role is required');
 
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok: false, error: 'Room not found', statusCode: 404 };
 
-  const player = room.players.find((item) => item.id === playerId);
+  const actor = requirePlayer(room, body);
+  const targetId = String(body.targetPlayerId || actor.id).trim();
+  if (targetId !== actor.id && !actor.isHost) throw authError('Only the host can change another player\'s role');
+  const player = room.players.find((item) => item.id === targetId && item.status !== 'removed');
   if (!player) throw new Error('Player not found');
-  validateRoleAvailable(room, role, playerId);
+  validateRoleAvailable(room, role, targetId);
 
   player.role = role;
   player.status = 'ready';
   await redisSaveRoom(room);
-  return { ok: true, room: publicRoom(room) };
+  return { ok: true, room: publicRoom(room, actor) };
 }
 
 async function handleRemovePlayer(body) {
   const roomCode = normalizeRoomCode(body.roomCode || body.code);
-  const playerId = String(body.playerId || '').trim();
-
   if (!roomCode) throw new Error('Room code is required');
-  if (!playerId) throw new Error('Player ID is required');
+  const targetId = String(body.targetPlayerId || '').trim();
+  if (!targetId) throw new Error('Target player ID is required');
 
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok: false, error: 'Room not found', statusCode: 404 };
 
-  room.players = room.players.filter((player) => player.id !== playerId || player.isHost);
+  const host = requireHost(room, body, 'Only the host can remove players');
+  room.players = room.players.filter((player) => player.id !== targetId || player.isHost);
   await redisSaveRoom(room);
-  return { ok: true, room: publicRoom(room) };
+  return { ok: true, room: publicRoom(room, host) };
 }
 
 async function handleStart(body) {
@@ -430,6 +308,7 @@ async function handleStart(body) {
   const sharedScenario = body.sharedScenario;
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok: false, error: 'Room not found', statusCode: 404 };
+  const host = requireHost(room, body, 'Only the host can start the Team Exercise');
 
   const activePlayers = room.players.filter((player) => player.status !== 'removed' && player.role);
   if (activePlayers.length < 2) throw new Error('At least 2 active player roles are required to start');
@@ -450,27 +329,25 @@ async function handleStart(body) {
   room.sharedTurnState = null;
   room.startedAt = new Date().toISOString();
   await redisSaveRoom(room);
-  return { ok: true, room: publicRoom(room) };
+  return { ok: true, room: publicRoom(room, host) };
 }
 
 
 async function handleSubmitResponse(body) {
   const roomCode = normalizeRoomCode(body.roomCode || body.code);
-  const playerId = String(body.playerId || '').trim();
   const response = String(body.response || '').trim();
   const expectedTurn = Number(body.turn);
   if (!roomCode) throw new Error('Room code is required');
-  if (!playerId) throw new Error('Player ID is required');
   if (!response) throw new Error('Response is required');
 
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok:false, error:'Room not found', statusCode:404 };
+  const player = requirePlayer(room, body);
+  if (!player.role) throw new Error('Active player not found');
+  const playerId = player.id;
   if (room.status !== 'active') throw new Error('Team exercise is not active');
   if (Number(room.turn || 0) !== expectedTurn) throw new Error('This turn has already advanced');
   if ((room.turnStatus || 'collecting') !== 'collecting') throw new Error('The team turn is already being processed');
-
-  const player = room.players.find((item) => item.id === playerId && item.status !== 'removed');
-  if (!player || !player.role) throw new Error('Active player not found');
 
   room.submissions = (room.submissions || []).filter((item) => !(item.turn === expectedTurn && item.playerId === playerId));
   room.submissions.push({
@@ -482,17 +359,15 @@ async function handleSubmitResponse(body) {
     submittedAt: new Date().toISOString(),
   });
   await redisSaveRoom(room);
-  return { ok:true, room:publicRoom(room) };
+  return { ok:true, room:publicRoom(room, player) };
 }
 
 async function handleBeginAdvance(body) {
   const roomCode = normalizeRoomCode(body.roomCode || body.code);
-  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
   const expectedTurn = Number(body.turn);
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok:false, error:'Room not found', statusCode:404 };
-  const host = room.players.find((item) => item.id === hostPlayerId && item.isHost);
-  if (!host) throw new Error('Only the host can advance the team turn');
+  const host = requireHost(room, body, 'Only the host can advance the team turn');
   if (room.status !== 'active') throw new Error('Team exercise is not active');
   if (Number(room.turn || 0) !== expectedTurn) throw new Error('This turn has already advanced');
   if ((room.turnStatus || 'collecting') !== 'collecting') throw new Error('The team turn is already being processed');
@@ -506,18 +381,16 @@ async function handleBeginAdvance(body) {
   room.turnStatus = 'processing';
   room.processingStartedAt = new Date().toISOString();
   await redisSaveRoom(room);
-  return { ok:true, submissions, room:publicRoom(room) };
+  return { ok:true, submissions, room:publicRoom(room, host) };
 }
 
 async function handleCompleteTurn(body) {
   const roomCode = normalizeRoomCode(body.roomCode || body.code);
-  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
   const expectedTurn = Number(body.turn);
   const sharedTurnState = body.sharedTurnState;
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok:false, error:'Room not found', statusCode:404 };
-  const host = room.players.find((item) => item.id === hostPlayerId && item.isHost);
-  if (!host) throw new Error('Only the host can complete the team turn');
+  const host = requireHost(room, body, 'Only the host can complete the team turn');
   if (Number(room.turn || 0) !== expectedTurn) throw new Error('This turn has already advanced');
   if (!sharedTurnState || Number(sharedTurnState.turn) !== expectedTurn + 1) throw new Error('Valid shared turn state is required');
 
@@ -530,16 +403,14 @@ async function handleCompleteTurn(body) {
   room.processingStartedAt = null;
   if (sharedTurnState.situation === 'ENDEX') room.status = 'ended';
   await redisSaveRoom(room);
-  return { ok:true, room:publicRoom(room) };
+  return { ok:true, room:publicRoom(room, host) };
 }
 
 async function handleCancelAdvance(body) {
   const roomCode = normalizeRoomCode(body.roomCode || body.code);
-  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok:false, error:'Room not found', statusCode:404 };
-  const host = room.players.find((item) => item.id === hostPlayerId && item.isHost);
-  if (!host) throw new Error('Only the host can reset the team turn');
+  const host = requireHost(room, body, 'Only the host can reset the team turn');
   room.turnStatus = 'collecting';
   room.processingStartedAt = null;
   if (room.status === 'ending') {
@@ -547,17 +418,15 @@ async function handleCancelAdvance(body) {
     room.endexStartedAt = null;
   }
   await redisSaveRoom(room);
-  return { ok:true, room:publicRoom(room) };
+  return { ok:true, room:publicRoom(room, host) };
 }
 
 
 async function handleBeginEndex(body) {
   const roomCode = normalizeRoomCode(body.roomCode || body.code);
-  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok:false, error:'Room not found', statusCode:404 };
-  const host = room.players.find((item) => item.id === hostPlayerId && item.isHost);
-  if (!host) throw new Error('Only the host can end the Team Exercise');
+  const host = requireHost(room, body, 'Only the host can end the Team Exercise');
   if (room.status !== 'active') throw new Error('Team exercise is not active');
   if ((room.turnStatus || 'collecting') === 'processing') throw new Error('Wait for the current team turn to finish');
 
@@ -570,9 +439,9 @@ async function handleBeginEndex(body) {
   await redisSaveRoom(room);
   return {
     ok:true,
-    room:publicRoom(room, hostPlayerId),
+    room:publicRoom(room, host),
     aarContext: {
-      players: room.players.filter((player) => player.status !== 'removed'),
+      players: room.players.filter((player) => player.status !== 'removed').map(publicPlayer),
       submissionHistory: room.submissionHistory || [],
       currentSubmissions: room.submissions || [],
       communications,
@@ -586,11 +455,9 @@ async function handleBeginEndex(body) {
 
 async function handleCompleteEndex(body) {
   const roomCode = normalizeRoomCode(body.roomCode || body.code);
-  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok:false, error:'Room not found', statusCode:404 };
-  const host = room.players.find((item) => item.id === hostPlayerId && item.isHost);
-  if (!host) throw new Error('Only the host can complete Team ENDEX');
+  const host = requireHost(room, body, 'Only the host can complete Team ENDEX');
   if (!body.teamAar || typeof body.teamAar !== 'object') throw new Error('Team AAR is required');
 
   const individualAars = body.individualAars && typeof body.individualAars === 'object' ? body.individualAars : {};
@@ -619,25 +486,23 @@ async function handleCompleteEndex(body) {
     exerciseTranscript: finalTranscript,
   };
   await redisSaveRoom(room);
-  return { ok:true, room:publicRoom(room, hostPlayerId) };
+  return { ok:true, room:publicRoom(room, host) };
 }
 
 async function handleSendMessage(body) {
   const roomCode = normalizeRoomCode(body.roomCode || body.code);
-  const senderId = String(body.playerId || body.senderId || '').trim();
   const text = String(body.message || body.text || '').trim();
   const channel = body.channel === 'direct' ? 'direct' : 'room';
   const recipientId = channel === 'direct' ? String(body.recipientId || '').trim() : '';
   if (!roomCode) throw new Error('Room code is required');
-  if (!senderId) throw new Error('Player ID is required');
   if (!text) throw new Error('Message is required');
   if (text.length > 1000) throw new Error('Message must be 1000 characters or fewer');
 
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok:false, error:'Room not found', statusCode:404 };
+  const sender = requirePlayer(room, body);
+  const senderId = sender.id;
   if (room.status !== 'active') throw new Error('Team chat is available during an active exercise');
-  const sender = room.players.find((player) => player.id === senderId && player.status !== 'removed');
-  if (!sender) throw new Error('Active player not found');
   let recipient = null;
   if (channel === 'direct') {
     recipient = room.players.find((player) => player.id === recipientId && player.status !== 'removed');
@@ -658,22 +523,20 @@ async function handleSendMessage(body) {
   };
   room.messages = [...(room.messages || []), message].slice(-500);
   await redisSaveRoom(room);
-  return { ok:true, message, room:publicRoom(room, senderId) };
+  return { ok:true, message, room:publicRoom(room, sender) };
 }
 
 async function handleUpdateChatSettings(body) {
   const roomCode = normalizeRoomCode(body.roomCode || body.code);
-  const hostPlayerId = String(body.playerId || body.hostPlayerId || '').trim();
   const room = await redisGetRoom(roomCode);
   if (!room) return { ok:false, error:'Room not found', statusCode:404 };
-  const host = room.players.find((player) => player.id === hostPlayerId && player.isHost);
-  if (!host) throw new Error('Only the host can change transcript chat settings');
+  const host = requireHost(room, body, 'Only the host can change transcript chat settings');
   room.chatSettings = {
     ...(room.chatSettings || {}),
     includePrivateMessagesInTranscript: Boolean(body.includePrivateMessagesInTranscript),
   };
   await redisSaveRoom(room);
-  return { ok:true, room:publicRoom(room, hostPlayerId) };
+  return { ok:true, room:publicRoom(room, host) };
 }
 
 module.exports = async function handler(req, res) {
@@ -686,7 +549,7 @@ module.exports = async function handler(req, res) {
 
     if (req.method === 'GET') {
       const code = req.query?.code || req.query?.roomCode;
-      const result = await handleGet(code, req.query?.playerId || '');
+      const result = await handleGet(code, req.query?.playerId || '', req.query?.playerToken || '');
       sendJson(res, result.statusCode || 200, result);
       return;
     }
@@ -711,7 +574,7 @@ module.exports = async function handler(req, res) {
         break;
       case 'get':
       case 'getRoom':
-        result = await handleGet(body.roomCode || body.code, body.playerId || '');
+        result = await handleGet(body.roomCode || body.code, body.playerId || '', body.playerToken || '');
         break;
       case 'updateRole':
         result = await handleUpdateRole(body);
@@ -753,8 +616,10 @@ module.exports = async function handler(req, res) {
 
     sendJson(res, result.statusCode || 200, result);
   } catch (err) {
-    console.error('team-room error', err);
-    sendJson(res, 500, {
+    const infrastructure = /redis|timed out/i.test(String(err.message || ''));
+    const statusCode = err.statusCode || (infrastructure ? 503 : 400);
+    if (statusCode >= 500) console.error('team-room error', err);
+    sendJson(res, statusCode, {
       ok: false,
       error: err.message || 'Team room request failed',
     });

@@ -30,6 +30,34 @@ NEXUS EOC now includes:
 
 ---
 
+## 2026-11 — Server-Side Prompts, Prompt Caching, Streaming, Team Room Credentials
+
+### Security
+
+- Moved all AI prompt construction to the server (`server/prompts.js`, `server/controllerPrompt.js`). The browser now sends a validated exercise descriptor and message history to `/api/chat`; it no longer sends or ships the controller prompt. Requests that carry a client-authored `system` prompt are refused.
+- Team Rooms now issue a secret `playerToken` to each participant at create or join. Every state-changing action requires the acting player's id and token; host-only actions require the host's token. Room views never include tokens, and anonymous reads return only the public lobby view (no private messages, shared scenario, turn state, or AARs). Player ids are generated server side and can no longer be chosen by the client.
+- `start` on a Team Room now requires the host; previously anyone with the room code could start it.
+
+### Changed
+
+- `/api/chat` enables Anthropic prompt caching: the static controller text is cached with a one-hour TTL and the latest user message carries a five-minute breakpoint so the exercise history prefix is reused across turns.
+- `/api/chat` streams responses as server-sent events by default (`stream: true`). The Live Exercise view shows the Deputy's consequence narrative as it arrives. Non-streaming remains available and returns the previous `{ content, usage }` shape.
+- ENDEX and AAR requests get a larger output budget (8000 tokens) to avoid truncated reviews.
+- The production model is configurable via `ANTHROPIC_MODEL` (default remains `claude-sonnet-4-6`).
+- Scenario, role, difficulty, and jurisdiction profile text moved to `shared/exerciseData.json`, which both the browser data modules and the server prompt builder read.
+- Redis protocol code is shared from `server/redis.js` by `/api/chat` and `/api/team-room`.
+
+### Fixed
+
+- Difficulty labels `Introductory`, `Standard`, and `Expert` previously rendered as `DIFFICULTY: Standard — undefined` in the controller prompt. They now map to the rubric text.
+
+### Tests
+
+- Added `tests/chatApi.test.mjs` (request building, cache breakpoints, streaming passthrough, error mapping, client partial-JSON extraction).
+- Added `tests/teamRoomApi.test.mjs` (token issuance, anonymous view limits, host-only and self-only enforcement) running against a local `redis-server` when available.
+
+---
+
 ## 2026-07 — Build Custom Scenario Release
 
 ### Added

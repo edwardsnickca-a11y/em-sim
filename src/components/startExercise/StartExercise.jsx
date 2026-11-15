@@ -5,6 +5,7 @@ import { SCENARIOS, DIFFICULTIES } from '../../data/scenarios'
 import { JURISDICTIONS, JURISDICTION_CONTEXT } from '../../data/jurisdictions'
 import { ROLES, ROLE_GROUPS } from '../../data/roles'
 import { deleteLocalPlan, LOCAL_PLAN_MAX_BYTES, LOCAL_PLAN_MAX_PAGES, processLocalPlanPdf } from '../../lib/localPlanProcessing'
+import { requestAiChat } from '../../lib/aiClient'
 
 import hurricaneImage from '../../assets/missionPortal/hurricane-landfall.jpg'
 import mciImage from '../../assets/missionPortal/mass-casualty-incident.jpg'
@@ -201,78 +202,7 @@ function isLocationSpecificEnough(value='') {
   return clean.includes(',') && clean.length >= 6
 }
 
-function buildCustomPreviewPrompt(form) {
-  return `You are NEXUS EOC generating an Exercise Preview for the Build Custom Scenario feature.
-
-The user has provided a real-world location or jurisdiction, event or hazard, situation description, selected exercise position/function, difficulty, and training focus areas.
-
-Your job is to convert the user's plain-language briefing into a concise EOC-focused exercise preview.
-
-Do not start the exercise yet.
-Do not generate injects yet.
-Do not generate the AAR yet.
-Do not reveal hidden complications, scoring logic, or future consequences.
-
-PRIMARY VOICE
-Use the NEXUS Deputy Emergency Manager voice: professional, operational, plain language, conversational, consequence-based, realistic, and EOC-focused.
-
-LOCATION RULES
-Use the validated location exactly as provided. Do not invent, replace, or independently change the location.
-Do not make unsupported claims about exact local capabilities, elected officials, facility names, agency names, emergency plans, security plans, infrastructure, or local procedures unless provided by verified platform data.
-If exact local agency names are not verified, use generic but realistic labels such as City Emergency Management, County Emergency Management, City Public Works, County Public Health, State Emergency Management Duty Officer, Regional Healthcare Coalition, Local Law Enforcement, Local Fire Department, Emergency Communications Center, Mayor's Office, County Executive's Office, Tribal Emergency Management Office, Utility Provider, School District, Transit Agency, or Joint Information Center.
-
-EOC FOCUS RULES
-This is an EOC exercise. The user is not the Incident Commander.
-Do not turn the scenario into tactical incident command.
-Do not ask the user to command field units, assign individual crews, direct police movements, direct EMS treatment, select tactical suppression actions, track suspects, plan security routes, control tactical perimeters, choose tactical law enforcement formations, or direct tactical rescue operations.
-
-LAW ENFORCEMENT / SECURITY GUARDRAIL
-For special events, civil unrest, threats, suspicious activity, complex attacks, VIP presence, or security-sensitive scenarios, keep the exercise focused on consequence management and emergency coordination. Avoid tactical police deployment, suspect tracking, security route planning, protective detail planning, checkpoint placement, sniper/counter-sniper details, tactical unit locations, surveillance plans, apprehension plans, crowd-control tactics, or operational security details.
-
-TRAINING FOCUS CONVERSION
-Convert selected Training Focus areas into exercise pressure.
-Community Lifelines: emphasize safety and security, health and medical, communications, transportation, energy, food/water/shelter, hazardous materials, and cascading impacts to critical services.
-Resource Coordination: emphasize scarce resources, mutual aid timing, competing requests, logistics constraints, staging and prioritization at the EOC level, vendor or contract limitations, and resource tracking gaps.
-Interagency Coordination: emphasize conflicting agency priorities, federal/state/local coordination, private sector coordination, nonprofit and community partner coordination, unified messaging, information-sharing gaps, and authority seams.
-Public Information: emphasize rumors, conflicting reports, media pressure, social media amplification, accessibility and language access, public warning decisions, public confidence, Joint Information Center coordination, and leadership talking points.
-Leadership Support: emphasize executive briefings, policy-level decisions, elected official concerns, senior leader information needs, political pressure, risk framing, options and consequences, and decision memos or talking points.
-Continuity / COOP: emphasize essential functions, alternate worksites, staffing continuity, communications continuity, degraded systems, succession and delegation, continuity of government concerns, and departmental continuity plans.
-Recovery Transition: emphasize damage assessment, documentation, debris or cleanup implications, assistance programs, reimbursement considerations, long-term sheltering, community impacts, after-action issues, and transition from response to recovery.
-
-DIFFICULTY CONVERSION
-Difficulty should shape tempo, ambiguity, friction, information gaps, resource constraints, media pressure, leadership pressure, and consequence severity without changing the user's selected role or location.
-
-USER SETUP DATA
-Location / Jurisdiction: ${form.location}
-Event or Hazard: ${form.eventHazard}
-Situation Description: ${form.situationDescription}
-Exercise Position / Function: ${form.role}
-Difficulty: ${form.difficulty}
-Training Focus: ${form.trainingFocus.join('; ')}
-
-PREVIEW OUTPUT FORMAT
-Use this exact structure in plain text:
-
-Exercise Preview
-Location / Jurisdiction:
-[Validated real location]
-Event or Hazard:
-[User-provided event or hazard, cleaned up if needed]
-Exercise Position / Function:
-[Selected role/function]
-Difficulty:
-[Selected difficulty]
-Training Focus:
-[List selected focus areas]
-Scenario Summary:
-[Short plain-language summary of the custom exercise NEXUS will run.]
-This Exercise Will Emphasize:
-[Plain-language explanation of the pressures the exercise will apply based on the selected Training Focus.]
-This Exercise Will Avoid:
-[Clear statement that the exercise will avoid tactical incident command, tactical law enforcement control, suspect tracking, security route planning, tactical unit placement, and field-level command decisions as applicable.]
-Ready to Launch:
-[One sentence indicating that the scenario is ready for the user to start if the preview looks right.]`
-}
+// The Exercise Preview prompt is built on the server (server/prompts.js).
 
 function CustomField({ label, helper, children }) {
   return (
@@ -501,15 +431,10 @@ export function CustomScenarioSetupModal({ onClose, onStartCustomScenario }) {
     }
     setLoadingPreview(true)
     try {
-      const res = await fetch('/api/chat', {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({
-          system:'You are NEXUS EOC. Generate only the requested Exercise Preview text. Do not start the exercise.',
-          messages:[{ role:'user', content:buildCustomPreviewPrompt(form) }],
-        }),
+      const data = await requestAiChat({
+        kind:'custom-preview',
+        exercise:{ form:{ location:form.location, eventHazard:form.eventHazard, situationDescription:form.situationDescription, role:form.role, difficulty:form.difficulty, trainingFocus:form.trainingFocus } },
       })
-      const data = await res.json()
       const text = data.content?.[0]?.text || ''
       setPreview(text.trim() || 'Exercise Preview could not be generated. Revise the setup and try again.')
       setStep('preview')

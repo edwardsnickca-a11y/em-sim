@@ -249,6 +249,15 @@ These files should remain grounded in emergency management practice and should n
 
 The AI controller is central to the product experience.
 
+Prompt construction happens on the server, never in the browser:
+
+- `server/controllerPrompt.js` holds the static NEXUS EOC Simulation Controller text. It is sent as the first system block with a one-hour prompt-cache TTL, so it must stay free of per-exercise values.
+- `server/prompts.js` appends the exercise configuration (scenario, location, clock, role, difficulty, localized rules, local plan context, custom scenario carryover) as a second system block, and builds the world-initialization, custom preview, and plan-alignment prompts.
+- `shared/exerciseData.json` is the single source for scenario, role, difficulty, and jurisdiction profile text, read by both `src/data/*.js` and the server.
+- `api/chat.js` validates the client's exercise descriptor, applies rate limiting, and calls Anthropic, streaming text deltas back as server-sent events. `src/lib/aiClient.js` is the only browser code that talks to it.
+
+When changing controller behavior, edit `server/controllerPrompt.js` or `server/prompts.js`, run `npm run test:integrity`, and then run the eval harness against the pinned production model.
+
 It should behave like an experienced Deputy Emergency Manager supporting the exercise.
 
 Core prompt behavior should enforce:
