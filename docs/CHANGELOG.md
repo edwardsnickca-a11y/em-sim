@@ -30,6 +30,23 @@ NEXUS EOC now includes:
 
 ---
 
+## 2026-11 — STARTEX Loading, Unread DM Highlights, No Em Dashes
+
+### Added
+
+- STARTEX loading modal. The host sees a spinner while the scenario world builds; joined players see "The host is starting the exercise" at the same time (new host-only `markStarting` room action and `startingAt` room field), then "Joining the exercise" as they enter.
+- Unread chat tracking per conversation. An incoming direct message turns the Team Coordination bar amber with a pulsing outline and a NEW PRIVATE MESSAGE label, and puts a badge on the sender's name. The highlight clears when that conversation is opened. The Team Room channel gets its own unread badge.
+
+### Changed
+
+- Em dashes are removed from everything players read during an exercise: the controller prompt no longer contains them and carries an explicit rule against them, the exercise configuration is sent without them, every AI response passes through a cleanup step (`src/lib/dashes.js`), and feed labels, role names, and reference titles use other punctuation.
+
+### Fixed
+
+- The first chat message in a room that had no prior messages was never counted as unread.
+
+---
+
 ## 2026-11 — Team Mode Private Role Updates and Faster Team AAR
 
 ### Added

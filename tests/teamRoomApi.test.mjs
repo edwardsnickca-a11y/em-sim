@@ -222,3 +222,17 @@ test('private role updates: each player sees only their own, host sees all, anon
   r = await call({ action: 'beginEndex', code, playerId: host.playerId, playerToken: host.playerToken })
   assert.equal(r.aarContext.roleUpdates['1'].length, 3)
 })
+
+test('markStarting is host only, visible to players, and cleared on start', { skip }, async () => {
+  const host = await call({ action: 'create', scenario: 'flood', jurisdiction: 'Mid-Size City', difficulty: 'Standard', hostName: 'Host', hostRole: 'EOC Director' })
+  const code = host.room.roomCode
+  const p = await call({ action: 'join', code, name: 'Tim', role: 'ESF-9 — Search & Rescue' })
+  let r = await call({ action: 'markStarting', code, playerId: p.playerId, playerToken: p.playerToken, starting: true })
+  assert.equal(r.status, 403)
+  r = await call({ action: 'markStarting', code, playerId: host.playerId, playerToken: host.playerToken, starting: true })
+  assert.equal(r.ok, true)
+  const asPlayer = await get({ code, playerId: p.playerId, playerToken: p.playerToken })
+  assert.ok(asPlayer.room.startingAt)
+  r = await call({ action: 'start', code, playerId: host.playerId, playerToken: host.playerToken, sharedScenario: { world: { location: 'x' }, selectedLocation: { label: 'x' } } })
+  assert.equal(r.room.startingAt, null)
+})

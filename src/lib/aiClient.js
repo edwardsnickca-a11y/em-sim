@@ -6,6 +6,8 @@
 // by request timeouts; callers still receive the same `{ content, usage }`
 // shape the old proxy returned.
 
+import { removeEmDashes } from './dashes.js'
+
 export const AI_REQUEST_TIMEOUT_MS = 110000
 const STREAM_IDLE_TIMEOUT_MS = 60000
 
@@ -18,7 +20,9 @@ function makeError(message, { status, name } = {}) {
 
 function toResult(text, usage, model) {
   if (!text) throw makeError('The AI service returned an empty response. Please try again.')
-  return { content: [{ type: 'text', text }], usage: usage || null, model: model || null }
+  // Every AI response passes through here, so no em dash reaches the screen,
+  // the transcript, the AAR, or the PDFs.
+  return { content: [{ type: 'text', text: removeEmDashes(text) }], usage: usage || null, model: model || null }
 }
 
 async function readSse(res, { onDelta, signal, resetIdle }) {
@@ -36,7 +40,7 @@ async function readSse(res, { onDelta, signal, resetIdle }) {
     if (event === 'delta') {
       if (typeof data.text === 'string') {
         text += data.text
-        if (onDelta) onDelta(text, data.text)
+        if (onDelta) onDelta(removeEmDashes(text), data.text)
       }
     } else if (event === 'done') {
       usage = data.usage || null
@@ -106,7 +110,7 @@ export async function requestAiChat({ kind, exercise, messages, stream = true, o
     }
     const data = await res.json().catch(() => ({}))
     const text = data?.content?.[0]?.text || ''
-    if (onDelta && text) onDelta(text, text)
+    if (onDelta && text) onDelta(removeEmDashes(text), text)
     return toResult(text, data?.usage, data?.model)
   } catch (err) {
     if (err?.name === 'AbortError') throw makeError('The AI request timed out. Please try again.', { name: 'TimeoutError' })

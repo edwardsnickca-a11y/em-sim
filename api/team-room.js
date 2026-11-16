@@ -181,6 +181,7 @@ function publicRoom(room, viewer = null) {
     submissions: (room.submissions || []).map(({ response, ...submission }) => submission),
     sharedTurnState: viewer ? (room.sharedTurnState || null) : null,
     roleUpdates: visibleRoleUpdates(room, viewer),
+    startingAt: room.status === 'lobby' ? (room.startingAt || null) : null,
     messages,
     chatSettings: room.chatSettings || { includePrivateMessagesInTranscript: false },
     teamAar: viewer ? (room.teamAar || null) : null,
@@ -358,6 +359,7 @@ async function handleStart(body) {
   room.facilitatorAar = null;
   room.communicationsLog = [];
   room.sharedTurnState = null;
+  room.startingAt = null;
   room.startedAt = new Date().toISOString();
   await redisSaveRoom(room);
   return { ok: true, room: publicRoom(room, host) };
@@ -437,6 +439,18 @@ async function handleCompleteTurn(body) {
   room.submissions = [];
   room.processingStartedAt = null;
   if (sharedTurnState.situation === 'ENDEX') room.status = 'ended';
+  await redisSaveRoom(room);
+  return { ok:true, room:publicRoom(room, host) };
+}
+
+// Lets players in the lobby see that the host is building the scenario world.
+async function handleMarkStarting(body) {
+  const roomCode = normalizeRoomCode(body.roomCode || body.code);
+  const room = await redisGetRoom(roomCode);
+  if (!room) return { ok:false, error:'Room not found', statusCode:404 };
+  const host = requireHost(room, body, 'Only the host can start the Team Exercise');
+  if (room.status !== 'lobby') return { ok:true, room:publicRoom(room, host) };
+  room.startingAt = body.starting === false ? null : new Date().toISOString();
   await redisSaveRoom(room);
   return { ok:true, room:publicRoom(room, host) };
 }
@@ -617,6 +631,9 @@ module.exports = async function handler(req, res) {
         break;
       case 'removePlayer':
         result = await handleRemovePlayer(body);
+        break;
+      case 'markStarting':
+        result = await handleMarkStarting(body);
         break;
       case 'start':
       case 'startRoom':

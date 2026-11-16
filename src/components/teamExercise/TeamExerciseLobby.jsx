@@ -4,6 +4,7 @@ import { CustomScenarioCard, CustomScenarioSetupModal, JurisdictionPlanPanel } f
 import { SCENARIOS, DIFFICULTIES } from '../../data/scenarios'
 import { JURISDICTIONS } from '../../data/jurisdictions'
 import { ROLES, ROLE_GROUPS } from '../../data/roles'
+import LoadingModal from '../common/LoadingModal'
 
 import hurricaneImage from '../../assets/missionPortal/hurricane-landfall.jpg'
 import mciImage from '../../assets/missionPortal/mass-casualty-incident.jpg'
@@ -185,6 +186,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [launching, setLaunching] = useState(false)
+  const [starting, setStarting] = useState(false)
 
   const cleanedSpecificJurisdiction = specificJurisdiction.trim()
   const specificJurisdictionError = useSpecificJurisdiction
@@ -353,15 +355,20 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
 
   async function startExercise() {
     if (!code || busy || room?.status !== 'lobby' || !onPrepareStart) return
-    setBusy(true); setError('')
+    setBusy(true); setError(''); setStarting(true)
+    // Tell joined players the host is building the world so they see a loading state too.
+    apiTeamRoom({ action:'markStarting', code, playerId, playerToken, starting:true }).catch(() => {})
     try {
       const activeRoom = await onPrepareStart(room, launchPlayer)
       if (activeRoom) {
         setRoom(activeRoom)
         update?.({ teamRoom:activeRoom, roomCode:activeRoom.roomCode, playerId:launchPlayer?.id || playerId, playerToken })
       }
-    } catch (err) { setError(err.message) }
-    finally { setBusy(false) }
+    } catch (err) {
+      setError(err.message)
+      apiTeamRoom({ action:'markStarting', code, playerId, playerToken, starting:false }).catch(() => {})
+    }
+    finally { setBusy(false); setStarting(false) }
   }
 
   async function removePlayer(id) {
@@ -374,6 +381,20 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
     } catch (err) { setError(err.message) }
     finally { setBusy(false) }
   }
+
+  // STARTEX feedback. The host sees it while the world builds; joined players see it
+  // as soon as the host starts (startingAt from the room) and while their screen
+  // switches into the live exercise.
+  const startingAtMs = room?.startingAt ? Date.parse(room.startingAt) : NaN
+  const hostIsStarting = room?.status === 'lobby' && Number.isFinite(startingAtMs) && Date.now() - startingAtMs < 3 * 60 * 1000
+  const exerciseLabel = room?.exercise?.customScenario?.eventHazard || SCENARIO_VISUALS[room?.exercise?.scenario]?.title || 'the exercise'
+  const loadingOverlay = starting
+    ? { title:'Starting the exercise', message:`Building the scenario world for ${exerciseLabel}. Players will join automatically when it is ready.`, detail:'This usually takes 20 to 60 seconds.' }
+    : (!currentPlayer?.isHost && hostIsStarting)
+      ? { title:'The host is starting the exercise', message:`Building the scenario world for ${exerciseLabel}. You will be taken into the exercise automatically.`, detail:'This usually takes 20 to 60 seconds.' }
+      : launching
+        ? { title:'Joining the exercise', message:'Loading the live exercise.' }
+        : null
 
   const shell = (children) => (
     <div style={{ width:'100vw', minHeight:'100vh', background:`radial-gradient(circle at 22% 18%, rgba(46,131,255,0.12), transparent 34%), linear-gradient(135deg, ${DS.bg}, #02070D 62%)`, color:DS.text, fontFamily:'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif', overflow:'hidden' }}>
@@ -390,6 +411,7 @@ export default function TeamExerciseLobby({ entryMode='host', state, update, onM
       <main style={{ height:'calc(100vh - 76px)', overflowY:'auto', overflowX:'hidden', padding:'clamp(12px, 1.2vw, 20px)', boxSizing:'border-box' }}>
         <div style={{ width:'min(100%, 1680px)', margin:'0 auto', display:'flex', flexDirection:'column', gap:12 }}>{children}</div>
       </main>
+      {loadingOverlay && <LoadingModal {...loadingOverlay} />}
     </div>
   )
 

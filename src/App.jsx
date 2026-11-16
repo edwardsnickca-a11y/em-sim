@@ -22,6 +22,7 @@ import { retrieveLocalPlanContext } from './lib/localPlanProcessing'
 import { createExerciseConfigSnapshot, launchOptionsFromSnapshot, createIntegrityState, appendIntegrityEvent, nextEventId, operationalTurnCount, validateChronology, applyStatePatch, freezeFinalState, canonicalJurisdictionName, buildEvidenceLedger, validateEvaluationEvidence } from './lib/exerciseIntegrity'
 import { buildTranscriptReportModel, buildAarReportModel } from './lib/reportModel'
 import { requestAiChat, extractPartialStringField } from './lib/aiClient'
+import { removeEmDashes, labelWithoutDash } from './lib/dashes'
 
 const CARTO_BASEMAP_KEY = import.meta.env.VITE_CARTO_BASEMAP_KEY?.trim() || ''
 const CARTO_DARK_TILE_URL = CARTO_BASEMAP_KEY
@@ -335,7 +336,7 @@ function slugifyCustomScenario(value = '') {
 
 function customScenarioTitle(customScenario) {
   return customScenario?.eventHazard?.trim()
-    ? `Custom Scenario — ${customScenario.eventHazard.trim()}`
+    ? `Custom Scenario: ${customScenario.eventHazard.trim()}`
     : 'Build Custom Scenario'
 }
 
@@ -2890,9 +2891,13 @@ export default function App() {
   const [showTeamChat, setShowTeamChat] = useState(false)
   const [teamChatTarget, setTeamChatTarget] = useState('room')
   const [teamChatInput, setTeamChatInput] = useState('')
-  const [teamChatUnread, setTeamChatUnread] = useState(0)
+  // Unread counts per conversation: 'room' for the Team Room, otherwise the sender's player id.
+  const [teamChatUnreadBy, setTeamChatUnreadBy] = useState({})
   const [teamChatError, setTeamChatError] = useState('')
   const knownTeamMessageIds = useRef(new Set())
+  // Set once the first room snapshot has been seen, even if it had no messages,
+  // so the very first message in a quiet room still counts as new.
+  const teamMessagesPrimed = useRef(false)
   const [settings, setSettings]       = useState(() => {
     try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}') } }
     catch { return DEFAULT_SETTINGS }
@@ -3067,7 +3072,7 @@ async function initCustomWorld(customScenario) {
     update({
       screen:'game', scenario:scenarioKey,
       dispatches:[], terminal:[
-        { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${selectedLocation?.label || jurisdiction} — ${launchDifficulty}` },
+        { type:'header', text:`▶ ${sc.name.toUpperCase()} · ${selectedLocation?.label || jurisdiction} · ${launchDifficulty}` },
         { type:'system', text:`Generating scenario world for ${selectedLocation?.label || jurisdiction}...` },
       ],
       history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
@@ -3096,7 +3101,7 @@ async function initCustomWorld(customScenario) {
         simTime:world.clock?.currentTime || 'H+0:00',
         dispatches: initDispatches,
         terminal: [
-          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${world.location} — ${launchDifficulty} — ${launchRole.toUpperCase()}${launchPlayerName ? ` — ${launchPlayerName.toUpperCase()}` : ''}` },
+          { type:'header',   text:`▶ ${sc.name.toUpperCase()} · ${world.location} · ${launchDifficulty} · ${launchRole.toUpperCase()}${launchPlayerName ? ` · ${launchPlayerName.toUpperCase()}` : ''}` },
           { type:'divider' },
           { type:'narrator', text:world.openingNarrative },
         ],
@@ -3119,7 +3124,7 @@ async function initCustomWorld(customScenario) {
         integrity:launchIntegrity,
         exerciseConfig:{ ...exerciseConfig, jurisdictionName:selectedLocation?.label || specificJurisdiction || exerciseConfig.jurisdictionName },
         terminal: [
-          { type:'header',   text:`▶ ${sc.name.toUpperCase()} — ${jurisdiction} — ${launchDifficulty}` },
+          { type:'header',   text:`▶ ${sc.name.toUpperCase()} · ${jurisdiction} · ${launchDifficulty}` },
           { type:'divider' },
           { type:'narrator', text:sc.desc + ' Your EOC is activating. Initial reports remain incomplete.' },
         ],
@@ -3252,7 +3257,7 @@ async function initCustomWorld(customScenario) {
       playerName:participant.name,
       dispatches:initDispatches,
       terminal:[
-        { type:'header', text:`▶ ${sc.name.toUpperCase()} — ${world.location || selectedLocation.label || jurisdiction} — ${difficulty} — ${participant.role.toUpperCase()}${participant.name ? ` — ${participant.name.toUpperCase()}` : ''}` },
+        { type:'header', text:`▶ ${sc.name.toUpperCase()} · ${world.location || selectedLocation.label || jurisdiction} · ${difficulty} · ${participant.role.toUpperCase()}${participant.name ? ` · ${participant.name.toUpperCase()}` : ''}` },
         { type:'divider' },
         { type:'narrator', text:world.openingNarrative },
       ],
@@ -3333,7 +3338,7 @@ async function startCustomScenario(customScenario) {
     difficulty,
     role,
     dispatches:[], terminal:[
-      { type:'header', text:`▶ ${scenarioName.toUpperCase()} — ${customScenario.location} — ${difficulty}` },
+      { type:'header', text:`▶ ${scenarioName.toUpperCase()} · ${customScenario.location} · ${difficulty}` },
       { type:'system', text:`Generating custom scenario world for ${customScenario.location}...` },
     ],
     history:[], turn:0, simTime:'H+0:00', situation:'DEVELOPING',
@@ -3357,7 +3362,7 @@ async function startCustomScenario(customScenario) {
       exerciseConfig:{ ...exerciseConfig, jurisdictionName:world.location || exerciseConfig.jurisdictionName },
       dispatches: initDispatches,
       terminal: [
-        { type:'header', text:`▶ ${scenarioName.toUpperCase()} — ${world.location || customScenario.location} — ${difficulty} — ${role.toUpperCase()}${state.playerName ? ` — ${state.playerName.toUpperCase()}` : ''}` },
+        { type:'header', text:`▶ ${scenarioName.toUpperCase()} · ${world.location || customScenario.location} · ${difficulty} · ${role.toUpperCase()}${state.playerName ? ` · ${state.playerName.toUpperCase()}` : ''}` },
         { type:'divider' },
         { type:'narrator', text:world.openingNarrative || `Okay, we are at STARTEX in ${customScenario.location}. ${customScenarioSummary(customScenario)} The first issue is building a usable operating picture and deciding what EOC-level support is needed now.` },
       ],
@@ -3380,7 +3385,7 @@ async function startCustomScenario(customScenario) {
       integrity:launchIntegrity,
       exerciseConfig:{ ...exerciseConfig, jurisdictionName:customScenario.location },
       terminal: [
-        { type:'header', text:`▶ ${scenarioName.toUpperCase()} — ${customScenario.location} — ${difficulty}` },
+        { type:'header', text:`▶ ${scenarioName.toUpperCase()} · ${customScenario.location} · ${difficulty}` },
         { type:'divider' },
         { type:'narrator', text:`Okay, we are at STARTEX in ${customScenario.location}. ${customScenarioSummary(customScenario)} Your EOC is activated. The first issue is building a shared operating picture and deciding what EOC-level support is needed now.` },
       ],
@@ -3431,6 +3436,9 @@ async function startCustomScenario(customScenario) {
     if (state?.screen !== 'game' || !state?.teamMode || !state?.roomCode) {
       setTeamLiveRoom(null)
       setTeamSyncError('')
+      teamMessagesPrimed.current = false
+      knownTeamMessageIds.current = new Set()
+      setTeamChatUnreadBy({})
       return undefined
     }
     let cancelled = false
@@ -3468,25 +3476,44 @@ async function startCustomScenario(customScenario) {
   }, [state?.screen, state?.teamMode, state?.roomCode, state?.turn])
 
   useEffect(() => {
-    const messages = teamLiveRoom?.messages || []
-    if (!state?.teamMode || !messages.length) return
-    if (knownTeamMessageIds.current.size === 0) {
+    if (!state?.teamMode || !teamLiveRoom) return
+    const messages = teamLiveRoom.messages || []
+    if (!teamMessagesPrimed.current) {
+      // Messages already in the room when this screen opened are history, not new.
       messages.forEach(message => knownTeamMessageIds.current.add(message.id))
+      teamMessagesPrimed.current = true
       return
     }
-    let added = 0
+    const added = {}
     messages.forEach(message => {
-      if (!knownTeamMessageIds.current.has(message.id)) {
-        knownTeamMessageIds.current.add(message.id)
-        if (message.senderId !== state.playerId && !showTeamChat) added += 1
-      }
+      if (knownTeamMessageIds.current.has(message.id)) return
+      knownTeamMessageIds.current.add(message.id)
+      if (message.senderId === state.playerId) return
+      const conversation = message.channel === 'direct' ? message.senderId : 'room'
+      if (message.channel === 'direct' && message.recipientId !== state.playerId) return
+      // Already reading this conversation: nothing to flag.
+      if (showTeamChat && teamChatTarget === conversation) return
+      added[conversation] = (added[conversation] || 0) + 1
     })
-    if (added) setTeamChatUnread(count => count + added)
-  }, [teamLiveRoom?.messages, state?.teamMode, state?.playerId, showTeamChat])
+    if (Object.keys(added).length) {
+      setTeamChatUnreadBy(current => {
+        const next = { ...current }
+        Object.entries(added).forEach(([key, count]) => { next[key] = (next[key] || 0) + count })
+        return next
+      })
+    }
+  }, [teamLiveRoom, state?.teamMode, state?.playerId, showTeamChat, teamChatTarget])
 
+  // Opening a conversation marks it read.
   useEffect(() => {
-    if (showTeamChat) setTeamChatUnread(0)
-  }, [showTeamChat])
+    if (!showTeamChat) return
+    setTeamChatUnreadBy(current => {
+      if (!current[teamChatTarget]) return current
+      const next = { ...current }
+      delete next[teamChatTarget]
+      return next
+    })
+  }, [showTeamChat, teamChatTarget])
 
   async function sendTeamChatMessage() {
     const text = teamChatInput.trim()
@@ -3617,7 +3644,7 @@ async function startCustomScenario(customScenario) {
       const newHistory = [...msgs, { role:'assistant', content:JSON.stringify(parsed) }]
       const addedTerm = [
         ...state.terminal,
-        { type:'player', text:`> TEAM RESPONSES SUBMITTED — TURN ${nextTurn}` },
+        { type:'player', text:`> TEAM RESPONSES SUBMITTED, TURN ${nextTurn}` },
         { type:'time', text:parsed.time },
         { type:'consequence', text:parsed.consequence, turn:nextTurn },
         resolvedSituation !== 'ENDEX' ? { type:'prompt', text:parsed.prompt } : null,
@@ -3865,7 +3892,7 @@ async function startCustomScenario(customScenario) {
 
       const finalTranscript = [...sharedTranscript, {
         type:'exercise_end', simTime:state.simTime, situation:'ENDEX',
-        playerInput:'HOST ENDEX', aiResponse:'ENDEX — Team Exercise complete.', prompt:'', dispatches:[], headlines:[], pins:[], lifelines:state.lifelines,
+        playerInput:'HOST ENDEX', aiResponse:'ENDEX. Team Exercise complete.', prompt:'', dispatches:[], headlines:[], pins:[], lifelines:state.lifelines,
       }]
       const completeRes = await fetch('/api/team-room', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
@@ -4297,6 +4324,8 @@ async function startCustomScenario(customScenario) {
   const teamAllSubmitted = Boolean(state.teamMode && teamActivePlayers.length > 0 && teamActivePlayers.every(player => teamSubmittedIds.has(player.id)))
   const currentPlayerIsHost = Boolean(currentTeamPlayer?.isHost)
   const teamMessages = liveRoom?.messages || []
+  const teamChatUnread = Object.values(teamChatUnreadBy).reduce((sum, count) => sum + count, 0)
+  const unreadDirectCount = Object.entries(teamChatUnreadBy).filter(([key]) => key !== 'room').reduce((sum, [, count]) => sum + count, 0)
   const visibleTeamMessages = teamMessages.filter(message => {
     if (teamChatTarget === 'room') return message.channel === 'room'
     return message.channel === 'direct' && (
@@ -4633,7 +4662,7 @@ async function startCustomScenario(customScenario) {
           <div style={{ display:'grid', gridTemplateColumns:'1.3fr .9fr .9fr .7fr', gap:10, minWidth:0 }}>
             {[
               ['Scenario', scenarioName],
-              ['Position / Function', roleLabel],
+              ['Position / Function', labelWithoutDash(roleLabel)],
               ['Jurisdiction', state.worldState?.location || state.jurisdiction],
               ['Difficulty', state.difficulty],
             ].map(([label,value]) => (
@@ -4729,7 +4758,7 @@ async function startCustomScenario(customScenario) {
                   const isNew = d.turn === state.turn
                   return (
                     <div key={d.id} style={{ padding:'9px 10px', borderRadius:6, border:`1px solid ${isNew ? 'rgba(69,163,255,0.55)' : UI.borderSoft}`, background:isNew ? 'rgba(69,163,255,0.12)' : 'rgba(6,23,38,0.38)', fontSize:fs-1, color:isNew ? UI.text : UI.muted, lineHeight:1.55, opacity:isNew ? 1 : 0.72 }}>
-                      {isNew && <div style={{ fontSize:10, color:UI.cyan, fontWeight:950, marginBottom:4, letterSpacing:'0.08em' }}>NEW — {state.simTime}</div>}
+                      {isNew && <div style={{ fontSize:10, color:UI.cyan, fontWeight:950, marginBottom:4, letterSpacing:'0.08em' }}>NEW · {state.simTime}</div>}
                       {d.text}
                     </div>
                   )
@@ -4771,7 +4800,7 @@ async function startCustomScenario(customScenario) {
                 <div style={{ display:'flex', gap:8, alignItems:'center' }}>
                   {!isEndex && <span style={{ color:UI.amber, fontSize:11, fontWeight:950 }}>{state.simTime}</span>}
                   {!isEndex && statusBadge}
-                  {isEndex && state.aar && <span style={{ color:UI.cyan, fontSize:11, fontWeight:950 }}>ENDEX — {state.turn} TURNS</span>}
+                  {isEndex && state.aar && <span style={{ color:UI.cyan, fontSize:11, fontWeight:950 }}>ENDEX · {state.turn} TURNS</span>}
                   {!isEndex && (state.exerciseTranscript || []).length > 0 && (
                     <button onClick={downloadCurrentTranscript} style={{ fontSize:10, padding:'3px 8px', color:UI.muted, background:'transparent', border:`1px solid ${UI.borderSoft}`, cursor:'pointer', borderRadius:4 }}>
                       Transcript PDF
@@ -4808,18 +4837,19 @@ async function startCustomScenario(customScenario) {
                     const turnRoleUpdates = state.teamMode && line.type==='consequence' && line.turn
                       ? (liveRoom?.roleUpdates?.[String(line.turn)] || [])
                       : []
-                    if (!turnRoleUpdates.length) return <div key={i} style={termStyles[line.type]||{ fontSize:fs }}>{line.text}</div>
+                    const lineText = line.type === 'header' ? String(line.text || '').replace(/ \u2014 /g, ' · ') : removeEmDashes(line.text)
+                    if (!turnRoleUpdates.length) return <div key={i} style={termStyles[line.type]||{ fontSize:fs }}>{lineText}</div>
                     return (
                       <div key={i}>
-                        <div style={termStyles[line.type]||{ fontSize:fs }}>{line.text}</div>
+                        <div style={termStyles[line.type]||{ fontSize:fs }}>{lineText}</div>
                         {turnRoleUpdates.map(update => {
                           const isMine = update.playerId === state.playerId
                           return (
                             <div key={update.playerId} style={{ margin:'10px 0 4px', padding:'8px 12px', borderLeft:`3px solid ${isMine ? UI.cyan : UI.borderSoft}`, background:'rgba(255,255,255,0.03)', borderRadius:3 }}>
                               <div style={{ fontSize:fs-2, fontWeight:850, letterSpacing:0.6, color:isMine ? UI.cyan : UI.muted, marginBottom:4, textTransform:'uppercase' }}>
-                                {isMine ? `For you: ${update.role}` : `${update.role}: ${update.playerName} (host view)`}
+                                {isMine ? `For you: ${labelWithoutDash(update.role)}` : `${labelWithoutDash(update.role)}, ${update.playerName} (host view)`}
                               </div>
-                              <div style={{ fontSize:fs, color:UI.text, whiteSpace:'pre-wrap' }}>{update.text}</div>
+                              <div style={{ fontSize:fs, color:UI.text, whiteSpace:'pre-wrap' }}>{removeEmDashes(update.text)}</div>
                             </div>
                           )
                         })}
@@ -5012,7 +5042,7 @@ async function startCustomScenario(customScenario) {
                 {refs.map((r,i) => (
                   <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
                     style={{ display:'block', padding:'8px 10px', borderRadius:6, border:`1px solid ${UI.borderSoft}`, background:'rgba(6,23,38,0.34)', fontSize:fs-1, color:UI.cyan, lineHeight:1.45, textDecoration:'none', wordBreak:'break-word' }}>
-                    ↗ {r.label}
+                    ↗ {labelWithoutDash(r.label)}
                   </a>
                 ))}
               </div>
@@ -5024,11 +5054,13 @@ async function startCustomScenario(customScenario) {
       {state.teamMode && state.screen === 'game' && (
         <div style={{ position:'fixed', left:'50%', transform:'translateX(-50%)', bottom:0, width:liveShellWidth, zIndex:1400, pointerEvents:'none' }}>
           <div style={{ margin:'0 10px', border:`1px solid ${UI.border}`, borderBottom:'none', borderRadius:'9px 9px 0 0', background:'rgba(3,12,22,0.97)', boxShadow:'0 -10px 30px rgba(0,0,0,0.32)', pointerEvents:'auto', overflow:'hidden' }}>
-            <button onClick={() => setShowTeamChat(open => !open)} style={{ width:'100%', height:38, display:'flex', alignItems:'center', gap:9, padding:'0 13px', border:'none', background:'linear-gradient(180deg, rgba(15,41,65,0.98), rgba(7,24,40,0.98))', color:UI.text, cursor:'pointer', fontWeight:900, letterSpacing:'0.05em' }}>
+            <style>{'@keyframes nexus-dm-pulse { 0%,100% { box-shadow: inset 0 0 0 1px rgba(245,155,34,0.9); } 50% { box-shadow: inset 0 0 0 2px rgba(245,155,34,0.35), 0 0 14px rgba(245,155,34,0.45); } }'}</style>
+            <button onClick={() => setShowTeamChat(open => !open)} style={{ width:'100%', height:38, display:'flex', alignItems:'center', gap:9, padding:'0 13px', border:'none', animation:unreadDirectCount > 0 ? 'nexus-dm-pulse 1.6s ease-in-out infinite' : 'none', background:unreadDirectCount > 0 ? 'linear-gradient(180deg, rgba(74,48,12,0.98), rgba(40,26,8,0.98))' : 'linear-gradient(180deg, rgba(15,41,65,0.98), rgba(7,24,40,0.98))', color:UI.text, cursor:'pointer', fontWeight:900, letterSpacing:'0.05em' }}>
               <span style={{ color:UI.teal }}>●</span>
               TEAM COORDINATION
               <span style={{ color:UI.dim, fontSize:10, fontWeight:700, letterSpacing:'normal' }}>{teamMessages.length} message{teamMessages.length===1?'':'s'}</span>
               {teamChatUnread > 0 && <span style={{ minWidth:20, height:20, padding:'0 6px', borderRadius:999, background:UI.amber, color:'#07111B', display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:10 }}>{teamChatUnread}</span>}
+              {unreadDirectCount > 0 && <span style={{ color:UI.amber, fontSize:10, fontWeight:900, letterSpacing:'0.06em' }}>{unreadDirectCount === 1 ? 'NEW PRIVATE MESSAGE' : `${unreadDirectCount} NEW PRIVATE MESSAGES`}</span>}
               <span style={{ marginLeft:'auto', color:UI.muted }}>{showTeamChat ? '▼' : '▲'}</span>
             </button>
 
@@ -5036,12 +5068,13 @@ async function startCustomScenario(customScenario) {
               <div style={{ height:290, display:'grid', gridTemplateColumns:'190px 1fr', borderTop:`1px solid ${UI.borderSoft}` }}>
                 <div style={{ padding:10, borderRight:`1px solid ${UI.borderSoft}`, overflowY:'auto' }} className="nexus-live-scroll">
                   <div style={{ color:UI.dim, fontSize:9, fontWeight:900, letterSpacing:'0.09em', marginBottom:7 }}>CHANNELS</div>
-                  <button onClick={() => setTeamChatTarget('room')} style={{ width:'100%', textAlign:'left', padding:'8px 9px', marginBottom:5, borderRadius:5, border:`1px solid ${teamChatTarget==='room'?UI.teal:UI.borderSoft}`, background:teamChatTarget==='room'?'rgba(45,226,184,0.10)':'transparent', color:teamChatTarget==='room'?UI.teal:UI.muted, cursor:'pointer', fontWeight:800 }}>Team Room</button>
+                  <button onClick={() => setTeamChatTarget('room')} style={{ width:'100%', textAlign:'left', padding:'8px 9px', marginBottom:5, borderRadius:5, border:`1px solid ${teamChatTarget==='room'?UI.teal:UI.borderSoft}`, background:teamChatTarget==='room'?'rgba(45,226,184,0.10)':'transparent', color:teamChatTarget==='room'?UI.teal:UI.muted, cursor:'pointer', fontWeight:800, display:'flex', alignItems:'center', justifyContent:'space-between' }}>Team Room{teamChatUnreadBy.room > 0 && <span style={{ minWidth:18, height:18, padding:'0 5px', borderRadius:999, background:UI.teal, color:'#07111B', display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:900 }}>{teamChatUnreadBy.room}</span>}</button>
                   <div style={{ color:UI.dim, fontSize:9, fontWeight:900, letterSpacing:'0.09em', margin:'12px 0 7px' }}>DIRECT MESSAGES</div>
                   {directMessagePlayers.map(player => (
-                    <button key={player.id} onClick={() => setTeamChatTarget(player.id)} style={{ width:'100%', textAlign:'left', padding:'7px 9px', marginBottom:5, borderRadius:5, border:`1px solid ${teamChatTarget===player.id?UI.cyan:UI.borderSoft}`, background:teamChatTarget===player.id?'rgba(69,163,255,0.10)':'transparent', color:teamChatTarget===player.id?UI.cyan:UI.muted, cursor:'pointer' }}>
-                      <div style={{ fontWeight:850, fontSize:11 }}>{player.name || player.role}</div>
-                      <div style={{ color:UI.dim, fontSize:9, marginTop:2 }}>{player.role}</div>
+                    <button key={player.id} onClick={() => setTeamChatTarget(player.id)} style={{ width:'100%', textAlign:'left', padding:'7px 9px', marginBottom:5, borderRadius:5, position:'relative', border:`1px solid ${teamChatUnreadBy[player.id] ? UI.amber : teamChatTarget===player.id?UI.cyan:UI.borderSoft}`, background:teamChatUnreadBy[player.id] ? 'rgba(245,155,34,0.14)' : teamChatTarget===player.id?'rgba(69,163,255,0.10)':'transparent', color:teamChatTarget===player.id?UI.cyan:UI.muted, cursor:'pointer' }}>
+                      <div style={{ fontWeight:850, fontSize:11, paddingRight:teamChatUnreadBy[player.id] ? 26 : 0 }}>{player.name || player.role}</div>
+                      <div style={{ color:UI.dim, fontSize:9, marginTop:2 }}>{labelWithoutDash(player.role)}</div>
+                      {teamChatUnreadBy[player.id] > 0 && <span style={{ position:'absolute', top:7, right:8, minWidth:18, height:18, padding:'0 5px', borderRadius:999, background:UI.amber, color:'#07111B', display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:900 }}>{teamChatUnreadBy[player.id]}</span>}
                     </button>
                   ))}
                   {currentPlayerIsHost && (
@@ -5054,7 +5087,7 @@ async function startCustomScenario(customScenario) {
 
                 <div style={{ minWidth:0, display:'flex', flexDirection:'column' }}>
                   <div style={{ height:34, padding:'0 11px', display:'flex', alignItems:'center', borderBottom:`1px solid ${UI.borderSoft}`, color:UI.muted, fontSize:10, fontWeight:850 }}>
-                    {teamChatTarget === 'room' ? 'TEAM ROOM' : `PRIVATE — ${directMessagePlayers.find(player => player.id === teamChatTarget)?.name || 'PLAYER'}`}
+                    {teamChatTarget === 'room' ? 'TEAM ROOM' : `PRIVATE: ${directMessagePlayers.find(player => player.id === teamChatTarget)?.name || 'PLAYER'}`}
                     {teamChatTarget !== 'room' && <span style={{ marginLeft:8, color:UI.amber, fontSize:9 }}>Only you and the recipient can view this conversation.</span>}
                   </div>
                   <div className="nexus-live-scroll" style={{ flex:1, minHeight:0, overflowY:'auto', padding:'10px 12px', display:'flex', flexDirection:'column', gap:8 }}>
@@ -5062,7 +5095,7 @@ async function startCustomScenario(customScenario) {
                     {visibleTeamMessages.map(message => {
                       const own = message.senderId === state.playerId
                       return <div key={message.id} style={{ alignSelf:own?'flex-end':'flex-start', maxWidth:'78%', padding:'7px 9px', borderRadius:7, border:`1px solid ${own?UI.cyan+'66':UI.borderSoft}`, background:own?'rgba(69,163,255,0.11)':'rgba(12,31,48,0.72)' }}>
-                        <div style={{ fontSize:9, color:own?UI.cyan:UI.teal, fontWeight:900 }}>{message.senderName} · {message.senderRole}</div>
+                        <div style={{ fontSize:9, color:own?UI.cyan:UI.teal, fontWeight:900 }}>{message.senderName} · {labelWithoutDash(message.senderRole)}</div>
                         <div style={{ marginTop:3, color:UI.text, fontSize:11, lineHeight:1.45, whiteSpace:'pre-wrap', wordBreak:'break-word' }}>{message.text}</div>
                         <div style={{ marginTop:3, color:UI.dim, fontSize:8 }}>{new Date(message.createdAt).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</div>
                       </div>

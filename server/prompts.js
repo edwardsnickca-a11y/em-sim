@@ -16,6 +16,18 @@ const ROLES = DATA.roles
 const JURISDICTION_CONTEXT = DATA.jurisdictionContext
 const DIFFICULTIES = DATA.difficulties
 
+// Mirrors src/lib/dashes.js removeEmDashes for the server (CommonJS).
+function withoutEmDashes(text) {
+  if (typeof text !== 'string' || !text) return text
+  return text
+    .replace(/(^|\n)[ \t]*[\u2014\u2013][ \t]+/g, '$1')
+    .replace(/[ \t]+[\u2014\u2013][ \t]+/g, ', ')
+    .replace(/(\S)\u2014(\S)/g, '$1, $2')
+    .replace(/[ \t]*\u2014[ \t]*/g, ' ')
+    .replace(/,\s*([,.;:!?])/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
+}
+
 function normalizeJurisdictionType(value = '') {
   const v = String(value || '').trim()
   return DATA.jurisdictionAliases[v] || v || 'Mid-Size City'
@@ -29,7 +41,7 @@ function isKnownJurisdictionType(value = '') {
 
 function customScenarioTitle(customScenario) {
   return customScenario?.eventHazard?.trim()
-    ? `Custom Scenario — ${customScenario.eventHazard.trim()}`
+    ? `Custom Scenario: ${customScenario.eventHazard.trim()}`
     : 'Build Custom Scenario'
 }
 
@@ -95,7 +107,7 @@ Avoid polished filler such as "multiple concurrent demands," "pressing against a
 Separate known facts from unresolved issues. Do not identify the correct priority or tell the player what action to take.
 End with one concise, non-prescriptive question asking for the player's initial priorities or direction.
 
-RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
+RESPOND ONLY IN THIS EXACT JSON FORMAT. No preamble, no markdown fences:
 {
   "location": "${customScenario.location}",
   "clock": { "incidentOnset": "H+0:00 or local clock time", "currentTime": "same format and not earlier than incidentOnset", "timezone": "local timezone when known" },
@@ -241,7 +253,7 @@ Avoid polished filler such as "multiple concurrent demands," "pressing against a
 Separate known facts from unresolved issues. Do not identify the correct priority, recommend an action, or tell the player what to do.
 End with one concise, non-prescriptive question asking for the player's initial priorities or direction.
 
-RESPOND ONLY IN THIS EXACT JSON FORMAT — no preamble, no markdown fences:
+RESPOND ONLY IN THIS EXACT JSON FORMAT. No preamble, no markdown fences:
 {
   "location": "${loc.label}",
   "clock": { "incidentOnset": "H+0:00 or local clock time", "currentTime": "same format and not earlier than incidentOnset", "timezone": "local timezone when known" },
@@ -330,12 +342,12 @@ Use the map center only as geographic context; do not force every pin into a fix
 
 SCENARIO: ${sc.name}
 ${locationBlock}
-JURISDICTION TYPE: ${normalizedJurisdiction} — ${jc.desc}
+JURISDICTION TYPE: ${normalizedJurisdiction}: ${jc.desc}
 KEY CONSTRAINTS FOR THIS JURISDICTION: ${jc.constraints}
-DIFFICULTY: ${difficulty} — ${diffMap[difficulty]}
+DIFFICULTY: ${difficulty}. ${diffMap[difficulty]}
 ${scenarioSpecific[scenario] ? `SCENARIO NOTES: ${scenarioSpecific[scenario]}` : ''}
-${playerName ? `PLAYER NAME: ${playerName} — on ENDEX, address them by name in the AAR opening.` : ''}
-ROLE: ${role || 'EOC Director'} — ${ROLES[role] || ROLES['EOC Director']}
+${playerName ? `PLAYER NAME: ${playerName}. On ENDEX, address them by name in the AAR opening.` : ''}
+ROLE: ${role || 'EOC Director'}. ${ROLES[role] || ROLES['EOC Director']}
 Evaluate all decisions from the perspective of this role.
 
 The platform has already selected the scenario, jurisdiction type, difficulty, and location context above. Use those values. Do not independently change the location.
@@ -348,7 +360,10 @@ The configuration above applies to the controller rules that precede it. Where t
 ${buildCustomScenarioAddOn(customScenario)}`
 
   const teamAddition = role === 'EOC Team' ? TEAM_ROLE_UPDATES_INSTRUCTIONS : ''
-  return { staticText: CONTROLLER_PROMPT, dynamicText: teamAddition ? `${dynamic}\n\n${teamAddition}` : dynamic }
+  // Scenario and role data contain em dashes; the model mirrors the punctuation it
+  // reads, so the configuration block is sent without them.
+  const dynamicClean = withoutEmDashes(dynamic)
+  return { staticText: CONTROLLER_PROMPT, dynamicText: teamAddition ? `${dynamicClean}\n\n${teamAddition}` : dynamicClean }
 }
 
 // Legacy single-string form, used by tests and for parity checks.
@@ -389,7 +404,7 @@ Evidence rules:
 function buildPlanAlignmentUser(evidenceBlock = '', aarContext = {}) {
   return `${evidenceBlock}
 
-MAIN AAR CONTEXT — FOR CONTEXT ONLY, NOT A SOURCE OF LOCAL PLAN REQUIREMENTS
+MAIN AAR CONTEXT. FOR CONTEXT ONLY, NOT A SOURCE OF LOCAL PLAN REQUIREMENTS
 Decision Log:
 ${String(aarContext?.decisionLog || '').trim()}
 
