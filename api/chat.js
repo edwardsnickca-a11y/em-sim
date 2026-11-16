@@ -37,6 +37,7 @@ const MAX_REQUEST_CHARS = 250000
 const MAX_MESSAGES = 400
 const MAX_TOKENS_DEFAULT = 4000
 const MAX_TOKENS_ENDEX = 8000
+const MAX_TOKENS_TEAM_TURN = 6000
 
 const KINDS = new Set(['turn', 'world-init', 'custom-world-init', 'custom-preview', 'plan-alignment'])
 
@@ -209,7 +210,7 @@ function buildRequest(body) {
       cleanLocalPlanContext(ex.localPlanContext),
     )
     return {
-      maxTokens: ex.endex ? MAX_TOKENS_ENDEX : MAX_TOKENS_DEFAULT,
+      maxTokens: ex.endex ? MAX_TOKENS_ENDEX : (str(ex.role, 80) === 'EOC Team' ? MAX_TOKENS_TEAM_TURN : MAX_TOKENS_DEFAULT),
       system: [
         // Static controller text: identical on every request, cached for an hour.
         { type: 'text', text: staticText, cache_control: { type: 'ephemeral', ttl: '1h' } },

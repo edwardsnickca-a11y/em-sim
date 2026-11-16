@@ -3558,7 +3558,11 @@ async function startCustomScenario(customScenario) {
 
       const submissions = beginData.submissions || []
       const combinedAction = submissions.map((item) => `[${item.playerRole} — ${item.playerName}]\n${item.response}`).join('\n\n')
-      const teamMessage = `TEAM TURN ${state.turn + 1} RESPONSES\n\n${combinedAction}\n\nEvaluate these responses as the combined actions of the EOC team. Generate one shared consequence update for the entire room. Do not coach the players or identify the correct answer.`
+      const rosterForUpdates = submissions
+        .filter(item => item.playerId)
+        .map(item => `playerId ${item.playerId}: ${item.playerName} (${item.playerRole})`)
+        .join('\n')
+      const teamMessage = `TEAM TURN ${state.turn + 1} RESPONSES\n\n${combinedAction}\n\nEvaluate these responses as the combined actions of the EOC team. Generate one shared consequence update for the entire room. Do not coach the players or identify the correct answer.\n\nPLAYERS FOR ROLE UPDATES (one roleUpdates entry each):\n${rosterForUpdates}`
       const msgs = [...state.history, { role:'user', content:teamMessage }]
       const localPlanContext = await getTurnLocalPlanContext(state, combinedAction, 'EOC Team')
 
@@ -3597,7 +3601,17 @@ async function startCustomScenario(customScenario) {
         throw new Error(`Team update failed integrity validation after one repair attempt: ${details}. No exercise state was changed.`)
       }
 
-      const { parsed, eventId, patchResult } = result
+      const { eventId, patchResult } = result
+      // Private per-role updates go to the server separately and never enter the
+      // shared history, terminal, or transcript that every player receives.
+      const validPlayerIds = new Set(submissions.map(item => item.playerId).filter(Boolean))
+      const roleUpdates = (Array.isArray(result.parsed.roleUpdates) ? result.parsed.roleUpdates : [])
+        .map(item => ({
+          playerId:String(item?.playerId || '').trim(),
+          text:neutralizeGeneratedText(item?.text, ''),
+        }))
+        .filter(item => validPlayerIds.has(item.playerId) && item.text)
+      const { roleUpdates:_privateRoleUpdates, ...parsed } = result.parsed
       const nextTurn = state.turn + 1
       const resolvedSituation = parsed.situation === 'ENDEX' || (parsed.consequence||'').toUpperCase().includes('ENDEX') ? 'ENDEX' : (parsed.situation||'DEVELOPING')
       const newHistory = [...msgs, { role:'assistant', content:JSON.stringify(parsed) }]
@@ -3605,7 +3619,7 @@ async function startCustomScenario(customScenario) {
         ...state.terminal,
         { type:'player', text:`> TEAM RESPONSES SUBMITTED — TURN ${nextTurn}` },
         { type:'time', text:parsed.time },
-        { type:'consequence', text:parsed.consequence },
+        { type:'consequence', text:parsed.consequence, turn:nextTurn },
         resolvedSituation !== 'ENDEX' ? { type:'prompt', text:parsed.prompt } : null,
         { type:'divider' },
       ].filter(Boolean)
@@ -3645,7 +3659,7 @@ async function startCustomScenario(customScenario) {
       }
       const completeRes = await fetch('/api/team-room', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
-        body:JSON.stringify({ action:'completeTurn', roomCode:state.roomCode, playerId:state.playerId, playerToken:state.playerToken, turn:state.turn, sharedTurnState }),
+        body:JSON.stringify({ action:'completeTurn', roomCode:state.roomCode, playerId:state.playerId, playerToken:state.playerToken, turn:state.turn, sharedTurnState, roleUpdates }),
       })
       const completeData = await completeRes.json().catch(() => ({}))
       if (!completeRes.ok || completeData.ok === false) throw new Error(completeData.error || 'Unable to save shared team turn')
@@ -3761,6 +3775,7 @@ async function startCustomScenario(customScenario) {
       const players = (context.players || []).filter(player => player.role)
       const allSubmissions = [...(context.submissionHistory || []), ...(context.currentSubmissions || [])]
       const permittedCommunications = context.communications || []
+      const allRoleUpdates = context.roleUpdates || {}
       const sharedTranscript = context.sharedTurnState?.exerciseTranscript || state.exerciseTranscript || []
       const scenarioName = SCENARIOS[state.scenario]?.name || state.scenario
 
@@ -3823,7 +3838,11 @@ async function startCustomScenario(customScenario) {
               return `TEAM ROOM — ${message.senderName}: ${message.text}`
             }).join('\n')
           : 'No permitted coordination messages involved this player.'
-        const individualRecord = `Evaluate only ${player.name}'s performance as ${player.role}. Distinguish the player's own decisions from team outcomes. Do not attribute another player's action to this player. Tie every finding to an actual submission, omission, timing issue, coordination message, or resulting consequence.\n\nSHARED TEAM AAR:\n${JSON.stringify(teamAar, null, 2)}\n\nPLAYER'S OFFICIAL SUBMISSIONS:\n${playerSubmissionText}\n\nPLAYER'S PERMITTED COMMUNICATIONS:\n${playerMessageText}\n\nSHARED EXERCISE CONTEXT:\n${sharedRecord}`
+        const playerRoleUpdates = Object.entries(allRoleUpdates)
+          .sort(([a],[b]) => Number(a) - Number(b))
+          .flatMap(([turn, entries]) => (entries || []).filter(entry => entry.playerId === player.id).map(entry => `TURN ${turn}: ${entry.text}`))
+        const playerRoleUpdateText = playerRoleUpdates.length ? playerRoleUpdates.join('\n') : 'No private role updates were recorded for this player.'
+        const individualRecord = `Evaluate only ${player.name}'s performance as ${player.role}. Distinguish the player's own decisions from team outcomes. Do not attribute another player's action to this player. Tie every finding to an actual submission, omission, timing issue, coordination message, or resulting consequence.\n\nSHARED TEAM AAR:\n${JSON.stringify(teamAar, null, 2)}\n\nPLAYER'S OFFICIAL SUBMISSIONS:\n${playerSubmissionText}\n\nPLAYER'S PERMITTED COMMUNICATIONS:\n${playerMessageText}\n\nPRIVATE ROLE UPDATES THIS PLAYER RECEIVED:\n${playerRoleUpdateText}\n\nSHARED EXERCISE CONTEXT:\n${sharedRecord}`
         const aar = await requestBaselineAar({
           role:player.role,
           playerName:player.name,
@@ -4786,7 +4805,26 @@ async function startCustomScenario(customScenario) {
                   {state.terminal.map((line,i) => {
                     if (!line) return null
                     if (line.type==='divider') return <hr key={i} style={{ border:'none', borderTop:`1px solid ${UI.borderSoft}`, margin:'10px 0' }}/>
-                    return <div key={i} style={termStyles[line.type]||{ fontSize:fs }}>{line.text}</div>
+                    const turnRoleUpdates = state.teamMode && line.type==='consequence' && line.turn
+                      ? (liveRoom?.roleUpdates?.[String(line.turn)] || [])
+                      : []
+                    if (!turnRoleUpdates.length) return <div key={i} style={termStyles[line.type]||{ fontSize:fs }}>{line.text}</div>
+                    return (
+                      <div key={i}>
+                        <div style={termStyles[line.type]||{ fontSize:fs }}>{line.text}</div>
+                        {turnRoleUpdates.map(update => {
+                          const isMine = update.playerId === state.playerId
+                          return (
+                            <div key={update.playerId} style={{ margin:'10px 0 4px', padding:'8px 12px', borderLeft:`3px solid ${isMine ? UI.cyan : UI.borderSoft}`, background:'rgba(255,255,255,0.03)', borderRadius:3 }}>
+                              <div style={{ fontSize:fs-2, fontWeight:850, letterSpacing:0.6, color:isMine ? UI.cyan : UI.muted, marginBottom:4, textTransform:'uppercase' }}>
+                                {isMine ? `For you: ${update.role}` : `${update.role}: ${update.playerName} (host view)`}
+                              </div>
+                              <div style={{ fontSize:fs, color:UI.text, whiteSpace:'pre-wrap' }}>{update.text}</div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
                   })}
                   {isEndex && !state.aar && (
                     <div style={{ marginTop:16, paddingTop:12, borderTop:`1px solid ${UI.borderSoft}` }}>

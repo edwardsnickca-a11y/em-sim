@@ -177,3 +177,48 @@ test('facilitator AAR and all individual AARs are host-only after ENDEX', { skip
   assert.equal(anon.room.teamAar, null)
   assert.equal(anon.room.individualAar, null)
 })
+
+test('private role updates: each player sees only their own, host sees all, anonymous sees none', { skip }, async () => {
+  const host = await call({ action: 'create', scenario: 'hazmat', jurisdiction: 'Mid-Size City', difficulty: 'Standard', hostName: 'Host', hostRole: 'EOC Director' })
+  const code = host.room.roomCode
+  const ops = await call({ action: 'join', code, name: 'Tim', role: 'Operations Section Chief' })
+  const pio = await call({ action: 'join', code, name: 'Pat', role: 'Public Information Officer' })
+  await call({ action: 'start', code, playerId: host.playerId, playerToken: host.playerToken, sharedScenario: { world: { location: 'x' }, selectedLocation: { label: 'x' } } })
+  for (const p of [host, ops, pio]) {
+    const r = await call({ action: 'submitResponse', code, playerId: p.playerId, playerToken: p.playerToken, turn: 0, response: 'Direction' })
+    assert.equal(r.ok, true)
+  }
+  let r = await call({ action: 'beginAdvance', code, playerId: host.playerId, playerToken: host.playerToken, turn: 0 })
+  assert.equal(r.ok, true)
+  r = await call({
+    action: 'completeTurn', code, playerId: host.playerId, playerToken: host.playerToken, turn: 0,
+    sharedTurnState: { turn: 1, situation: 'DEVELOPING', terminal: [{ type: 'consequence', text: 'Shared assessment', turn: 1 }] },
+    roleUpdates: [
+      { playerId: host.playerId, text: 'Director update' },
+      { playerId: ops.playerId, text: 'Ops update' },
+      { playerId: pio.playerId, text: 'PIO update' },
+      { playerId: 'not-a-player', text: 'Injected' },
+      { playerId: ops.playerId, text: 'Duplicate for ops' },
+    ],
+  })
+  assert.equal(r.ok, true)
+
+  const asHost = await get({ code, playerId: host.playerId, playerToken: host.playerToken })
+  assert.deepEqual(asHost.room.roleUpdates['1'].map(u => u.text), ['Director update', 'Ops update', 'PIO update'])
+  assert.equal(asHost.room.roleUpdates['1'][1].role, 'Operations Section Chief')
+
+  const asOps = await get({ code, playerId: ops.playerId, playerToken: ops.playerToken })
+  assert.deepEqual(asOps.room.roleUpdates['1'].map(u => u.text), ['Ops update'])
+  assert.equal(asOps.room.sharedTurnState.terminal[0].text, 'Shared assessment')
+  assert.ok(!JSON.stringify(asOps.room).includes('PIO update'))
+  assert.ok(!JSON.stringify(asOps.room).includes('Director update'))
+
+  const asPio = await get({ code, playerId: pio.playerId, playerToken: pio.playerToken })
+  assert.deepEqual(asPio.room.roleUpdates['1'].map(u => u.text), ['PIO update'])
+
+  const anon = await get({ code })
+  assert.deepEqual(anon.room.roleUpdates, {})
+
+  r = await call({ action: 'beginEndex', code, playerId: host.playerId, playerToken: host.playerToken })
+  assert.equal(r.aarContext.roleUpdates['1'].length, 3)
+})

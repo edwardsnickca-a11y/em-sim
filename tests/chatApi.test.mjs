@@ -183,3 +183,13 @@ test('extractPartialStringField reads a streamed consequence as it arrives', () 
   assert.equal(extractPartialStringField('{"consequence": "abc'), 'abc')
   assert.equal(extractPartialStringField('{"prompt":"x"}'), '')
 })
+
+test('team turns get role-update instructions and a larger budget; single-player turns do not', () => {
+  const team = chat.buildRequest({ ...turnBody, exercise: { ...turnBody.exercise, role: 'EOC Team', playerName: '' } })
+  const solo = chat.buildRequest(turnBody)
+  assert.match(team.system[1].text, /TEAM MODE ROLE UPDATES/)
+  assert.match(team.system[1].text, /"roleUpdates"/)
+  assert.doesNotMatch(solo.system[1].text, /TEAM MODE ROLE UPDATES/)
+  assert.equal(team.system[0].text, solo.system[0].text, 'static cached block is identical for team and solo')
+  assert.ok(team.maxTokens > solo.maxTokens)
+})

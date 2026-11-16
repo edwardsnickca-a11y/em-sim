@@ -30,6 +30,22 @@ NEXUS EOC now includes:
 
 ---
 
+## 2026-11 — Team Mode Private Role Updates and Faster Team AAR
+
+### Added
+
+- Each team turn now returns a shared situation assessment for the whole room plus a private update for each player, written to their position: what came back from their own direction and what is now on their desk.
+- Players see only their own role update, shown directly under the shared assessment for that turn. The host sees every player's update, labeled by role.
+- Role updates are stripped from the shared history, terminal, and transcript before broadcast and are stored per player on the server (`roleUpdates` in the room, filtered per viewer).
+- Each player's individual AAR now considers the private role updates that player received.
+
+### Changed
+
+- Team ENDEX generates the shared team AAR and all individual AARs in parallel; the facilitator AAR still runs last. This roughly halves Team ENDEX wait time.
+- Team turns use a 6000 token output budget to fit the per-role updates.
+
+---
+
 ## 2026-11 — Server-Side Prompts, Prompt Caching, Streaming, Team Room Credentials
 
 ### Security

@@ -108,6 +108,36 @@ function requireHost(room, body, message = 'Only the host can perform this actio
   return player;
 }
 
+// Private per-role turn updates. Stored as { [turn]: [{ playerId, playerName, role, text }] }.
+// A player sees only entries addressed to them; the host sees every entry.
+function visibleRoleUpdates(room, viewer) {
+  if (!viewer) return {};
+  const all = room.roleUpdates || {};
+  if (viewer.isHost) return all;
+  const out = {};
+  for (const [turn, entries] of Object.entries(all)) {
+    const mine = (entries || []).filter((entry) => entry.playerId === viewer.id);
+    if (mine.length) out[turn] = mine;
+  }
+  return out;
+}
+
+function cleanRoleUpdates(room, roleUpdates) {
+  if (!Array.isArray(roleUpdates)) return [];
+  const active = new Map((room.players || []).filter((p) => p.status !== 'removed' && p.role).map((p) => [p.id, p]));
+  const seen = new Set();
+  const out = [];
+  for (const item of roleUpdates.slice(0, MAX_PLAYERS)) {
+    const playerId = String(item?.playerId || '').trim();
+    const text = String(item?.text || '').trim().slice(0, 2000);
+    const player = active.get(playerId);
+    if (!player || !text || seen.has(playerId)) continue;
+    seen.add(playerId);
+    out.push({ playerId, playerName: player.name, role: player.role, text });
+  }
+  return out;
+}
+
 function publicPlayer(player) {
   const { token, ...rest } = player;
   return rest;
@@ -150,6 +180,7 @@ function publicRoom(room, viewer = null) {
     turnStatus: room.turnStatus || 'collecting',
     submissions: (room.submissions || []).map(({ response, ...submission }) => submission),
     sharedTurnState: viewer ? (room.sharedTurnState || null) : null,
+    roleUpdates: visibleRoleUpdates(room, viewer),
     messages,
     chatSettings: room.chatSettings || { includePrivateMessagesInTranscript: false },
     teamAar: viewer ? (room.teamAar || null) : null,
@@ -397,6 +428,10 @@ async function handleCompleteTurn(body) {
   const completedSubmissions = (room.submissions || []).filter((item) => item.turn === expectedTurn);
   room.submissionHistory = [...(room.submissionHistory || []), ...completedSubmissions].slice(-500);
   room.sharedTurnState = sharedTurnState;
+  const updates = cleanRoleUpdates(room, body.roleUpdates);
+  if (updates.length) {
+    room.roleUpdates = { ...(room.roleUpdates || {}), [String(expectedTurn + 1)]: updates };
+  }
   room.turn = expectedTurn + 1;
   room.turnStatus = 'collecting';
   room.submissions = [];
@@ -444,6 +479,7 @@ async function handleBeginEndex(body) {
       players: room.players.filter((player) => player.status !== 'removed').map(publicPlayer),
       submissionHistory: room.submissionHistory || [],
       currentSubmissions: room.submissions || [],
+      roleUpdates: room.roleUpdates || {},
       communications,
       chatSettings: room.chatSettings || { includePrivateMessagesInTranscript:false },
       sharedScenario: room.sharedScenario || null,
