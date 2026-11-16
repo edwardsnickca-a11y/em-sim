@@ -3782,29 +3782,31 @@ async function startCustomScenario(customScenario) {
 
       const sharedRecord = `SCENARIO: ${scenarioName}\nJURISDICTION: ${canonicalJurisdictionName(state) || state.jurisdiction}\nJURISDICTION TYPE: ${state.exerciseConfig?.jurisdictionType || state.jurisdiction}\nDIFFICULTY: ${state.difficulty}\nFINAL SIMULATED TIME: ${state.simTime}\nCOMPLETED TURNS: ${state.turn}\n\nTEAM ROSTER:\n${rosterText}\n\nROLE SUBMISSIONS BY TURN:\n${submissionText}\n\nPERMITTED COMMUNICATIONS:\n${communicationsText}\n\nSHARED EXERCISE TRANSCRIPT:\n${JSON.stringify(sharedTranscript, null, 2)}`
 
-      // Use the same proven ENDEX/AAR contract as single-player EOC.
-      const teamAar = await requestBaselineAar({
-        role:'EOC Team',
-        playerName:'Team',
-        record:`Evaluate the EOC team as a whole. Emphasize cross-role decision quality, coordination, sequencing, information management, Community Lifelines, resource decisions, public information, leadership support, and consequences.\n\n${sharedRecord}`,
-        label:'Shared Team AAR',
-      })
-      const teamPlanRecords = collectPlanAlignmentRecord(sharedTranscript)
-      if (teamPlanRecords.length) {
-        try {
-          const verifiedPlanAlignment = await generatePlanAlignmentSection(sharedTranscript, teamAar)
-          teamAar.planAlignment = verifiedPlanAlignment || buildPlanAlignmentFallback(sharedTranscript)
-        } catch (err) {
-          console.warn('Team Plan Alignment generation unavailable:', err?.message || err)
-          teamAar.planAlignment = buildPlanAlignmentFallback(sharedTranscript)
+      // The shared team report and each player's individual report are independent,
+      // so they are generated in parallel. The facilitator report needs all of them
+      // and runs afterward. This roughly halves Team ENDEX wait time.
+      const teamAarTask = (async () => {
+        // Use the same proven ENDEX/AAR contract as single-player EOC.
+        const teamAar = await requestBaselineAar({
+          role:'EOC Team',
+          playerName:'Team',
+          record:`Evaluate the EOC team as a whole. Emphasize cross-role decision quality, coordination, sequencing, information management, Community Lifelines, resource decisions, public information, leadership support, and consequences.\n\n${sharedRecord}`,
+          label:'Shared Team AAR',
+        })
+        const teamPlanRecords = collectPlanAlignmentRecord(sharedTranscript)
+        if (teamPlanRecords.length) {
+          try {
+            const verifiedPlanAlignment = await generatePlanAlignmentSection(sharedTranscript, teamAar)
+            teamAar.planAlignment = verifiedPlanAlignment || buildPlanAlignmentFallback(sharedTranscript)
+          } catch (err) {
+            console.warn('Team Plan Alignment generation unavailable:', err?.message || err)
+            teamAar.planAlignment = buildPlanAlignmentFallback(sharedTranscript)
+          }
         }
-      }
+        return teamAar
+      })()
 
-      const individualEntries = []
-      // Evaluate one role at a time so each report receives a complete, focused response.
-      for (let index = 0; index < players.length; index += 1) {
-        const batch = players.slice(index, index + 1)
-        const batchEntries = await Promise.all(batch.map(async player => {
+      const individualTasks = players.map(async player => {
         const playerSubmissions = allSubmissions.filter(item => item.playerId === player.id)
         const playerMessages = permittedCommunications.filter(message =>
           message.senderId === player.id || message.recipientId === player.id
@@ -3828,10 +3830,10 @@ async function startCustomScenario(customScenario) {
           record:individualRecord,
           label:`Individual AAR for ${player.name}`,
         })
-          return [player.id, aar]
-        }))
-        individualEntries.push(...batchEntries)
-      }
+        return [player.id, aar]
+      })
+
+      const [teamAar, individualEntries] = await Promise.all([teamAarTask, Promise.all(individualTasks)])
       const individualAars = Object.fromEntries(individualEntries)
 
       const facilitatorRecord = `Evaluate the exercise from the facilitator perspective. Compare role performance, identify cross-role coordination patterns, conflicting or missing actions, decision sequencing, and specific follow-on training priorities.\n\nSHARED TEAM AAR:\n${JSON.stringify(teamAar, null, 2)}\n\nINDIVIDUAL ROLE AARS:\n${JSON.stringify(individualAars, null, 2)}\n\nCOMPLETE TEAM RECORD:\n${sharedRecord}`
